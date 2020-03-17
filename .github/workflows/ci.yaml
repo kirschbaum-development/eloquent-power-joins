@@ -1,0 +1,18 @@
+on: push
+name: CI
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-latest
+    container:
+      image: kirschbaumdevelopment/laravel-test-runner:7.4.0
+
+    steps:
+    - uses: actions/checkout@v1
+
+    - name: Install composer dependencies
+      run: |
+        composer install --no-scripts
+
+    - name: Run Testsuite
+      run: vendor/bin/phpunit tests/

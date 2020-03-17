@@ -2,6 +2,7 @@
 
 namespace KirschbaumDevelopment\LaravelWhereHasWithJoins;
 
+use Closure;
 use RuntimeException;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -25,6 +26,10 @@ class LaravelWhereHasWithJoins
             }
 
             $relation->performJoinForWhereHasWithJoins($this);
+
+            if (is_callable($callback)) {
+                $callback($this);
+            }
 
             return $this;
         });

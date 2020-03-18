@@ -25,6 +25,14 @@ class CreateTables extends Migration
             $table->string('title');
             $table->timestamps();
         });
+
+        Schema::create('comments', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('user_id');
+            $table->unsignedInteger('post_id');
+            $table->text('body');
+            $table->timestamps();
+        });
     }
 
     /**

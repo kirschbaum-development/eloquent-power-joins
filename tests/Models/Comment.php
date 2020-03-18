@@ -6,15 +6,15 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class Post extends Model
+class User extends Model
 {
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
 
-    public function comments(): HasMany
+    public function post(): BelongsTo
     {
-        return $this->hasMany(Comment::class);
+        return $this->belongsTo(Post::class);
     }
 }

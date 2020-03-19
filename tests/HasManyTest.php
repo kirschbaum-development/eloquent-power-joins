@@ -68,7 +68,11 @@ class HasManyTest extends TestCase
     /** @test */
     public function test_doesnt_have()
     {
-        $this->markTestIncomplete('@TODO');
+        [$user1, $user2] = factory(User::class)->times(2)->create();
+        $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
+
+        $this->assertCount(1, User::doesntHave('posts')->get());
+        $this->assertCount(1, User::doesntHaveWithJoins('posts')->get());
     }
 
     /** @test */

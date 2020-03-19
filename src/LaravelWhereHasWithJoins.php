@@ -68,6 +68,10 @@ class LaravelWhereHasWithJoins
 
             return $this;
         });
+
+        Builder::macro('doesntHaveWithJoins', function ($relation, $boolean = 'and', Closure $callback = null) {
+            return $this->hasWithJoins($relation, '<', 1, $boolean, $callback);
+        });
     }
 
     protected static function registerWhereHasFunctions()
@@ -93,7 +97,7 @@ class LaravelWhereHasWithJoins
         });
 
         HasMany::macro('performJoinForWhereHasWithJoins', function ($builder, $previousRelation = null) {
-            $builder->join(
+            $builder->leftJoin(
                 $this->query->getModel()->getTable(),
                 $this->foreignKey,
                 '=',

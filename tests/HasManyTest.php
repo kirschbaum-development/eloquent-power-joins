@@ -5,6 +5,7 @@ namespace KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests;
 use Illuminate\Database\Eloquent\Builder;
 use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Post;
 use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\User;
+use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Comment;
 
 class HasManyTest extends TestCase
 {
@@ -52,14 +53,27 @@ class HasManyTest extends TestCase
     }
 
     /** @test */
-    public function test_has_many_with_nested_relations()
+    public function test_has_with_joins_and_nested_relations()
     {
-        $this->markTestIncomplete('TODO');
-
         [$user1, $user2] = factory(User::class)->times(2)->create();
-        $posts = factory(Post::class)->create(['user_id' => $user1->id]);
+        $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
+        $post2 = factory(Post::class)->create(['user_id' => $user2->id]);
+        $commentsPost1 = factory(Comment::class)->times(2)->create(['post_id' => $post1->id]);
+        $commentsPost2 = factory(Comment::class)->times(5)->create(['post_id' => $post2->id]);
 
-        $this->assertCount(1, User::whereHas('posts')->get());
-        $this->assertCount(1, User::whereHasWithJoins('posts')->get());
+        $this->assertCount(2, User::has('posts.comments')->get());
+        $this->assertCount(2, User::hasWithJoins('posts.comments')->get());
+    }
+
+    /** @test */
+    public function test_doesnt_have()
+    {
+        $this->markTestIncomplete('@TODO');
+    }
+
+    /** @test */
+    public function test_where_doesnt_have()
+    {
+        $this->markTestIncomplete('@TODO');
     }
 }

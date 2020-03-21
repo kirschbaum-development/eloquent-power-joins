@@ -1,9 +1,9 @@
 # Eloquent Joins with Extra Powers
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins)
+<!-- [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins) -->
 [![Actions Status](https://github.com/kirschbaum-development/laravel-where-has-with-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/laravel-where-has-with-joins/actions)
-[![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/laravel-where-has-with-joins)
-[![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins)
+<!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/laravel-where-has-with-joins) -->
+<!-- [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins) -->
 
 Joins are very useful in a lot of ways. If you are here, you probably know them. This package gives you some extra powers to make your joins more readable and make you write less code, hidding some implementation details from places they don't need to be exposed.
 

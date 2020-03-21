@@ -120,6 +120,10 @@ class LaravelWhereHasWithJoins
     protected static function registerJoinRelationshipFunctions()
     {
         Builder::macro('joinRelationship', function ($relation, $joinType = 'join') {
+            if (Str::contains($relation, '.')) {
+                return $this->joinNestedRelationship($relation, $joinType);
+            }
+
             $relation = $this->getModel()->{$relation}();
 
             $this->{$joinType}(
@@ -138,6 +142,34 @@ class LaravelWhereHasWithJoins
 
         Builder::macro('rightJoinRelationship', function ($relation) {
             return $this->joinRelationship($relation, 'rightJoin');
+        });
+
+        Builder::macro('joinNestedRelationship', function ($relations, $joinType = 'join') {
+            $relations = explode('.', $relations);
+            $latestRelation = null;
+
+            foreach ($relations as $index => $relation) {
+                if (! $latestRelation) {
+                    $currentModel = $this->getModel();
+                    $relation = $currentModel->{$relation}();
+                    $relationModel = $relation->getModel();
+                } else {
+                    $currentModel = $latestRelation->getModel();
+                    $relation = $currentModel->{$relation}();
+                    $relationModel = $relation->getModel();
+                }
+
+                $this->{$joinType}(
+                    $relationModel->getTable(),
+                    sprintf('%s.%s', $relationModel->getTable(), $relation->getForeignKeyName()),
+                    '=',
+                    $currentModel->getQualifiedKeyName()
+                );
+
+                $latestRelation = $relation;
+            }
+
+            return $this;
         });
     }
 }

@@ -13,6 +13,7 @@ class LaravelWhereHasWithJoins
 {
     public static function registerEloquentMacros()
     {
+        static::registerJoinRelationshipFunctions();
         static::registerHasFunctions();
         static::registerWhereHasFunctions();
     }
@@ -72,6 +73,10 @@ class LaravelWhereHasWithJoins
         Builder::macro('doesntHaveWithJoins', function ($relation, $boolean = 'and', Closure $callback = null) {
             return $this->hasWithJoins($relation, '<', 1, $boolean, $callback);
         });
+
+        Builder::macro('whereDoesntHaveWithJoins', function ($relation, Closure $callback = null) {
+            throw new RuntimeException('This is not implemented yet');
+        });
     }
 
     protected static function registerWhereHasFunctions()
@@ -109,6 +114,30 @@ class LaravelWhereHasWithJoins
             $builder
                 ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
                 ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
+        });
+    }
+
+    protected static function registerJoinRelationshipFunctions()
+    {
+        Builder::macro('joinRelationship', function ($relation, $joinType = 'join') {
+            $relation = $this->getModel()->{$relation}();
+
+            $this->{$joinType}(
+                $relation->getModel()->getTable(),
+                sprintf('%s.%s', $relation->getModel()->getTable(), $relation->getForeignKeyName()),
+                '=',
+                $this->getModel()->getQualifiedKeyName()
+            );
+
+            return $this;
+        });
+
+        Builder::macro('leftJoinRelationship', function ($relation) {
+            return $this->joinRelationship($relation, 'leftJoin');
+        });
+
+        Builder::macro('rightJoinRelationship', function ($relation) {
+            return $this->joinRelationship($relation, 'rightJoin');
         });
     }
 }

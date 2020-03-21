@@ -7,7 +7,7 @@ use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Post;
 use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\User;
 use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Comment;
 
-class HasManyTest extends TestCase
+class HasUsingJoinsTest extends TestCase
 {
     /** @test */
     public function test_has_with_joins()
@@ -73,11 +73,5 @@ class HasManyTest extends TestCase
 
         $this->assertCount(1, User::doesntHave('posts')->get());
         $this->assertCount(1, User::doesntHaveWithJoins('posts')->get());
-    }
-
-    /** @test */
-    public function test_where_doesnt_have()
-    {
-        $this->markTestIncomplete('@TODO');
     }
 }

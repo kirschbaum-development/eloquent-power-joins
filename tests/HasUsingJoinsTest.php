@@ -10,34 +10,34 @@ use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 class HasUsingJoinsTest extends TestCase
 {
     /** @test */
-    public function test_has_with_joins()
+    public function test_has_using_joins()
     {
         [$user1, $user2] = factory(User::class)->times(2)->create();
         $posts = factory(Post::class)->create(['user_id' => $user1->id]);
 
         $this->assertCount(1, User::has('posts')->get());
-        $this->assertCount(1, User::hasWithJoins('posts')->get());
+        $this->assertCount(1, User::hasUsingJoins('posts')->get());
     }
 
     /** @test */
-    public function test_has_with_joins_using_different_operators()
+    public function test_has_using_joins_using_different_operators()
     {
         [$user1, $user2] = factory(User::class)->times(2)->create();
         $user1Posts = factory(Post::class)->times(2)->create(['user_id' => $user1->id]);
         $user2Posts = factory(Post::class)->times(3)->create(['user_id' => $user2->id]);
 
         $this->assertCount(1, User::has('posts', '>=', 3)->get());
-        $this->assertCount(1, User::hasWithJoins('posts', '>=', 3)->get());
+        $this->assertCount(1, User::hasUsingJoins('posts', '>=', 3)->get());
 
         $this->assertCount(1, User::has('posts', '>', 2)->get());
-        $this->assertCount(1, User::hasWithJoins('posts', '>', 2)->get());
+        $this->assertCount(1, User::hasUsingJoins('posts', '>', 2)->get());
 
         $this->assertCount(1, User::has('posts', '<=', 2)->get());
-        $this->assertCount(1, User::hasWithJoins('posts', '<=', 2)->get());
+        $this->assertCount(1, User::hasUsingJoins('posts', '<=', 2)->get());
     }
 
     /** @test */
-    public function test_where_has_with_joins()
+    public function test_where_has_using_joins()
     {
         [$user1, $user2] = factory(User::class)->times(2)->create();
         $posts = factory(Post::class)->create(['user_id' => $user1->id]);
@@ -47,7 +47,7 @@ class HasUsingJoinsTest extends TestCase
             $builder->where('posts.user_id', '=', $user1->id);
         })->get());
 
-        $this->assertCount(1, User::whereHasWithJoins('posts', function (Builder $builder) use ($user1) {
+        $this->assertCount(1, User::whereHasUsingJoins('posts', function (Builder $builder) use ($user1) {
             $builder->where('posts.user_id', '=', $user1->id);
         })->get());
     }
@@ -62,7 +62,7 @@ class HasUsingJoinsTest extends TestCase
         $commentsPost2 = factory(Comment::class)->times(5)->create(['post_id' => $post2->id]);
 
         $this->assertCount(2, User::has('posts.comments')->get());
-        $this->assertCount(2, User::hasWithJoins('posts.comments')->get());
+        $this->assertCount(2, User::hasUsingJoins('posts.comments')->get());
     }
 
     /** @test */
@@ -72,6 +72,6 @@ class HasUsingJoinsTest extends TestCase
         $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
 
         $this->assertCount(1, User::doesntHave('posts')->get());
-        $this->assertCount(1, User::doesntHaveWithJoins('posts')->get());
+        $this->assertCount(1, User::doesntHaveUsingJoins('posts')->get());
     }
 }

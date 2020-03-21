@@ -1,6 +1,6 @@
 <?php
 
-namespace KirschbaumDevelopment\LaravelWhereHasWithJoins;
+namespace KirschbaumDevelopment\EloquentJoins;
 
 use Closure;
 use RuntimeException;
@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 
-class LaravelWhereHasWithJoins
+class EloquentJoins
 {
     public static function registerEloquentMacros()
     {

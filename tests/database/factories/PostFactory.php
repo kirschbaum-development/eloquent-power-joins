@@ -1,8 +1,8 @@
 <?php
 
 use Illuminate\Support\Str;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Post;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\User;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
 
 $factory->define(Post::class, function (Faker\Generator $faker) {
     return [

@@ -1,6 +1,6 @@
 <?php
 
-namespace KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models;
+namespace KirschbaumDevelopment\EloquentJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;

@@ -1,10 +1,10 @@
 <?php
 
-namespace KirschbaumDevelopment\LaravelWhereHasWithJoins;
+namespace KirschbaumDevelopment\EloquentJoins;
 
 use Illuminate\Support\ServiceProvider;
 
-class LaravelWhereHasWithJoinsServiceProvider extends ServiceProvider
+class EloquentJoinsServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.
@@ -28,6 +28,6 @@ class LaravelWhereHasWithJoinsServiceProvider extends ServiceProvider
         // Automatically apply the package configuration
         $this->mergeConfigFrom(__DIR__.'/../config/config.php', 'laravel-where-has-with-joins');
 
-        LaravelWhereHasWithJoins::registerEloquentMacros();
+        EloquentJoins::registerEloquentMacros();
     }
 }

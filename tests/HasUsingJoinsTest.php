@@ -1,11 +1,11 @@
 <?php
 
-namespace KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests;
+namespace KirschbaumDevelopment\EloquentJoins\Tests;
 
 use Illuminate\Database\Eloquent\Builder;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Post;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\User;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Comment;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 
 class HasUsingJoinsTest extends TestCase
 {

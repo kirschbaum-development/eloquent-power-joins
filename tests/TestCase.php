@@ -1,8 +1,8 @@
 <?php
 
-namespace KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests;
+namespace KirschbaumDevelopment\EloquentJoins\Tests;
 
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\LaravelWhereHasWithJoinsServiceProvider;
+use KirschbaumDevelopment\EloquentJoins\EloquentJoinsServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -16,7 +16,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
     protected function getPackageProviders($app)
     {
-        return [LaravelWhereHasWithJoinsServiceProvider::class];
+        return [EloquentJoinsServiceProvider::class];
     }
 
     /**

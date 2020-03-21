@@ -1,11 +1,13 @@
 {
-    "name": "kirschbaum-development/laravel-where-has-with-joins",
+    "name": "kirschbaum-development/eloquent-joins-with-extra-powers",
     "description": "Laravel whereHas, but using joins.",
     "keywords": [
-        "kirschbaum-development",
-        "laravel-where-has-with-joins"
+        "laravel",
+        "eloquent",
+        "mysql",
+        "join"
     ],
-    "homepage": "https://github.com/kirschbaum-development/laravel-where-has-with-joins",
+    "homepage": "https://github.com/kirschbaum-development/eloquent-joins-with-extra-powers",
     "license": "MIT",
     "type": "library",
     "authors": [
@@ -26,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "KirschbaumDevelopment\\LaravelWhereHasWithJoins\\": "src"
+            "KirschbaumDevelopment\\EloquentJoins\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "KirschbaumDevelopment\\LaravelWhereHasWithJoins\\Tests\\": "tests"
+            "KirschbaumDevelopment\\EloquentJoins\\Tests\\": "tests"
         }
     },
     "scripts": {
@@ -45,11 +47,8 @@
     "extra": {
         "laravel": {
             "providers": [
-                "KirschbaumDevelopment\\LaravelWhereHasWithJoins\\LaravelWhereHasWithJoinsServiceProvider"
-            ],
-            "aliases": {
-                "LaravelWhereHasWithJoins": "KirschbaumDevelopment\\LaravelWhereHasWithJoins\\LaravelWhereHasWithJoinsFacade"
-            }
+                "KirschbaumDevelopment\\EloquentJoins\\EloquentJoinsServiceProvider"
+            ]
         }
     }
 }

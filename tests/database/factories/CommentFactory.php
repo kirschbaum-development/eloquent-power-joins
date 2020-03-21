@@ -1,9 +1,9 @@
 <?php
 
 use Illuminate\Support\Str;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Post;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\User;
-use KirschbaumDevelopment\LaravelWhereHasWithJoins\Tests\Models\Comment;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 
 $factory->define(Comment::class, function (Faker\Generator $faker) {
     return [

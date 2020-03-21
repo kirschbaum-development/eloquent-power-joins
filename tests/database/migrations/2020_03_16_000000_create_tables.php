@@ -33,6 +33,12 @@ class CreateTables extends Migration
             $table->text('body');
             $table->timestamps();
         });
+
+        Schema::create('images', function (Blueprint $table) {
+            $table->increments('id');
+            $table->morphs('imageable');
+            $table->timestamps();
+        });
     }
 
     /**

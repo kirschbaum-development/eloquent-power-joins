@@ -8,6 +8,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Query\Builder as QueryBuilder;
+use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class EloquentJoins
 {
@@ -126,12 +127,17 @@ class EloquentJoins
 
             $relation = $this->getModel()->{$relation}();
 
-            $this->{$joinType}(
-                $relation->getModel()->getTable(),
-                sprintf('%s.%s', $relation->getModel()->getTable(), $relation->getForeignKeyName()),
-                '=',
-                $this->getModel()->getQualifiedKeyName()
-            );
+            $this->{$joinType}($relation->getModel()->getTable(), function ($join) use ($relation) {
+                $join->on(
+                    sprintf('%s.%s', $relation->getModel()->getTable(), $relation->getForeignKeyName()),
+                    '=',
+                    $this->getModel()->getQualifiedKeyName()
+                );
+
+                if ($relation instanceof MorphOneOrMany) {
+                    $join->where($relation->getMorphType(), '=', get_class($this->getModel()));
+                }
+            });
 
             return $this;
         });
@@ -159,12 +165,17 @@ class EloquentJoins
                     $relationModel = $relation->getModel();
                 }
 
-                $this->{$joinType}(
-                    $relationModel->getTable(),
-                    sprintf('%s.%s', $relationModel->getTable(), $relation->getForeignKeyName()),
-                    '=',
-                    $currentModel->getQualifiedKeyName()
-                );
+                $this->{$joinType}($relationModel->getTable(), function ($join) use ($relation, $relationModel, $currentModel) {
+                    $join->on(
+                        sprintf('%s.%s', $relationModel->getTable(), $relation->getForeignKeyName()),
+                        '=',
+                        $currentModel->getQualifiedKeyName()
+                    );
+
+                    if ($relation instanceof MorphOneOrMany) {
+                        $join->where($relation->getMorphType(), '=', get_class($currentModel));
+                    }
+                });
 
                 $latestRelation = $relation;
             }

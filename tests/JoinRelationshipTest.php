@@ -89,4 +89,31 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_join_morph_relationship()
+    {
+        $query = Post::query()->joinRelationship('images')->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_morph_nested_relationship()
+    {
+        $query = User::query()->joinRelationship('posts.images')->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            $query
+        );
+    }
 }

@@ -52,14 +52,15 @@ User::select('users.*')->joinRelationship('posts.comments')->toSql();
 
 ### Has Using Joins
 
-[Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convinient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and more performant choice, depending on how many records you have or the structure of your table.
+[Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and more performant choice, depending on how many records you have or the structure of your table.
 
 This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**.
 
 Below, you can see the methods this package implements and also the Laravel equivalent.
 
+**Laravel Native Methods**
+
 ``` php
-// Laravel native methods which uses where exists
 User::has('posts');
 User::has('posts.comments');
 User::has('posts', '>', 3);
@@ -67,8 +68,11 @@ User::whereHas('posts', function ($query) {
     $query->where('posts.published', true);
 });
 User::doesntHave('posts');
+```
 
-// Package methods which uses joins
+**Package implementations**
+
+```php
 User::hasUsingJoins('posts');
 User::hasUsingJoins('posts.comments');
 User::hasUsingJoins('posts.comments', '>', 3);

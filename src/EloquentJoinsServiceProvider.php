@@ -11,8 +11,6 @@ class EloquentJoinsServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-
-
         if ($this->app->runningInConsole()) {
             $this->publishes([
                 __DIR__.'/../config/config.php' => config_path('laravel-where-has-with-joins.php'),

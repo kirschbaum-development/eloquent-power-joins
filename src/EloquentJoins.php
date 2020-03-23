@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class EloquentJoins
 {
+    /**
+     * Register macros with Eloquent.
+     */
     public static function registerEloquentMacros()
     {
         static::registerJoinRelationshipFunctions();
@@ -19,6 +22,9 @@ class EloquentJoins
         static::registerWhereHasFunctions();
     }
 
+    /**
+     * Register 'has' methods.
+     */
     protected static function registerHasFunctions()
     {
         Builder::macro('hasUsingJoins', function ($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {
@@ -80,6 +86,9 @@ class EloquentJoins
         });
     }
 
+    /**
+     * Register 'whereHas' methods.
+     */
     protected static function registerWhereHasFunctions()
     {
         QueryBuilder::macro('getGroupBy', function () {
@@ -118,6 +127,9 @@ class EloquentJoins
         });
     }
 
+    /**
+     * Register 'joinRelationship' methods.
+     */
     protected static function registerJoinRelationshipFunctions()
     {
         Builder::macro('joinRelationship', function ($relation, $joinType = 'join') {

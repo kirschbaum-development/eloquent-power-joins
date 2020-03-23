@@ -5,7 +5,7 @@
 <!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/laravel-where-has-with-joins) -->
 <!-- [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins) -->
 
-Joins are very useful in a lot of ways. If you are here, you probably know them. This package gives you some extra powers to make your joins more readable and make you write less code, hidding some implementation details from places they don't need to be exposed.
+Joins are very useful in a lot of ways. If you are here, you most likely know about and use them. This package gives you some extra powers making your joins more readable with less code while hiding implementation details from places they don't need to be exposed.
 
 ## Installation
 
@@ -17,42 +17,44 @@ composer require kirschbaum-development/eloquent-joins-with-extra-powers
 
 ## Usage
 
-This package provide a few different methods you can use.
+This package provides a few different methods you can use.
 
 ### Join Relationship
 
-Let's say you have an `User` model, which has a `hasMany` relationship with the `Post` model. If you want to join the tables, you would usually write something like:
+Let's say you have a `User` model with a `hasMany` relationship to the `Post` model. If you want to join the tables, you would usually write something like:
 
 ```php
 User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id')->toSql();
 // select users.* from users inner join "posts" on "posts"."user_id" = "users"."id"
 ```
 
-This package provides you the `joinRelationship` method.
+This package provides you with a new `joinRelationship()` method:
 
 ```php
 User::select('users.*')->joinRelationship('posts')->toSql();
 // select users.* from users inner join "posts" on "posts"."user_id" = "users"."id"
 ```
 
-And you have the same results. In terms of code, you didn't save much, but you are now using the relationship between users and posts do join the tables. This means that you are now hiding how this relationship work behind the scenes (implementation details), you also don't need to change the code if the relationship type changes and you have a more readable and less overwhelming code.
+Both options produce the same results. In terms of code, you didn't save much, but you are now using the relationship between users and posts do join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
 
-But, **it gets better** when you need to **join nested relationships**. Let's say you also have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
+But, **it gets better** when you need to **join nested relationships**. Let's assume you have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
 
 ```php
 User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id')->join('posts', 'posts.user_id', '=', 'users.id')->toSql();
 // select users.* from users inner join "posts" on "posts"."user_id" = "users"."id" inner join "comments" on "comments"."post_id" = "posts"."id"
 ```
 
-But, instead of writting all this, you can just write:
+Instead of writing all this, you can simply write:
 
 ```php
 User::select('users.*')->joinRelationship('posts.comments')->toSql();
 ```
 
+So much better, wouldn't you agree?!
+
 ### Has Using Joins
 
-[Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and more performant choice, depending on how many records you have or the structure of your table.
+[Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and may not be the more performant choice, depending on how many records you have or the structure of your tables.
 
 This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**.
 

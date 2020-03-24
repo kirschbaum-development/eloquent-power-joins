@@ -5,7 +5,7 @@
 <!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/laravel-where-has-with-joins) -->
 <!-- [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins) -->
 
-Joins are very useful in a lot of ways. If you are here, you most likely know about and use them. This package gives you some extra powers making your joins more readable with less code while hiding implementation details from places they don't need to be exposed.
+Joins are very useful in a lot of ways. If you are here, you most likely know about and use them. Eloquent is very powerful, but it lacks a bit of the "Laravel way" when using joins. This package make your joins in a more Laravel way, with more readable with less code while hiding implementation details from places they don't need to be exposed.
 
 ## Installation
 
@@ -14,6 +14,8 @@ You can install the package via composer:
 ```bash
 composer require kirschbaum-development/eloquent-joins-with-extra-powers
 ```
+
+And that's it, you are ready to use the package.
 
 ## Usage
 

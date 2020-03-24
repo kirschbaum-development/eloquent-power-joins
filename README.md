@@ -1,4 +1,4 @@
-# Eloquent Joins with Extra Powers
+# Eloquent Super Joins
 
 <!-- [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins) -->
 [![Actions Status](https://github.com/kirschbaum-development/laravel-where-has-with-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/laravel-where-has-with-joins/actions)
@@ -57,7 +57,30 @@ User::select('users.*')->leftJoinRelationship('posts.comments')->toSql();
 User::select('users.*')->rightJoinRelationship('posts.comments')->toSql();
 ```
 
-### Has Using Joins
+**Applying conditions to the join**
+
+Now, let's say you want to apply a condition to the join you are making.
+
+```php
+User::select('users.*')->joinRelationship('posts', function ($join) {
+    $join->where('posts.approved', true);
+})->toSql();
+```
+
+You simply need to pass a callback as the second parameter to the `joinRelationship` method. And, for nested relationship, pass an array referencing the relation name.
+
+```php
+User::select('users.*')->joinRelationship('posts.comments', [
+    'posts' => function ($join) {
+        $join->where('posts.published', true);
+    },
+    'comments' => function ($join) {
+        $join->where('comments.approved', true);
+    }
+])->toSql();
+```
+
+### Querying relationship existence (Using Joins)
 
 [Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and may not be the more performant choice, depending on how many records you have or the structure of your tables.
 

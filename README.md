@@ -50,7 +50,12 @@ Instead of writing all this, you can simply write:
 User::select('users.*')->joinRelationship('posts.comments')->toSql();
 ```
 
-So much better, wouldn't you agree?!
+So much better, wouldn't you agree?! You can also `left` or `right` join the relationships.
+
+```php
+User::select('users.*')->leftJoinRelationship('posts.comments')->toSql();
+User::select('users.*')->rightJoinRelationship('posts.comments')->toSql();
+```
 
 ### Has Using Joins
 

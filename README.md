@@ -1,4 +1,4 @@
-# Eloquent Super Joins
+# Eloquent Power Joins
 
 <!-- [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins) -->
 [![Actions Status](https://github.com/kirschbaum-development/laravel-where-has-with-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/laravel-where-has-with-joins/actions)
@@ -12,7 +12,7 @@ Joins are very useful in a lot of ways. If you are here, you most likely know ab
 You can install the package via composer:
 
 ```bash
-composer require kirschbaum-development/eloquent-joins-with-extra-powers
+composer require kirschbaum-development/eloquent-power-joins
 ```
 
 And that's it, you are ready to use the package.

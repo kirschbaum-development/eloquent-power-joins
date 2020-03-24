@@ -1,5 +1,5 @@
 {
-    "name": "kirschbaum-development/eloquent-joins-with-extra-powers",
+    "name": "kirschbaum-development/eloquent-power-joins",
     "description": "Laravel whereHas, but using joins.",
     "keywords": [
         "laravel",
@@ -7,7 +7,7 @@
         "mysql",
         "join"
     ],
-    "homepage": "https://github.com/kirschbaum-development/eloquent-joins-with-extra-powers",
+    "homepage": "https://github.com/kirschbaum-development/eloquent-power-joins",
     "license": "MIT",
     "type": "library",
     "authors": [

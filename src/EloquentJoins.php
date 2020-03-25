@@ -3,13 +3,13 @@
 namespace KirschbaumDevelopment\EloquentJoins;
 
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship;
 use Illuminate\Database\Eloquent\Builder as EloquentQueryBuilder;
 use KirschbaumDevelopment\EloquentJoins\Mixins\HasManyExtraMethods;
 use KirschbaumDevelopment\EloquentJoins\Mixins\QueryBuilderExtraMethods;
-use KirschbaumDevelopment\EloquentJoins\Mixins\BelongsToManyExtraMethods;
+use KirschbaumDevelopment\EloquentJoins\Mixins\RelationshipsExtraMethods;
 use KirschbaumDevelopment\EloquentJoins\Mixins\QueryRelationshipExistence;
 
 class EloquentJoins
@@ -23,7 +23,6 @@ class EloquentJoins
         EloquentQueryBuilder::mixin(new QueryRelationshipExistence);
         QueryBuilder::mixin(new QueryBuilderExtraMethods);
 
-        HasMany::mixin(new HasManyExtraMethods);
-        BelongsToMany::mixin(new BelongsToManyExtraMethods);
+        Relation::mixin(new RelationshipsExtraMethods);
     }
 }

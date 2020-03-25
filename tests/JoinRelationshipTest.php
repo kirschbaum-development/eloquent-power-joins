@@ -152,4 +152,17 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_join_belongs_to_many()
+    {
+        $this->markTestIncomplete('TODO');
+        $query = User::query()->joinRelationship('groups')->toSql();
+        dd($query);
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+    }
 }

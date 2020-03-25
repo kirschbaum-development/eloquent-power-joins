@@ -16,8 +16,6 @@ jobs:
                         testbench: 5.*
                     -   laravel: 6.*
                         testbench: 4.*
-                    -   laravel: 5.8
-                        testbench: 3.8
 
         name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 

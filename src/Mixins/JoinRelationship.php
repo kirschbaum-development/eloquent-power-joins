@@ -3,6 +3,7 @@
 namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class JoinRelationship
@@ -15,22 +16,7 @@ class JoinRelationship
             }
 
             $relation = $this->getModel()->{$relation}();
-
-            $this->{$joinType}($relation->getModel()->getTable(), function ($join) use ($relation, $callback) {
-                $join->on(
-                    sprintf('%s.%s', $relation->getModel()->getTable(), $relation->getForeignKeyName()),
-                    '=',
-                    $this->getModel()->getQualifiedKeyName()
-                );
-
-                if ($relation instanceof MorphOneOrMany) {
-                    $join->where($relation->getMorphType(), '=', get_class($this->getModel()));
-                }
-
-                if ($callback && is_callable($callback)) {
-                    $callback($join);
-                }
-            });
+            $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback);
 
             return $this;
         };
@@ -65,6 +51,10 @@ class JoinRelationship
                     $currentModel = $latestRelation->getModel();
                     $relation = $currentModel->{$relationName}();
                     $relationModel = $relation->getModel();
+                }
+
+                if ($relation instanceof BelongsToMany) {
+                    throw new Exception('Joining nested relationships with BelongsToMany currently is not implemented');
                 }
 
                 $this->{$joinType}($relationModel->getTable(), function ($join) use ($relation, $relationName, $relationModel, $currentModel, $callback) {

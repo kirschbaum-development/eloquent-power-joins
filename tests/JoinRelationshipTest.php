@@ -156,12 +156,15 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_join_belongs_to_many()
     {
-        $this->markTestIncomplete('TODO');
         $query = User::query()->joinRelationship('groups')->toSql();
-        dd($query);
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            'inner join "group_members" on "group_members"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "groups" on "groups"."id" = "group_members"."group_id"',
             $query
         );
     }

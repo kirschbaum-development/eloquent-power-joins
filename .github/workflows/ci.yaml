@@ -10,14 +10,14 @@ jobs:
             fail-fast: true
             matrix:
                 php: [7.3, 7.4]
-                laravel: [6.*, 7.*]
+                laravel: [5.8, 6.*, 7.*]
                 include:
                     -   laravel: 7.*
                         testbench: 5.*
                     -   laravel: 6.*
                         testbench: 4.*
 
-        name: P${{ matrix.php }} - L${{ matrix.laravel }} - ${{ matrix.dependency-version }}
+        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
         steps:
             -   name: Checkout code

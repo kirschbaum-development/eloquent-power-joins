@@ -1,9 +1,9 @@
 # Eloquent Power Joins
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins)
-[![Actions Status](https://github.com/kirschbaum-development/laravel-where-has-with-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/laravel-where-has-with-joins/actions)
-<!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/laravel-where-has-with-joins) -->
-[![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/laravel-where-has-with-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/laravel-where-has-with-joins)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
+[![Actions Status](https://github.com/kirschbaum-development/eloquent-power-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions)
+[![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
+<!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins) -->
 
 Joins are very useful in a lot of ways. If you are here, you most likely know about and use them. Eloquent is very powerful, but it lacks a bit of the "Laravel way" when using joins. This package make your joins in a more Laravel way, with more readable with less code while hiding implementation details from places they don't need to be exposed.
 

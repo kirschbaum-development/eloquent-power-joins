@@ -23,7 +23,7 @@
         "illuminate/database": "^5.8|^6.0|^7.0"
     },
     "require-dev": {
-        "orchestra/testbench": "4.*|5.*",
+        "orchestra/testbench": "3.8.*|4.*|5.*",
         "phpunit/phpunit": "^8.0"
     },
     "autoload": {

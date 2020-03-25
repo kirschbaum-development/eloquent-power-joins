@@ -5,6 +5,7 @@ namespace KirschbaumDevelopment\EloquentJoins\Tests;
 use Illuminate\Database\Eloquent\Builder;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Group;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 
 class HasUsingJoinsTest extends TestCase
@@ -17,6 +18,17 @@ class HasUsingJoinsTest extends TestCase
 
         $this->assertCount(1, User::has('posts')->get());
         $this->assertCount(1, User::hasUsingJoins('posts')->get());
+    }
+
+    /** @test */
+    public function test_has_using_joins_on_belongs_to_many()
+    {
+        [$user1, $user2] = factory(User::class)->times(2)->create();
+        $group = factory(Group::class)->create();
+        $user1->groups()->attach($group);
+
+        $this->assertCount(1, User::has('groups')->get());
+        $this->assertCount(1, User::hasUsingJoins('groups')->get());
     }
 
     /** @test */

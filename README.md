@@ -114,11 +114,16 @@ User::whereHasUsingJoins('posts', function ($query) {
 User::doesntHaveUsingJoins('posts');
 ```
 
-### Testing
+### Order by
 
-``` bash
-composer test
+You can also sort your query results using a column from another table using the `orderByUsingJoins` method.
+
+```php
+User::select('users.*')->orderByUsingJoins('profile.city')->toSql();
+// select "users".* from "users" inner join "user_profiles" on "user_profiles"."user_id" = "users"."id" order by "user_profiles"."city" asc
 ```
+
+***
 
 ## Contributing
 

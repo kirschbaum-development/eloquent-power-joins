@@ -89,4 +89,25 @@ class JoinRelationship
             return $this;
         };
     }
+
+    /**
+     * Order by a field in the defined relationship.
+     */
+    public function orderByUsingJoins()
+    {
+        return function ($sort) {
+            $relationships = explode('.', $sort);
+            $sort = array_pop($relationships);
+            $lastRelationship = $relationships[count($relationships) - 1];
+
+            $this->joinRelationship(implode('.', $relationships));
+
+            tap(array_pop($relationships), function ($latestRelation) use ($sort) {
+                $table = $this->getModel()->$latestRelation()->getModel()->getTable();
+                $this->orderBy(sprintf('%s.%s', $table, $sort));
+            });
+
+            return $this;
+        };
+    }
 }

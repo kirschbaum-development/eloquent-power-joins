@@ -1,6 +1,6 @@
 {
     "name": "kirschbaum-development/eloquent-power-joins",
-    "description": "Laravel whereHas, but using joins.",
+    "description": "The Laravel magic applied to joins.",
     "keywords": [
         "laravel",
         "eloquent",

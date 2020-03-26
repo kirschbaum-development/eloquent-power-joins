@@ -37,14 +37,14 @@ User::select('users.*')->joinRelationship('posts')->toSql();
 // select users.* from users inner join "posts" on "posts"."user_id" = "users"."id"
 ```
 
-Both options produce the same results. In terms of code, you didn't save much, but you are now using the relationship between users and posts do join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
+Both options produce the same results. In terms of code, you didn't save much, but you are now using the relationship between users and posts to join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
 
 But, **it gets better** when you need to **join nested relationships**. Let's assume you have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
 
 ```php
 User::select('users.*')
     ->join('posts', 'posts.user_id', '=', 'users.id')
-    ->join('posts', 'posts.user_id', '=', 'users.id')
+    ->join('comments', 'comments.post_id', '=', 'posts.id')
     ->toSql();
 // select users.* from users inner join "posts" on "posts"."user_id" = "users"."id" inner join "comments" on "comments"."post_id" = "posts"."id"
 ```

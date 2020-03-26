@@ -188,4 +188,35 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_it_doesnt_join_the_same_relationship_twice()
+    {
+        $query = User::query()
+            ->select('users.*')
+            ->joinRelationship('posts.comments')
+            ->joinRelationship('posts.images')
+            ->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertEquals(
+            1,
+            substr_count($query, 'inner join "posts" on "posts"."user_id" = "users"."id"'),
+            'It should only make 1 join with the posts table'
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            $query
+        );
+    }
 }

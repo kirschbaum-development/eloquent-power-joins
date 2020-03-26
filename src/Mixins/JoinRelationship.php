@@ -8,6 +8,13 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class JoinRelationship
 {
+    /**
+     * Cache to not join the same relationship twice.
+     *
+     * @var array
+     */
+    public static $joinRelationshipCache = [];
+
     public function joinRelationship()
     {
         return function ($relation, $callback = null, $joinType = 'join') {
@@ -53,6 +60,11 @@ class JoinRelationship
                     $relationModel = $relation->getModel();
                 }
 
+                if (isset(JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relationName])) {
+                    $latestRelation = $relation;
+                    continue;
+                }
+
                 if ($relation instanceof BelongsToMany) {
                     throw new Exception('Joining nested relationships with BelongsToMany currently is not implemented');
                 }
@@ -74,6 +86,7 @@ class JoinRelationship
                 });
 
                 $latestRelation = $relation;
+                JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relationName] = true;
             }
 
             return $this;

@@ -42,7 +42,10 @@ Both options produce the same results. In terms of code, you didn't save much, b
 But, **it gets better** when you need to **join nested relationships**. Let's assume you have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
 
 ```php
-User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id')->join('posts', 'posts.user_id', '=', 'users.id')->toSql();
+User::select('users.*')
+    ->join('posts', 'posts.user_id', '=', 'users.id')
+    ->join('posts', 'posts.user_id', '=', 'users.id')
+    ->toSql();
 // select users.* from users inner join "posts" on "posts"."user_id" = "users"."id" inner join "comments" on "comments"."post_id" = "posts"."id"
 ```
 
@@ -120,7 +123,8 @@ You can also sort your query results using a column from another table using the
 
 ```php
 User::select('users.*')->orderByUsingJoins('profile.city')->toSql();
-// select "users".* from "users" inner join "user_profiles" on "user_profiles"."user_id" = "users"."id" order by "user_profiles"."city" asc
+// select "users".* from "users" inner join "user_profiles" on "user_profiles"."user_id" = "users"."id"
+// order by "user_profiles"."city" asc
 ```
 
 ***

@@ -62,19 +62,29 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForBelongsToMany()
     {
         return function ($builder, $joinType, $callback) {
-            $builder->{$joinType}(
-                $this->getTable(),
-                $this->getQualifiedForeignPivotKeyName(),
-                '=',
-                $this->getQualifiedParentKeyName()
-            );
+            $builder->{$joinType}($this->getTable(), function ($join) use ($callback) {
+                $join->on(
+                    $this->getQualifiedForeignPivotKeyName(),
+                    '=',
+                    $this->getQualifiedParentKeyName()
+                );
 
-            $builder->{$joinType}(
-                $this->getModel()->getTable(),
-                sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()),
-                '=',
-                $this->getQualifiedRelatedPivotKeyName()
-            );
+                if (is_array($callback) && isset($callback[$this->getTable()])) {
+                    $callback[$this->getTable()]($join);
+                }
+            });
+
+            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback) {
+                $join->on(
+                    sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()),
+                    '=',
+                    $this->getQualifiedRelatedPivotKeyName()
+                );
+
+                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                    $callback[$this->getModel()->getTable()]($join);
+                }
+            });
 
             return $this;
         };

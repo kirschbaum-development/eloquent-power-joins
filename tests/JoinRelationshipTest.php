@@ -168,4 +168,24 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_join_belongs_to_many_with_callback()
+    {
+        $query = User::query()->joinRelationship('groups', [
+            'groups' => function ($join) {
+                $join->where('groups.name', 'Test');
+            },
+        ])->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "group_members" on "group_members"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "groups" on "groups"."id" = "group_members"."group_id" and "groups"."name" = ?',
+            $query
+        );
+    }
 }

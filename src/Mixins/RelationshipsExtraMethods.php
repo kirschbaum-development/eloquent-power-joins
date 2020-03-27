@@ -3,6 +3,8 @@
 namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
@@ -18,8 +20,10 @@ class RelationshipsExtraMethods
                 return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback);
             } elseif ($this instanceof MorphOneOrMany) {
                 $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback);
-            } else {
+            } elseif ($this instanceof HasMany || $this instanceof HasOne) {
                 return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback);
+            } else {
+                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback);
             }
         };
     }
@@ -33,6 +37,26 @@ class RelationshipsExtraMethods
             $builder
                 ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
                 ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
+        };
+    }
+
+    /**
+     * Perform the JOIN clause for the BelongsTo (or similar) relationships.
+     */
+    protected function performJoinForEloquentPowerJoinsForBelongsTo()
+    {
+        return function ($builder, $joinType, $callback) {
+            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
+                $join->on(
+                    $this->parent->getTable().'.'.$this->foreignKey,
+                    '=',
+                    $this->query->getModel()->getTable().'.'.$this->ownerKey
+                );
+
+                if ($callback && is_callable($callback)) {
+                    $callback($join);
+                }
+            });
         };
     }
 

@@ -219,4 +219,19 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_it_join_belongs_to_relationship()
+    {
+        $posts = factory(Post::class)->times(2)->create();
+
+        $queriesPosts = Post::query()
+            ->select('posts.id', 'users.name')
+            ->joinRelationship('user')
+            ->get();
+
+        $this->assertCount(2, $queriesPosts);
+        $this->assertEquals($posts->get(0)->user->name, $queriesPosts->get(0)->name);
+        $this->assertEquals($posts->get(1)->user->name, $queriesPosts->get(1)->name);
+    }
 }

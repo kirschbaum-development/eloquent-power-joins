@@ -3,12 +3,15 @@
 namespace KirschbaumDevelopment\EloquentJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class User extends Model
 {
+    use SoftDeletes;
+
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id');

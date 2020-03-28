@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Builder;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipTest extends TestCase
 {
@@ -238,7 +239,11 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_it_join_nested_belongs_to_relationship()
     {
-        [$comment1, $comment2] = factory(Comment::class, 2)->create();
+        [$comment1, $comment2, $comment3] = factory(Comment::class, 3)->create();
+
+        // deleting this user, which will make the user soft deleted
+        // this should make the user NOT come in the query, since we are INNER JOINING
+        $comment3->post->user->delete();
 
         $comments = Comment::query()
             ->select('posts.title', 'users.name')
@@ -248,5 +253,16 @@ class JoinRelationshipTest extends TestCase
         $this->assertCount(2, $comments);
         $this->assertEquals($comment1->post->user->name, $comments->get(0)->name);
         $this->assertEquals($comment2->post->user->name, $comments->get(1)->name);
+    }
+
+    /** @test */
+    public function test_join_model_with_soft_deletes()
+    {
+        $query = UserProfile::query()->joinRelationship('user')->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "users" on "user_profiles"."user_id" = "users"."id" and "users"."deleted_at" is null',
+            $query
+        );
     }
 }

@@ -17,6 +17,7 @@ class CreateTables extends Migration
             $table->increments('id');
             $table->string('name');
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('user_profiles', function (Blueprint $table) {

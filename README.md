@@ -93,6 +93,14 @@ User::select('users.*')->joinRelationship('posts.comments', [
 ]);
 ```
 
+**Soft deletes**
+
+When joining any models which uses the `SoftDeletes` trait, the following condition will be also automatically applied to all your joins:
+
+```sql
+and "users"."deleted_at" is null
+```
+
 ### 2 - Querying relationship existence (Using Joins)
 
 [Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and may not be the more performant choice, depending on how many records you have or the structure of your tables.

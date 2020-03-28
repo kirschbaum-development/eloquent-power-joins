@@ -3,6 +3,7 @@
 namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Illuminate\Support\Str;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -41,6 +42,10 @@ class RelationshipsExtraMethods
                     $this->query->getModel()->getTable().'.'.$this->ownerKey
                 );
 
+                if ($this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                }
+
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
@@ -60,6 +65,10 @@ class RelationshipsExtraMethods
                     '=',
                     $this->parent->getTable().'.'.$this->localKey
                 );
+
+                if ($this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                }
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
@@ -93,6 +102,10 @@ class RelationshipsExtraMethods
                     $this->getQualifiedRelatedPivotKeyName()
                 );
 
+                if ($this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                }
+
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
                 }
@@ -115,6 +128,10 @@ class RelationshipsExtraMethods
                     $this->parent->getTable().'.'.$this->localKey
                 )->where($this->getMorphType(), '=', get_class($this->getModel()));
 
+                if ($this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                }
+
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
@@ -133,6 +150,19 @@ class RelationshipsExtraMethods
             $builder
                 ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
                 ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
+        };
+    }
+
+    /**
+     * Checks if the relationship model uses soft deletes.
+     *
+     * @param \Illuminate\Database\Eloquent\Model $model
+     * @return bool
+     */
+    public function usesSoftDeletes()
+    {
+        return function ($model) {
+            return in_array(SoftDeletes::class, class_uses_recursive($model));
         };
     }
 }

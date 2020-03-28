@@ -129,7 +129,7 @@ First thing to be aware here, is that the below example is one use-case where us
 
 That said, below you can see one example of the MySQL CPU usage after deploying a change to use `hasUsingJoins` instead of `has`, in one of our client's application. MySQL was running on RDS, and this image was took from AWS CloudWatch.
 
-![MySQL CPU Graph](screenshots/mysql-performance-graph.png "MySQL CPU Graph")
+![MySQL CPU Graph](screenshots/mysql-cpu-graph.png "MySQL CPU Graph")
 
 Below, you can see the methods this package implements and also the Laravel equivalent.
 

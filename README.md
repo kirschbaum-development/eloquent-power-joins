@@ -23,50 +23,56 @@ And that's it, you are ready to use the package.
 
 This package provides a few different methods you can use.
 
-### Join Relationship
+### 1 - Join Relationship
 
 Let's say you have a `User` model with a `hasMany` relationship to the `Post` model. If you want to join the tables, you would usually write something like:
 
 ```php
-User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id')->toSql();
-// select users.* from users inner join "posts" on "posts"."user_id" = "users"."id"
+User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id')->...();
 ```
 
-This package provides you with a new `joinRelationship()` method:
+This package provides you with a new `joinRelationship()` method, which does the exact same thing.
 
 ```php
 User::select('users.*')->joinRelationship('posts')->toSql();
-// select users.* from users inner join "posts" on "posts"."user_id" = "users"."id"
 ```
 
-Both options produce the same results. In terms of code, you didn't save much, but you are now using the relationship between users and posts to join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
+Both options produce the same results. In terms of code, you didn't save much, but you are now using the relationship between the `User` and the `Post` models to join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
 
-But, **it gets better** when you need to **join nested relationships**. Let's assume you have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
+But, **it gets better** when you need to **join nested relationships**. Let's assume you also have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
 
 ```php
 User::select('users.*')
     ->join('posts', 'posts.user_id', '=', 'users.id')
-    ->join('comments', 'comments.post_id', '=', 'posts.id')
-    ->toSql();
-// select users.* from users inner join "posts" on "posts"."user_id" = "users"."id" inner join "comments" on "comments"."post_id" = "posts"."id"
+    ->join('comments', 'comments.post_id', '=', 'posts.id');
 ```
 
 Instead of writing all this, you can simply write:
 
 ```php
-User::select('users.*')->joinRelationship('posts.comments')->toSql();
+User::select('users.*')->joinRelationship('posts.comments');
 ```
 
-So much better, wouldn't you agree?! You can also `left` or `right` join the relationships.
+So much better, wouldn't you agree?! You can also `left` or `right` join the relationships as needed.
 
 ```php
-User::select('users.*')->leftJoinRelationship('posts.comments')->toSql();
-User::select('users.*')->rightJoinRelationship('posts.comments')->toSql();
+User::select('users.*')->leftJoinRelationship('posts.comments');
+User::select('users.*')->rightJoinRelationship('posts.comments');
 ```
 
-**Applying conditions to the join**
+**Joining polymorphic relationships**
 
-Now, let's say you want to apply a condition to the join you are making.
+Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you also need to apply the `where imageable_type = Image::class` condition, otherwise you could get messy results.
+
+Turns out, if you join a polymorphic relationship, Eloquent Power Joins automatically applies this condition for you. You simply need to call the same method.
+
+```php
+Post::select('posts.*')->joinRelationship('images');
+```
+
+**Applying conditions & callbacks to the joins**
+
+Now, let's say you want to apply a condition to the join you are making. You simply need to pass a callback as the second parameter to the `joinRelationship` method.
 
 ```php
 User::select('users.*')->joinRelationship('posts', function ($join) {
@@ -74,7 +80,7 @@ User::select('users.*')->joinRelationship('posts', function ($join) {
 })->toSql();
 ```
 
-You simply need to pass a callback as the second parameter to the `joinRelationship` method. And, for nested relationship, pass an array referencing the relation name.
+For nested calls and for `BelongsToMany` relationships (where two tables are joined), you simply need pass an array referencing the relationship names.
 
 ```php
 User::select('users.*')->joinRelationship('posts.comments', [
@@ -84,10 +90,10 @@ User::select('users.*')->joinRelationship('posts.comments', [
     'comments' => function ($join) {
         $join->where('comments.approved', true);
     }
-])->toSql();
+]);
 ```
 
-### Querying relationship existence (Using Joins)
+### 2 - Querying relationship existence (Using Joins)
 
 [Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and may not be the more performant choice, depending on how many records you have or the structure of your tables.
 
@@ -119,7 +125,7 @@ User::whereHasUsingJoins('posts', function ($query) {
 User::doesntHaveUsingJoins('posts');
 ```
 
-### Order by
+### 3 - Order by
 
 You can also sort your query results using a column from another table using the `orderByUsingJoins` method.
 

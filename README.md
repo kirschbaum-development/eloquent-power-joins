@@ -123,6 +123,14 @@ and "users"."deleted_at" is null
 
 This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**.
 
+**Performance**
+
+First thing to be aware here, is that the below example is one use-case where using `joins` over `where exists` is a lot more performant. You shouldn't assume this is true out of the box, and you should use tools like [Laravel Debugbar](https://github.com/barryvdh/laravel-debugbar) or [Laravel Telescope](https://laravel.com/docs/7.x/telescope) and figure out what's best for YOUR use-case.
+
+That said, below you can see one example of the MySQL CPU usage after deploying a change to use `hasUsingJoins` instead of `has`, in one of our client's application. MySQL was running on RDS, and this image was took from AWS CloudWatch.
+
+![MySQL CPU Graph](screenshots/mysql-performance-graph.png "MySQL CPU Graph")
+
 Below, you can see the methods this package implements and also the Laravel equivalent.
 
 **Laravel Native Methods**
@@ -137,7 +145,7 @@ User::whereHas('posts', function ($query) {
 User::doesntHave('posts');
 ```
 
-**Package implementations**
+**Package equivalent, but using joins**
 
 ```php
 User::hasUsingJoins('posts');

@@ -100,10 +100,6 @@ class JoinRelationship
                     continue;
                 }
 
-                if ($relation instanceof BelongsToMany) {
-                    throw new Exception('Joining nested relationships with BelongsToMany currently is not implemented');
-                }
-
                 $relation->performJoinForEloquentPowerJoins(
                     $this,
                     $joinType,

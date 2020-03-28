@@ -5,6 +5,8 @@
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 <!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins) -->
 
+The Laravel magic you know, now applied to joins.
+
 Joins are very useful in a lot of ways. If you are here, you most likely know about and use them. Eloquent is very powerful, but it lacks a bit of the "Laravel way" when using joins. This package make your joins in a more Laravel way, with more readable with less code while hiding implementation details from places they don't need to be exposed.
 
 ## Installation

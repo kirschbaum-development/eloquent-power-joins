@@ -15,28 +15,16 @@ class RelationshipsExtraMethods
      */
     public function performJoinForEloquentPowerJoins()
     {
-        return function ($builder, $joinType = 'leftJoin', $callback = null) {
+        return function ($builder, $joinType = 'leftJoin', $callback = null, $previousRelation = null) {
             if ($this instanceof BelongsToMany) {
-                return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $previousRelation);
             } elseif ($this instanceof MorphOneOrMany) {
-                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback);
+                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $previousRelation);
             } elseif ($this instanceof HasMany || $this instanceof HasOne) {
-                return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $previousRelation);
             } else {
-                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $previousRelation);
             }
-        };
-    }
-
-    /**
-     * Perform the "HAVING" clause for eloquent power joins.
-     */
-    public function performHavingForEloquentPowerJoins()
-    {
-        return function ($builder, $operator, $count) {
-            $builder
-                ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
-                ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
         };
     }
 
@@ -45,7 +33,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForBelongsTo()
     {
-        return function ($builder, $joinType, $callback) {
+        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on(
                     $this->parent->getTable().'.'.$this->foreignKey,
@@ -65,7 +53,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForHasMany()
     {
-        return function ($builder, $joinType, $callback) {
+        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on(
                     $this->foreignKey,
@@ -85,7 +73,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForBelongsToMany()
     {
-        return function ($builder, $joinType, $callback) {
+        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback) {
                 $join->on(
                     $this->getQualifiedForeignPivotKeyName(),
@@ -119,7 +107,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForMorph()
     {
-        return function ($builder, $joinType, $callback) {
+        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
             $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on(
                     sprintf('%s.%s', $this->getModel()->getTable(), $this->getForeignKeyName()),
@@ -133,6 +121,18 @@ class RelationshipsExtraMethods
             });
 
             return $this;
+        };
+    }
+
+    /**
+     * Perform the "HAVING" clause for eloquent power joins.
+     */
+    public function performHavingForEloquentPowerJoins()
+    {
+        return function ($builder, $operator, $count) {
+            $builder
+                ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
+                ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
         };
     }
 }

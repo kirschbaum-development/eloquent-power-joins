@@ -17,13 +17,19 @@ class JoinRelationship
 
     public function joinRelationship()
     {
-        return function ($relation, $callback = null, $joinType = 'join') {
-            if (Str::contains($relation, '.')) {
-                return $this->joinNestedRelationship($relation, $callback, $joinType);
+        return function ($relationName, $callback = null, $joinType = 'join') {
+            if (Str::contains($relationName, '.')) {
+                return $this->joinNestedRelationship($relationName, $callback, $joinType);
             }
 
-            $relation = $this->getModel()->{$relation}();
+            if ($this->relationshipAlreadyJoined($relationName)) {
+                return $this;
+            }
+
+            $relation = $this->getModel()->{$relationName}();
             $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback);
+
+            $this->markRelationshipAsAlreadyJoined($relationName);
 
             return $this;
         };
@@ -43,6 +49,9 @@ class JoinRelationship
         };
     }
 
+    /**
+     * Join nested relationships.
+     */
     public function joinNestedRelationship()
     {
         return function ($relations, $callback = null, $joinType = 'join') {
@@ -50,17 +59,15 @@ class JoinRelationship
             $latestRelation = null;
 
             foreach ($relations as $index => $relationName) {
-                if (! $latestRelation) {
-                    $currentModel = $this->getModel();
-                    $relation = $currentModel->{$relationName}();
-                    $relationModel = $relation->getModel();
-                } else {
-                    $currentModel = $latestRelation->getModel();
-                    $relation = $currentModel->{$relationName}();
-                    $relationModel = $relation->getModel();
+                $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
+                $relation = $currentModel->{$relationName}();
+                $relationCallback = null;
+
+                if ($callback && is_array($callback) && isset($callback[$relationName])) {
+                    $relationCallback = $callback[$relationName];
                 }
 
-                if (isset(JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relationName])) {
+                if ($this->relationshipAlreadyJoined($relationName)) {
                     $latestRelation = $relation;
                     continue;
                 }
@@ -69,24 +76,14 @@ class JoinRelationship
                     throw new Exception('Joining nested relationships with BelongsToMany currently is not implemented');
                 }
 
-                $this->{$joinType}($relationModel->getTable(), function ($join) use ($relation, $relationName, $relationModel, $currentModel, $callback) {
-                    $join->on(
-                        sprintf('%s.%s', $relationModel->getTable(), $relation->getForeignKeyName()),
-                        '=',
-                        $currentModel->getQualifiedKeyName()
-                    );
-
-                    if ($relation instanceof MorphOneOrMany) {
-                        $join->where($relation->getMorphType(), '=', get_class($currentModel));
-                    }
-
-                    if ($callback && is_array($callback) && isset($callback[$relationName])) {
-                        $callback[$relationName]($join);
-                    }
-                });
+                $relation->performJoinForEloquentPowerJoins(
+                    $this,
+                    $joinType,
+                    $relationCallback
+                );
 
                 $latestRelation = $relation;
-                JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relationName] = true;
+                $this->markRelationshipAsAlreadyJoined($relationName);
             }
 
             return $this;
@@ -111,6 +108,26 @@ class JoinRelationship
             });
 
             return $this;
+        };
+    }
+
+    /**
+     * Checks if the relationship was already joined.
+     */
+    public function relationshipAlreadyJoined()
+    {
+        return function ($relation) {
+            return isset(JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relation]);
+        };
+    }
+
+    /**
+     * Marks the relationship as already joined.
+     */
+    public function markRelationshipAsAlreadyJoined()
+    {
+        return function ($relation) {
+            JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relation] = true;
         };
     }
 }

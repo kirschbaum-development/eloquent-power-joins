@@ -234,4 +234,19 @@ class JoinRelationshipTest extends TestCase
         $this->assertEquals($posts->get(0)->user->name, $queriesPosts->get(0)->name);
         $this->assertEquals($posts->get(1)->user->name, $queriesPosts->get(1)->name);
     }
+
+    /** @test */
+    public function test_it_join_nested_belongs_to_relationship()
+    {
+        [$comment1, $comment2] = factory(Comment::class, 2)->create();
+
+        $comments = Comment::query()
+            ->select('posts.title', 'users.name')
+            ->joinRelationship('post.user')
+            ->get();
+
+        $this->assertCount(2, $comments);
+        $this->assertEquals($comment1->post->user->name, $comments->get(0)->name);
+        $this->assertEquals($comment2->post->user->name, $comments->get(1)->name);
+    }
 }

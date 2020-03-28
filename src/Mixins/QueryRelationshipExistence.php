@@ -4,7 +4,6 @@ namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Closure;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class QueryRelationshipExistence
 {

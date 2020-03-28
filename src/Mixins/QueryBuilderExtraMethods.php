@@ -2,9 +2,6 @@
 
 namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
-
 class QueryBuilderExtraMethods
 {
     public function getGroupBy()

@@ -1,10 +1,10 @@
 # Eloquent Power Joins
 
-[![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Actions Status](https://github.com/kirschbaum-development/eloquent-power-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions)
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![StyleCI](https://github.styleci.io/repos/247844867/shield?branch=master)](https://github.styleci.io/repos/247844867)
-<!-- [![Quality Score](https://img.shields.io/scrutinizer/g/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins) -->
+[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins/?branch=master)
 
 The Laravel magic you know, now applied to joins.
 

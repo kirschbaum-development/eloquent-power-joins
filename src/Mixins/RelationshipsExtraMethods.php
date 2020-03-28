@@ -154,9 +154,6 @@ class RelationshipsExtraMethods
 
     /**
      * Checks if the relationship model uses soft deletes.
-     *
-     * @param \Illuminate\Database\Eloquent\Model $model
-     * @return bool
      */
     public function usesSoftDeletes()
     {

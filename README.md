@@ -28,16 +28,16 @@ This package provides a few different methods you can use.
 Let's say you have a `User` model with a `hasMany` relationship to the `Post` model. If you want to join the tables, you would usually write something like:
 
 ```php
-User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id')->...();
+User::select('users.*')->join('posts', 'posts.user_id', '=', 'users.id');
 ```
 
 This package provides you with a new `joinRelationship()` method, which does the exact same thing.
 
 ```php
-User::select('users.*')->joinRelationship('posts')->toSql();
+User::joinRelationship('posts');
 ```
 
-Both options produce the same results. In terms of code, you didn't save much, but you are now using the relationship between the `User` and the `Post` models to join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
+Both options produce the same results. In terms of code, you didn't save THAT much, but you are now using the relationship between the `User` and the `Post` models to join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
 
 But, **it gets better** when you need to **join nested relationships**. Let's assume you also have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
 
@@ -50,14 +50,14 @@ User::select('users.*')
 Instead of writing all this, you can simply write:
 
 ```php
-User::select('users.*')->joinRelationship('posts.comments');
+User::joinRelationship('posts.comments');
 ```
 
 So much better, wouldn't you agree?! You can also `left` or `right` join the relationships as needed.
 
 ```php
-User::select('users.*')->leftJoinRelationship('posts.comments');
-User::select('users.*')->rightJoinRelationship('posts.comments');
+User::leftJoinRelationship('posts.comments');
+User::rightJoinRelationship('posts.comments');
 ```
 
 **Joining polymorphic relationships**
@@ -91,6 +91,22 @@ User::select('users.*')->joinRelationship('posts.comments', [
         $join->where('comments.approved', true);
     }
 ]);
+```
+
+**Select * from table**
+
+When making joins, using `select * from ...` can be dangerous as fields with the same name between the parent and the joined tables could conflict. Thinking on that, if you call the `joinRelationship` method without previously selecting any specific columns, Eloquent Power Joins will automatically include that for you. For instance, take a look at the following examples:
+
+```php
+User::joinRelationship('posts')->toSql();
+// select users.* from users inner join posts on posts.user_id = users.id
+```
+
+And, if you specify the select statement:
+
+```php
+User::select('users.id')->joinRelationship('posts')->toSql();
+// select users.id from users inner join posts on posts.user_id = users.id
 ```
 
 **Soft deletes**

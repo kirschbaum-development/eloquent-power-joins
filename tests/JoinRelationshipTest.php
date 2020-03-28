@@ -265,4 +265,41 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_it_automatically_includes_select_statement_if_not_defined()
+    {
+        $query = User::joinRelationship('posts')->toSql();
+
+        $this->assertStringContainsString(
+            'select "users".* from "users"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_it_does_notautomatically_includes_select_statement_if_already_defined()
+    {
+        $query = User::select('users.id')->joinRelationship('posts')->toSql();
+
+        $this->assertStringNotContainsString(
+            'select "users".* from "users"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'select "users"."id" from "users"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+    }
 }

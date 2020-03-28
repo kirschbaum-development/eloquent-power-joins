@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class QueryRelationshipExistence
 {
+    /**
+     * Same as Laravel 'has`, but using joins instead of where exists.
+     */
     public function hasUsingJoins()
     {
         return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {

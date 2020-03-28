@@ -16,15 +16,15 @@ class RelationshipsExtraMethods
      */
     public function performJoinForEloquentPowerJoins()
     {
-        return function ($builder, $joinType = 'leftJoin', $callback = null, $previousRelation = null) {
+        return function ($builder, $joinType = 'leftJoin', $callback = null) {
             if ($this instanceof BelongsToMany) {
-                return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $previousRelation);
+                return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback);
             } elseif ($this instanceof MorphOneOrMany) {
-                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $previousRelation);
+                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback);
             } elseif ($this instanceof HasMany || $this instanceof HasOne) {
-                return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $previousRelation);
+                return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback);
             } else {
-                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $previousRelation);
+                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback);
             }
         };
     }
@@ -34,7 +34,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForBelongsTo()
     {
-        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
+        return function ($builder, $joinType, $callback = null) {
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on(
                     $this->parent->getTable().'.'.$this->foreignKey,
@@ -58,7 +58,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForHasMany()
     {
-        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
+        return function ($builder, $joinType, $callback = null) {
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on(
                     $this->foreignKey,
@@ -82,7 +82,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForBelongsToMany()
     {
-        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
+        return function ($builder, $joinType, $callback = null) {
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback) {
                 $join->on(
                     $this->getQualifiedForeignPivotKeyName(),
@@ -120,7 +120,7 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForMorph()
     {
-        return function ($builder, $joinType, $callback = null, $previousRelation = null) {
+        return function ($builder, $joinType, $callback = null) {
             $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on(
                     sprintf('%s.%s', $this->getModel()->getTable(), $this->getForeignKeyName()),

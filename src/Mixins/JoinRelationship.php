@@ -15,9 +15,16 @@ class JoinRelationship
      */
     public static $joinRelationshipCache = [];
 
+    /**
+     * Join the relationship(s).
+     */
     public function joinRelationship()
     {
         return function ($relationName, $callback = null, $joinType = 'join') {
+            if (is_null($this->getSelect())) {
+                $this->select(sprintf('%s.*', $this->getModel()->getTable()));
+            }
+
             if (Str::contains($relationName, '.')) {
                 return $this->joinNestedRelationship($relationName, $callback, $joinType);
             }
@@ -35,6 +42,13 @@ class JoinRelationship
         };
     }
 
+    public function joinRelation()
+    {
+        return function ($relationName, $callback = null, $joinType = 'join') {
+            return $this->joinRelationship($relationName, $callback. $joinType);
+        };
+    }
+
     public function leftJoinRelationship()
     {
         return function ($relation, $callback = null) {
@@ -42,7 +56,21 @@ class JoinRelationship
         };
     }
 
+    public function leftJoinRelation()
+    {
+        return function ($relation, $callback = null) {
+            return $this->joinRelationship($relation, $callback, 'leftJoin');
+        };
+    }
+
     public function rightJoinRelationship()
+    {
+        return function ($relation, $callback = null) {
+            return $this->joinRelationship($relation, $callback, 'rightJoin');
+        };
+    }
+
+    public function rightJoinRelation()
     {
         return function ($relation, $callback = null) {
             return $this->joinRelationship($relation, $callback, 'rightJoin');

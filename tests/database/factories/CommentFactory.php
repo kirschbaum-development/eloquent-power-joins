@@ -1,9 +1,8 @@
 <?php
 
-use Illuminate\Support\Str;
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 
 $factory->define(Comment::class, function (Faker\Generator $faker) {
     return [

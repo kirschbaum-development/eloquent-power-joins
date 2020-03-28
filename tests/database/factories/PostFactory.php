@@ -1,6 +1,5 @@
 <?php
 
-use Illuminate\Support\Str;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
 

@@ -3,8 +3,6 @@
 namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class JoinRelationship
 {
@@ -45,7 +43,7 @@ class JoinRelationship
     public function joinRelation()
     {
         return function ($relationName, $callback = null, $joinType = 'join') {
-            return $this->joinRelationship($relationName, $callback. $joinType);
+            return $this->joinRelationship($relationName, $callback.$joinType);
         };
     }
 

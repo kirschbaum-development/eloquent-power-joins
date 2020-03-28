@@ -50,6 +50,8 @@ class CreateTables extends Migration
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('post_id');
             $table->text('body');
+            $table->integer('votes')->default(0);
+            $table->boolean('approved')->default(1);
             $table->timestamps();
         });
 

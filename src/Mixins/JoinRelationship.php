@@ -117,19 +117,82 @@ class JoinRelationship
      */
     public function orderByUsingJoins()
     {
-        return function ($sort) {
+        return function ($sort, $direction = 'asc', $aggregation = null) {
             $relationships = explode('.', $sort);
-            $sort = array_pop($relationships);
-            $lastRelationship = $relationships[count($relationships) - 1];
+            $column = array_pop($relationships);
+            $latestRelationshipName = $relationships[count($relationships) - 1];
 
             $this->joinRelationship(implode('.', $relationships));
 
-            tap(array_pop($relationships), function ($latestRelation) use ($sort) {
-                $table = $this->getModel()->$latestRelation()->getModel()->getTable();
-                $this->orderBy(sprintf('%s.%s', $table, $sort));
-            });
+            $latestRelationshipModel = $this->getModel()->$latestRelationshipName()->getModel();
+
+            if ($aggregation) {
+                $this->selectRaw(
+                    sprintf(
+                        '%s(%s.%s) as %s_aggregation',
+                        $aggregation,
+                        $latestRelationshipModel->getTable(),
+                        $column,
+                        $latestRelationshipName
+                    )
+                )
+                    ->groupBy(sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()))
+                    ->orderBy(sprintf('%s_aggregation', $latestRelationshipName), $direction);
+            } else {
+                $this->orderBy(sprintf('%s.%s', $latestRelationshipModel->getTable(), $column), $direction);
+            }
 
             return $this;
+        };
+    }
+
+    /**
+     * Order by the COUNT aggregation using joins.
+     */
+    public function orderByCountUsingJoins()
+    {
+        return function ($sort, $direction = 'asc') {
+            return $this->orderByUsingJoins($sort, $direction, 'COUNT');
+        };
+    }
+
+    /**
+     * Order by the SUM aggregation using joins.
+     */
+    public function orderBySumUsingJoins()
+    {
+        return function ($sort, $direction = 'asc') {
+            return $this->orderByUsingJoins($sort, $direction, 'SUM');
+        };
+    }
+
+    /**
+     * Order by the AVG aggregation using joins.
+     */
+    public function orderByAvgUsingJoins()
+    {
+        return function ($sort, $direction = 'asc') {
+            return $this->orderByUsingJoins($sort, $direction, 'AVG');
+        };
+    }
+
+    /**
+     * Order by the MIN aggregation using joins.
+     */
+    public function orderByMinUsingJoins()
+    {
+        return function ($sort, $direction = 'asc') {
+            return $this->orderByUsingJoins($sort, $direction, 'MIN');
+        };
+    }
+
+    /**
+     * Order by the MAX aggregation using joins.
+     */
+    public function orderByMaxUsingJoins()
+    {
+        return function ($sort, $direction = 'asc') {
+            return $this->orderByUsingJoins($sort, $direction, 'MAX');
         };
     }
 

@@ -1,6 +1,7 @@
 # Eloquent Power Joins
 
 [![Actions Status](https://github.com/kirschbaum-development/eloquent-power-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions)
+[![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![StyleCI](https://github.styleci.io/repos/247844867/shield?branch=master)](https://github.styleci.io/repos/247844867)
@@ -163,9 +164,29 @@ User::doesntHaveUsingJoins('posts');
 You can also sort your query results using a column from another table using the `orderByUsingJoins` method.
 
 ```php
-User::select('users.*')->orderByUsingJoins('profile.city')->toSql();
-// select "users".* from "users" inner join "user_profiles" on "user_profiles"."user_id" = "users"."id"
-// order by "user_profiles"."city" asc
+User::orderByUsingJoins('profile.city');
+```
+
+This query will sort the results based on the `city` column on the `user_profiles` table. You can also sort your results by aggregations (`COUNT`, `SUM`, `AVG`, `MIN` or `MAX`).
+
+For instance, to sort users by the ones who have the bigger number of posts, you would do this:
+
+```php
+$users = User::orderByCountUsingJoins('posts.id', 'desc')->get();
+```
+
+Or, to get the list of posts sorted by the ones with comments which contain the bigger average of votes.
+
+```php
+$posts = Post::orderByAvgUsingJoins('comments.votes', 'desc')->get();
+```
+
+And you also have methods for `SUM`, `MIN` and `MAX`:
+
+```php
+Post::orderBySumUsingJoins('comments.votes');
+Post::orderByMinUsingJoins('comments.votes');
+Post::orderByMaxUsingJoins('comments.votes');
 ```
 
 ***

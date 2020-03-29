@@ -301,4 +301,23 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_join_has_many_through_relationship()
+    {
+        // just making sure it runs fine
+        User::joinRelationship('commentsThroughPosts')->get();
+
+        $query = User::joinRelationship('commentsThroughPosts')->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+    }
 }

@@ -169,13 +169,13 @@ User::orderByUsingJoins('profile.city');
 
 This query will sort the results based on the `city` column on the `user_profiles` table. You can also sort your results by aggregations (`COUNT`, `SUM`, `AVG`, `MIN` or `MAX`).
 
-For instance, to sort users by the ones who have the bigger number of posts, you would do this:
+For instance, to sort users with the highest number of posts, you can do this:
 
 ```php
 $users = User::orderByCountUsingJoins('posts.id', 'desc')->get();
 ```
 
-Or, to get the list of posts sorted by the ones with comments which contain the bigger average of votes.
+Or, to get the list of posts where the comments contain the highest average of votes.
 
 ```php
 $posts = Post::orderByAvgUsingJoins('comments.votes', 'desc')->get();

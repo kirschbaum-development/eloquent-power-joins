@@ -3,7 +3,6 @@
 namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Closure;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Str;

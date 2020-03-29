@@ -32,10 +32,6 @@ class QueryRelationshipExistence
             $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback);
             $relation->performHavingForEloquentPowerJoins($this, $operator, $count);
 
-            // if (is_callable($callback)) {
-            //     $callback($this);
-            // }
-
             return $this;
         };
     }

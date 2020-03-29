@@ -11,6 +11,13 @@ The Laravel magic you know, now applied to joins.
 
 Joins are very useful in a lot of ways. If you are here, you most likely know about and use them. Eloquent is very powerful, but it lacks a bit of the "Laravel way" when using joins. This package make your joins in a more Laravel way, with more readable with less code while hiding implementation details from places they don't need to be exposed.
 
+A few things we consider is missing when using joins which are very powerful Eloquent features:
+
+* Ability to use relationship definitions to make joins;
+* Ability to use model scopes inside different contexts;
+* Ability to query relationship existence using joins instead of where exists;
+* Ability to easily sort results based on columns or aggregations from related tables;
+
 ## Installation
 
 You can install the package via composer:
@@ -23,7 +30,7 @@ And that's it, you are ready to use the package.
 
 ## Usage
 
-This package provides a few different methods you can use.
+This package provides a few features.
 
 ### 1 - Join Relationship
 
@@ -93,6 +100,26 @@ User::select('users.*')->joinRelationship('posts.comments', [
         $join->where('comments.approved', true);
     }
 ]);
+```
+
+**Using model scopes inside the callbacks 🤯**
+
+We consider this one of the most useful features of this package. Let's say, you have a `published` scope on your `Post` model:
+
+```php
+    public function scopePublished($query)
+    {
+        $query->where('published', true);
+    }
+```
+
+When joining relationships, you **can** use the scopes defined in the model being joined. How cool is this?
+
+```php
+User::joinRelationshio('posts', function ($join) {
+    // the $join instance here can access any of the scopes defined in Post 🤯
+    $join->published();
+});
 ```
 
 **Select * from table**

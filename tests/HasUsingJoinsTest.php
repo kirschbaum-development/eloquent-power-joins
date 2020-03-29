@@ -2,7 +2,6 @@
 
 namespace KirschbaumDevelopment\EloquentJoins\Tests;
 
-use Illuminate\Database\Eloquent\Builder;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Group;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;

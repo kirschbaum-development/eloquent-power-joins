@@ -51,7 +51,7 @@ class RelationshipsExtraMethods
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            });
+            }, $this->query->getModel());
         };
     }
 
@@ -75,7 +75,7 @@ class RelationshipsExtraMethods
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            });
+            }, $this->query->getModel());
         };
     }
 
@@ -111,7 +111,7 @@ class RelationshipsExtraMethods
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
                 }
-            });
+            }, $this->getModel());
 
             return $this;
         };
@@ -137,7 +137,7 @@ class RelationshipsExtraMethods
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            });
+            }, $this->getModel());
 
             return $this;
         };
@@ -159,7 +159,7 @@ class RelationshipsExtraMethods
                 if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
                     $callback[$this->getThroughParent()->getTable()]($join);
                 }
-            });
+            }, $this->getThroughParent());
 
             $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback) {
                 $join->on($this->getQualifiedFarKeyName(), '=', $this->getQualifiedParentKeyName());
@@ -171,7 +171,7 @@ class RelationshipsExtraMethods
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
                 }
-            });
+            }, $this->getModel());
 
             return $this;
         };

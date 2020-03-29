@@ -29,12 +29,8 @@ class QueryRelationshipExistence
                 $relation = $this->getRelationWithoutConstraints($relation);
             }
 
-            $relation->performJoinForEloquentPowerJoins($this);
+            $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback);
             $relation->performHavingForEloquentPowerJoins($this, $operator, $count);
-
-            if (is_callable($callback)) {
-                $callback($this);
-            }
 
             return $this;
         };
@@ -53,7 +49,7 @@ class QueryRelationshipExistence
                     $relation = $latestRelation->getModel()->query()->getRelationWithoutConstraints($relation);
                 }
 
-                $relation->performJoinForEloquentPowerJoins($this, 'leftJoin');
+                $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback);
 
                 if (count($relations) === ($index + 1)) {
                     $relation->performHavingForEloquentPowerJoins($this, $operator, $count);

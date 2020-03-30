@@ -89,7 +89,7 @@ User::select('users.*')->joinRelationship('posts', function ($join) {
 })->toSql();
 ```
 
-For nested calls and for `BelongsToMany` relationships (where two tables are joined), you simply need pass an array referencing the relationship names.
+For nested calls and for `BelongsToMany` relationships (where two tables are joined), you simply need to pass an array referencing the relationship names.
 
 ```php
 User::select('users.*')->joinRelationship('posts.comments', [
@@ -116,7 +116,7 @@ We consider this one of the most useful features of this package. Let's say, you
 When joining relationships, you **can** use the scopes defined in the model being joined. How cool is this?
 
 ```php
-User::joinRelationshio('posts', function ($join) {
+User::joinRelationship('posts', function ($join) {
     // the $join instance here can access any of the scopes defined in Post 🤯
     $join->published();
 });

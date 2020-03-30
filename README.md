@@ -122,6 +122,8 @@ User::joinRelationshio('posts', function ($join) {
 });
 ```
 
+When using model scopes inside a join clause, you **can't** type hint the `$query` parameter in your scope. Also, keep in mind you are inside a join, so you are limited to use only conditions supported by joins.
+
 **Select * from table**
 
 When making joins, using `select * from ...` can be dangerous as fields with the same name between the parent and the joined tables could conflict. Thinking on that, if you call the `joinRelationship` method without previously selecting any specific columns, Eloquent Power Joins will automatically include that for you. For instance, take a look at the following examples:

@@ -48,15 +48,7 @@ User::joinRelationship('posts');
 
 Both options produce the same results. In terms of code, you didn't save THAT much, but you are now using the relationship between the `User` and the `Post` models to join the tables. This means that you are now hiding how this relationship works behind the scenes (implementation details). You also don't need to change the code if the relationship type changes. You now have more readable and less overwhelming code.
 
-But, **it gets better** when you need to **join nested relationships**. Let's assume you also have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables.
-
-```php
-User::select('users.*')
-    ->join('posts', 'posts.user_id', '=', 'users.id')
-    ->join('comments', 'comments.post_id', '=', 'posts.id');
-```
-
-Instead of writing all this, you can simply write:
+But, **it gets better** when you need to **join nested relationships**. Let's assume you also have a `hasMany` relationship between the `Post` and `Comment` models and you need to join these tables, you can simply write:
 
 ```php
 User::joinRelationship('posts.comments');
@@ -71,12 +63,12 @@ User::rightJoinRelationship('posts.comments');
 
 **Joining polymorphic relationships**
 
-Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you also need to apply the `where imageable_type = Image::class` condition, otherwise you could get messy results.
+Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you would also need to apply the `where imageable_type = Image::class` condition, otherwise you could get messy results.
 
 Turns out, if you join a polymorphic relationship, Eloquent Power Joins automatically applies this condition for you. You simply need to call the same method.
 
 ```php
-Post::select('posts.*')->joinRelationship('images');
+Post::joinRelationship('images');
 ```
 
 **Applying conditions & callbacks to the joins**
@@ -84,7 +76,7 @@ Post::select('posts.*')->joinRelationship('images');
 Now, let's say you want to apply a condition to the join you are making. You simply need to pass a callback as the second parameter to the `joinRelationship` method.
 
 ```php
-User::select('users.*')->joinRelationship('posts', function ($join) {
+User::joinRelationship('posts', function ($join) {
     $join->where('posts.approved', true);
 })->toSql();
 ```
@@ -92,7 +84,7 @@ User::select('users.*')->joinRelationship('posts', function ($join) {
 For nested calls and for `BelongsToMany` relationships (where two tables are joined), you simply need to pass an array referencing the relationship names.
 
 ```php
-User::select('users.*')->joinRelationship('posts.comments', [
+User::joinRelationship('posts.comments', [
     'posts' => function ($join) {
         $join->where('posts.published', true);
     },
@@ -152,17 +144,7 @@ and "users"."deleted_at" is null
 
 [Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and may not be the more performant choice, depending on how many records you have or the structure of your tables.
 
-This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**.
-
-**Performance**
-
-First thing to be aware here, is that the below example is one use-case where using `joins` over `where exists` is a lot more performant. You shouldn't assume this is true out of the box, and you should use tools like [Laravel Debugbar](https://github.com/barryvdh/laravel-debugbar) or [Laravel Telescope](https://laravel.com/docs/7.x/telescope) and figure out what's best for YOUR use-case.
-
-That said, below you can see one example of the MySQL CPU usage after deploying a change to use `hasUsingJoins` instead of `has`, in one of our client's application. MySQL was running on RDS, and this image was took from AWS CloudWatch.
-
-![MySQL CPU Graph](screenshots/mysql-cpu-graph.png "MySQL CPU Graph")
-
-Below, you can see the methods this package implements and also the Laravel equivalent.
+This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**. Below, you can see the methods this package implements and also the Laravel equivalent.
 
 **Laravel Native Methods**
 

@@ -24,6 +24,11 @@ class Post extends Model
         return $this->morphMany(Image::class, 'imageable');
     }
 
+    public function category(): BelongsTo
+    {
+        return $this->belongsTo(Category::class);
+    }
+
     public function scopePublished($query)
     {
         $query->where('posts.published', true);

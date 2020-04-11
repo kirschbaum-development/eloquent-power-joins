@@ -16,17 +16,18 @@ class RelationshipsExtraMethods
      */
     public function performJoinForEloquentPowerJoins()
     {
-        return function ($builder, $joinType = 'leftJoin', $callback = null) {
+        return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null) {
+            // dd('performJoinForEloquentPowerJoins', $alias);
             if ($this instanceof BelongsToMany) {
-                return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $alias);
             } elseif ($this instanceof MorphOneOrMany) {
-                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback);
+                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $alias);
             } elseif ($this instanceof HasMany || $this instanceof HasOne) {
-                return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $alias);
             } elseif ($this instanceof HasManyThrough) {
-                return $this->performJoinForEloquentPowerJoinsForHasManyThrough($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForHasManyThrough($builder, $joinType, $callback, $alias);
             } else {
-                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback);
+                return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $alias);
             }
         };
     }
@@ -36,16 +37,23 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForBelongsTo()
     {
-        return function ($builder, $joinType, $callback = null) {
-            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
+        return function ($builder, $joinType, $callback = null, $alias = null) {
+            $joinedTable = $this->query->getModel()->getTable();
+            $parentTable = $this->parent->powerJoinTableAlias ?: $this->parent->getTable();
+
+            $builder->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
+                if ($alias) {
+                    $join->as($alias);
+                }
+
                 $join->on(
-                    $this->parent->getTable().'.'.$this->foreignKey,
+                    $parentTable.'.'.$this->foreignKey,
                     '=',
-                    $this->query->getModel()->getTable().'.'.$this->ownerKey
+                    $joinedTable.'.'.$this->ownerKey
                 );
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                    $join->whereNull($alias.'.'.$this->query->getModel()->getDeletedAtColumn());
                 }
 
                 if ($callback && is_callable($callback)) {

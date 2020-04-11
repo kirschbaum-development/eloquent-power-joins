@@ -18,6 +18,13 @@ class JoinRelationship
     public static $joinRelationshipCache = [];
 
     /**
+     * Cache to not join the same relationship twice.
+     *
+     * @var array
+     */
+    public static $powerJoinAliasesCache = [];
+
+    /**
      * Join method map.
      */
     public static $joinMethodsMap = [
@@ -31,7 +38,8 @@ class JoinRelationship
      */
     public function joinRelationship()
     {
-        return function ($relationName, $callback = null, $joinType = 'join') {
+        return function ($relationName, $callback = null, $joinType = 'join', $useAlias = false) {
+            $useAlias = $this->shouldUseAlias($useAlias);
             $joinType = JoinRelationship::$joinMethodsMap[$joinType] ?? $joinType;
 
             if (is_null($this->getSelect())) {
@@ -39,7 +47,7 @@ class JoinRelationship
             }
 
             if (Str::contains($relationName, '.')) {
-                return $this->joinNestedRelationship($relationName, $callback, $joinType);
+                return $this->joinNestedRelationship($relationName, $callback, $joinType, $useAlias);
             }
 
             if ($this->relationshipAlreadyJoined($relationName)) {
@@ -47,11 +55,28 @@ class JoinRelationship
             }
 
             $relation = $this->getModel()->{$relationName}();
-            $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback);
+            $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
+
+            if ($useAlias) {
+                $this->cachePowerJoinAlias($relationName, $alias);
+            }
+
+            $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback, $alias);
 
             $this->markRelationshipAsAlreadyJoined($relationName);
+            $this->clearPowerJoinCaches();
 
             return $this;
+        };
+    }
+
+    /**
+     * Join the relationship(s) using table aliases.
+     */
+    public function joinRelationshipUsingAlias()
+    {
+        return function ($relationName, $callback = null) {
+            return $this->joinRelationship($relationName, $callback, 'join', true);
         };
     }
 
@@ -64,29 +89,29 @@ class JoinRelationship
 
     public function leftJoinRelationship()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'leftJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'leftJoin', $useAlias);
         };
     }
 
     public function leftJoinRelation()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'leftJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'leftJoin', $useAlias);
         };
     }
 
     public function rightJoinRelationship()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'rightJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias);
         };
     }
 
     public function rightJoinRelation()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'rightJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias);
         };
     }
 
@@ -95,12 +120,13 @@ class JoinRelationship
      */
     public function joinNestedRelationship()
     {
-        return function ($relations, $callback = null, $joinType = 'join') {
+        return function ($relations, $callback = null, $joinType = 'join', $useAlias = false) {
             $relations = explode('.', $relations);
             $latestRelation = null;
 
             foreach ($relations as $index => $relationName) {
                 $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
+                $currentModel->powerJoinTableAlias = JoinRelationship::getAliasFor(optional($latestRelation)->getRelationName());
                 $relation = $currentModel->{$relationName}();
                 $relationCallback = null;
 
@@ -113,15 +139,24 @@ class JoinRelationship
                     continue;
                 }
 
+                $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
+
+                if ($useAlias) {
+                    $this->cachePowerJoinAlias($relationName, $alias);
+                }
+
                 $relation->performJoinForEloquentPowerJoins(
                     $this,
                     $joinType,
-                    $relationCallback
+                    $relationCallback,
+                    $alias
                 );
 
                 $latestRelation = $relation;
                 $this->markRelationshipAsAlreadyJoined($relationName);
             }
+
+            $this->clearPowerJoinCaches();
 
             return $this;
         };
@@ -291,5 +326,48 @@ class JoinRelationship
         return function (QueryBuilder $parentQuery, $type, $table, Model $model = null) {
             return new PowerJoinClause($parentQuery, $type, $table, $model);
         };
+    }
+
+    /**
+     * Check if the current join should use aliases.
+     */
+    public function shouldUseAlias()
+    {
+        return function ($shouldUseAlias) {
+            return $shouldUseAlias;
+        };
+    }
+
+    public function generateAliasForRelationship()
+    {
+        return function ($relationName) {
+            return md5($relationName . time());
+        };
+    }
+
+    /**
+     * Cache the power join table alias used for the power join.
+     */
+    public function cachePowerJoinAlias()
+    {
+        return function ($relationName, $alias) {
+            JoinRelationship::$powerJoinAliasesCache[$relationName] = $alias;
+        };
+    }
+
+    /**
+     * Clear the power join caches.
+     */
+    public function clearPowerJoinCaches()
+    {
+        return function () {
+            JoinRelationship::$powerJoinAliasesCache = [];
+            return $this;
+        };
+    }
+
+    public static function getAliasFor($relationName = null)
+    {
+        return JoinRelationship::$powerJoinAliasesCache[$relationName] ?? null;
     }
 }

@@ -341,7 +341,7 @@ class JoinRelationship
     public function generateAliasForRelationship()
     {
         return function ($relationName) {
-            return md5($relationName . time());
+            return md5($relationName.time());
         };
     }
 
@@ -362,6 +362,7 @@ class JoinRelationship
     {
         return function () {
             JoinRelationship::$powerJoinAliasesCache = [];
+
             return $this;
         };
     }

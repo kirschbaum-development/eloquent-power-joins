@@ -2,7 +2,6 @@
 
 namespace KirschbaumDevelopment\EloquentJoins\Tests;
 
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Category;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;

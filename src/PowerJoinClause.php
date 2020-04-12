@@ -5,6 +5,7 @@ namespace KirschbaumDevelopment\EloquentJoins;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
+use Illuminate\Support\Str;
 
 class PowerJoinClause extends JoinClause
 {
@@ -73,16 +74,24 @@ class PowerJoinClause extends JoinClause
 
     protected function useTableAliasInConditions()
     {
-        if (! $this->alias) {
+        if (! $this->alias || ! $this->model) {
             return $this;
         }
 
         $this->wheres = collect($this->wheres)->filter(function ($where) {
             return in_array($where['type'] ?? '', ['Column']);
         })->map(function ($where) {
-            // dump($where, $this->table, $this->alias);
-            $where['first'] = str_replace($this->tableName, $this->alias, $where['first']);
-            $where['second'] = str_replace($this->tableName, $this->alias, $where['second']);
+            $key = $this->model->getKeyName();
+            $table = $this->tableName;
+
+            if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
+                // if joining the same table, only replace the correct table.key pair
+                $where['first'] = str_replace($table.'.'.$key, $this->alias.'.'.$key, $where['first']);
+                $where['second'] = str_replace($table.'.'.$key, $this->alias.'.'.$key, $where['second']);
+            } else {
+                $where['first'] = str_replace($table, $this->alias, $where['first']);
+                $where['second'] = str_replace($table, $this->alias, $where['second']);
+            }
 
             return $where;
         });

@@ -47,6 +47,11 @@ class CreateTables extends Migration
             $table->timestamps();
         });
 
+        Schema::create('post_groups', function (Blueprint $table) {
+            $table->unsignedInteger('group_id');
+            $table->unsignedInteger('post_id');
+        });
+
         Schema::create('categories', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('parent_id')->nullable()->default(null);

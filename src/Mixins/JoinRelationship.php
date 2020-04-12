@@ -4,6 +4,8 @@ namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Str;
 use KirschbaumDevelopment\EloquentJoins\PowerJoinClause;
@@ -55,7 +57,7 @@ class JoinRelationship
             }
 
             $relation = $this->getModel()->{$relationName}();
-            $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
+            $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
             $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback, $alias);
 
             $this->markRelationshipAsAlreadyJoined($relationName);
@@ -121,8 +123,8 @@ class JoinRelationship
 
             foreach ($relations as $index => $relationName) {
                 $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
-                $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
                 $relation = $currentModel->{$relationName}();
+                $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
                 $relationCallback = null;
 
                 if ($useAlias) {
@@ -333,7 +335,14 @@ class JoinRelationship
 
     public function generateAliasForRelationship()
     {
-        return function ($relationName) {
+        return function ($relation, $relationName) {
+            if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
+                return [
+                   md5($relationName . 'table1' . time()),
+                   md5($relationName . 'table2' . time())
+                ];
+            }
+
             return md5($relationName . time());
         };
     }

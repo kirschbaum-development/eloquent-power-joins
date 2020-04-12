@@ -41,7 +41,6 @@ class JoinRelationship
     public function joinRelationship()
     {
         return function ($relationName, $callback = null, $joinType = 'join', $useAlias = false) {
-            $useAlias = $this->shouldUseAlias($useAlias);
             $joinType = JoinRelationship::$joinMethodsMap[$joinType] ?? $joinType;
 
             if (is_null($this->getSelect())) {
@@ -343,23 +342,13 @@ class JoinRelationship
         };
     }
 
-    /**
-     * Check if the current join should use aliases.
-     */
-    public function shouldUseAlias()
-    {
-        return function ($shouldUseAlias) {
-            return $shouldUseAlias;
-        };
-    }
-
     public function generateAliasForRelationship()
     {
         return function ($relation, $relationName) {
             if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
                 return [
-                   md5($relationName.'table1'.time()),
-                   md5($relationName.'table2' . time()),
+                    md5($relationName.'table1'.time()),
+                    md5($relationName.'table2'.time()),
                 ];
             }
 
@@ -384,12 +373,8 @@ class JoinRelationship
     {
         return function () {
             JoinRelationship::$powerJoinAliasesCache = [];
+
             return $this;
         };
-    }
-
-    public static function getAliasFor($model = null, $default = null)
-    {
-        return JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
     }
 }

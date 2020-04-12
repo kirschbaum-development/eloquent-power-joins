@@ -338,12 +338,12 @@ class JoinRelationship
         return function ($relation, $relationName) {
             if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
                 return [
-                   md5($relationName . 'table1' . time()),
-                   md5($relationName . 'table2' . time())
+                   md5($relationName.'table1'.time()),
+                   md5($relationName.'table2' . time()),
                 ];
             }
 
-            return md5($relationName . time());
+            return md5($relationName.time());
         };
     }
 

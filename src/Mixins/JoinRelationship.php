@@ -56,11 +56,6 @@ class JoinRelationship
 
             $relation = $this->getModel()->{$relationName}();
             $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
-
-            if ($useAlias) {
-                $this->cachePowerJoinAlias($relationName, $alias);
-            }
-
             $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback, $alias);
 
             $this->markRelationshipAsAlreadyJoined($relationName);
@@ -126,9 +121,13 @@ class JoinRelationship
 
             foreach ($relations as $index => $relationName) {
                 $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
-                $currentModel->powerJoinTableAlias = JoinRelationship::getAliasFor(optional($latestRelation)->getRelationName());
+                $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
                 $relation = $currentModel->{$relationName}();
                 $relationCallback = null;
+
+                if ($useAlias) {
+                    $this->cachePowerJoinAlias($relation->getModel(), $alias);
+                }
 
                 if ($callback && is_array($callback) && isset($callback[$relationName])) {
                     $relationCallback = $callback[$relationName];
@@ -137,12 +136,6 @@ class JoinRelationship
                 if ($this->relationshipAlreadyJoined($relationName)) {
                     $latestRelation = $relation;
                     continue;
-                }
-
-                $alias = $useAlias ? $this->generateAliasForRelationship($relationName) : null;
-
-                if ($useAlias) {
-                    $this->cachePowerJoinAlias($relationName, $alias);
                 }
 
                 $relation->performJoinForEloquentPowerJoins(
@@ -252,7 +245,7 @@ class JoinRelationship
     public function relationshipAlreadyJoined()
     {
         return function ($relation) {
-            return isset(JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relation]);
+            return isset(JoinRelationship::$joinRelationshipCache[spl_object_id($this)][$relation]);
         };
     }
 
@@ -262,7 +255,7 @@ class JoinRelationship
     public function markRelationshipAsAlreadyJoined()
     {
         return function ($relation) {
-            JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relation] = true;
+            JoinRelationship::$joinRelationshipCache[spl_object_id($this)][$relation] = true;
         };
     }
 
@@ -350,8 +343,8 @@ class JoinRelationship
      */
     public function cachePowerJoinAlias()
     {
-        return function ($relationName, $alias) {
-            JoinRelationship::$powerJoinAliasesCache[$relationName] = $alias;
+        return function ($model, $alias) {
+            JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
         };
     }
 

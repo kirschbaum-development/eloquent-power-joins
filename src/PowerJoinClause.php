@@ -73,6 +73,10 @@ class PowerJoinClause extends JoinClause
 
     protected function useTableAliasInConditions()
     {
+        if (! $this->alias) {
+            return $this;
+        }
+
         $this->wheres = collect($this->wheres)->filter(function ($where) {
             return in_array($where['type'] ?? '', ['Column']);
         })->map(function ($where) {
@@ -82,6 +86,8 @@ class PowerJoinClause extends JoinClause
 
             return $where;
         });
+
+        return $this;
     }
 
     public function __call($name, $arguments)

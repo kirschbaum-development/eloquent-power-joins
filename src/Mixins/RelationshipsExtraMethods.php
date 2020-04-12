@@ -39,7 +39,7 @@ class RelationshipsExtraMethods
     {
         return function ($builder, $joinType, $callback = null, $alias = null) {
             $joinedTable = $this->query->getModel()->getTable();
-            $parentTable = $this->parent->powerJoinTableAlias ?: $this->parent->getTable();
+            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
 
             $builder->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
                 if ($alias) {
@@ -53,7 +53,7 @@ class RelationshipsExtraMethods
                 );
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($alias.'.'.$this->query->getModel()->getDeletedAtColumn());
+                    $join->whereNull($joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn());
                 }
 
                 if ($callback && is_callable($callback)) {
@@ -68,12 +68,19 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForHasMany()
     {
-        return function ($builder, $joinType, $callback = null) {
-            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback) {
+        return function ($builder, $joinType, $callback = null, $alias = null) {
+            $joinedTable = $this->query->getModel()->getTable();
+            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+
+            $builder->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
+                if ($alias) {
+                    $join->as($alias);
+                }
+
                 $join->on(
                     $this->foreignKey,
                     '=',
-                    $this->parent->getTable().'.'.$this->localKey
+                    $parentTable.'.'.$this->localKey
                 );
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
@@ -224,6 +231,13 @@ class RelationshipsExtraMethods
     {
         return function () {
             return $this->farParent;
+        };
+    }
+
+    public function getTableOrAliasForModel()
+    {
+        return function ($model, $default = null) {
+            return JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
         };
     }
 }

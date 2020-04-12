@@ -271,7 +271,7 @@ class RelationshipsExtraMethods
     public function getTableOrAliasForModel()
     {
         return function ($model, $default = null) {
-            return JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
+            return JoinRelationship::getAliasFor($model, $default);
         };
     }
 }

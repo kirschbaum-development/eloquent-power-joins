@@ -77,6 +77,26 @@ class JoinRelationship
         };
     }
 
+    /**
+     * Left join the relationship(s) using table aliases.
+     */
+    public function leftJoinRelationshipUsingAlias()
+    {
+        return function ($relationName, $callback = null) {
+            return $this->joinRelationship($relationName, $callback, 'leftJoin', true);
+        };
+    }
+
+    /**
+     * Right join the relationship(s) using table aliases.
+     */
+    public function rightJoinRelationshipUsingAlias()
+    {
+        return function ($relationName, $callback = null) {
+            return $this->joinRelationship($relationName, $callback, 'rightJoin', true);
+        };
+    }
+
     public function joinRelation()
     {
         return function ($relationName, $callback = null, $joinType = 'join') {
@@ -368,8 +388,8 @@ class JoinRelationship
         };
     }
 
-    public static function getAliasFor($relationName = null)
+    public static function getAliasFor($model = null, $default = null)
     {
-        return JoinRelationship::$powerJoinAliasesCache[$relationName] ?? null;
+        return JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
     }
 }

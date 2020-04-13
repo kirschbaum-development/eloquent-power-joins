@@ -4,6 +4,8 @@ namespace KirschbaumDevelopment\EloquentJoins\Mixins;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Support\Str;
 use KirschbaumDevelopment\EloquentJoins\PowerJoinClause;
@@ -16,6 +18,13 @@ class JoinRelationship
      * @var array
      */
     public static $joinRelationshipCache = [];
+
+    /**
+     * Cache to not join the same relationship twice.
+     *
+     * @var array
+     */
+    public static $powerJoinAliasesCache = [];
 
     /**
      * Join method map.
@@ -31,7 +40,7 @@ class JoinRelationship
      */
     public function joinRelationship()
     {
-        return function ($relationName, $callback = null, $joinType = 'join') {
+        return function ($relationName, $callback = null, $joinType = 'join', $useAlias = false) {
             $joinType = JoinRelationship::$joinMethodsMap[$joinType] ?? $joinType;
 
             if (is_null($this->getSelect())) {
@@ -39,7 +48,7 @@ class JoinRelationship
             }
 
             if (Str::contains($relationName, '.')) {
-                return $this->joinNestedRelationship($relationName, $callback, $joinType);
+                return $this->joinNestedRelationship($relationName, $callback, $joinType, $useAlias);
             }
 
             if ($this->relationshipAlreadyJoined($relationName)) {
@@ -47,11 +56,43 @@ class JoinRelationship
             }
 
             $relation = $this->getModel()->{$relationName}();
-            $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback);
+            $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
+            $relation->performJoinForEloquentPowerJoins($this, $joinType, $callback, $alias);
 
             $this->markRelationshipAsAlreadyJoined($relationName);
+            $this->clearPowerJoinCaches();
 
             return $this;
+        };
+    }
+
+    /**
+     * Join the relationship(s) using table aliases.
+     */
+    public function joinRelationshipUsingAlias()
+    {
+        return function ($relationName, $callback = null) {
+            return $this->joinRelationship($relationName, $callback, 'join', true);
+        };
+    }
+
+    /**
+     * Left join the relationship(s) using table aliases.
+     */
+    public function leftJoinRelationshipUsingAlias()
+    {
+        return function ($relationName, $callback = null) {
+            return $this->joinRelationship($relationName, $callback, 'leftJoin', true);
+        };
+    }
+
+    /**
+     * Right join the relationship(s) using table aliases.
+     */
+    public function rightJoinRelationshipUsingAlias()
+    {
+        return function ($relationName, $callback = null) {
+            return $this->joinRelationship($relationName, $callback, 'rightJoin', true);
         };
     }
 
@@ -64,29 +105,29 @@ class JoinRelationship
 
     public function leftJoinRelationship()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'leftJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'leftJoin', $useAlias);
         };
     }
 
     public function leftJoinRelation()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'leftJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'leftJoin', $useAlias);
         };
     }
 
     public function rightJoinRelationship()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'rightJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias);
         };
     }
 
     public function rightJoinRelation()
     {
-        return function ($relation, $callback = null) {
-            return $this->joinRelationship($relation, $callback, 'rightJoin');
+        return function ($relation, $callback = null, $useAlias = false) {
+            return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias);
         };
     }
 
@@ -95,14 +136,19 @@ class JoinRelationship
      */
     public function joinNestedRelationship()
     {
-        return function ($relations, $callback = null, $joinType = 'join') {
+        return function ($relations, $callback = null, $joinType = 'join', $useAlias = false) {
             $relations = explode('.', $relations);
             $latestRelation = null;
 
             foreach ($relations as $index => $relationName) {
                 $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
                 $relation = $currentModel->{$relationName}();
+                $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
                 $relationCallback = null;
+
+                if ($useAlias) {
+                    $this->cachePowerJoinAlias($relation->getModel(), $alias);
+                }
 
                 if ($callback && is_array($callback) && isset($callback[$relationName])) {
                     $relationCallback = $callback[$relationName];
@@ -116,12 +162,15 @@ class JoinRelationship
                 $relation->performJoinForEloquentPowerJoins(
                     $this,
                     $joinType,
-                    $relationCallback
+                    $relationCallback,
+                    $alias
                 );
 
                 $latestRelation = $relation;
                 $this->markRelationshipAsAlreadyJoined($relationName);
             }
+
+            $this->clearPowerJoinCaches();
 
             return $this;
         };
@@ -217,7 +266,7 @@ class JoinRelationship
     public function relationshipAlreadyJoined()
     {
         return function ($relation) {
-            return isset(JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relation]);
+            return isset(JoinRelationship::$joinRelationshipCache[spl_object_id($this)][$relation]);
         };
     }
 
@@ -227,7 +276,7 @@ class JoinRelationship
     public function markRelationshipAsAlreadyJoined()
     {
         return function ($relation) {
-            JoinRelationship::$joinRelationshipCache[spl_object_hash($this)][$relation] = true;
+            JoinRelationship::$joinRelationshipCache[spl_object_id($this)][$relation] = true;
         };
     }
 
@@ -290,6 +339,42 @@ class JoinRelationship
     {
         return function (QueryBuilder $parentQuery, $type, $table, Model $model = null) {
             return new PowerJoinClause($parentQuery, $type, $table, $model);
+        };
+    }
+
+    public function generateAliasForRelationship()
+    {
+        return function ($relation, $relationName) {
+            if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
+                return [
+                    md5($relationName.'table1'.time()),
+                    md5($relationName.'table2'.time()),
+                ];
+            }
+
+            return md5($relationName.time());
+        };
+    }
+
+    /**
+     * Cache the power join table alias used for the power join.
+     */
+    public function cachePowerJoinAlias()
+    {
+        return function ($model, $alias) {
+            JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
+        };
+    }
+
+    /**
+     * Clear the power join caches.
+     */
+    public function clearPowerJoinCaches()
+    {
+        return function () {
+            JoinRelationship::$powerJoinAliasesCache = [];
+
+            return $this;
         };
     }
 }

@@ -188,7 +188,9 @@ class JoinRelationship
 
             $this->joinRelationship(implode('.', $relationships));
 
-            $latestRelationshipModel = $this->getModel()->$latestRelationshipName()->getModel();
+            $latestRelationshipModel = array_reduce($relationships, function ($model, $relationshipName) {
+                return $model->$relationshipName()->getModel();
+            }, $this->getModel());
 
             if ($aggregation) {
                 $this->selectRaw(

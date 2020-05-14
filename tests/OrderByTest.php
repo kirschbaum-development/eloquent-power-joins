@@ -34,9 +34,9 @@ class OrderByTest extends TestCase
     public function test_order_by_nested_relationship()
     {
         // just making sure the query doesn't throw any exceptions
-        User::orderByUsingJoins('posts.comments.approved', 'desc')->get();
+        User::orderByUsingJoins('posts.category.title', 'desc')->get();
 
-        $query = User::orderByUsingJoins('posts.comments.approved', 'desc')->toSql();
+        $query = User::orderByUsingJoins('posts.category.title', 'desc')->toSql();
 
         $this->assertStringContainsString(
             'select "users".* from "users"',
@@ -44,7 +44,7 @@ class OrderByTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            'order by "comments"."approved" desc',
+            'order by "categories"."title" desc',
             $query
         );
     }

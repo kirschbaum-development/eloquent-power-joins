@@ -49,6 +49,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
                 $join->as('category_parent');
             },
         ])->get();
+
         $query = Post::joinRelationship('category.parent', [
             'parent' => function ($join) {
                 $join->as('category_parent');
@@ -175,5 +176,21 @@ class JoinRelationshipUsingAliasTest extends TestCase
         $this->assertStringNotContainsString('"posts"."user_id"', $query);
         $this->assertStringContainsString('"comments" as', $query);
         $this->assertStringNotContainsString('"comments"."post_id"', $query);
+    }
+
+    /**
+     * @test
+     */
+    public function test_joining_the_same_table_twice_with_belongs_to_many()
+    {
+        $query = User::joinRelationship('groups.parentGroups', [
+            'parentGroups' => [
+                'groups' => function ($join) {
+                    $join->as('groups_2');
+                },
+            ],
+        ])->toSql();
+
+        $this->assertStringContainsString('inner join "groups" as "groups_2" on "groups_2"."id" = "group_parent"."group_id"', $query);
     }
 }

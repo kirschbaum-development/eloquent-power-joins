@@ -83,7 +83,7 @@ User::joinRelationship('posts', function ($join) {
 })->toSql();
 ```
 
-For nested calls and for `BelongsToMany` relationships (where two tables are joined), you simply need to pass an array referencing the relationship names.
+For **nested calls**, you simply need to pass an array referencing the relationship names.
 
 ```php
 User::joinRelationship('posts.comments', [
@@ -93,6 +93,22 @@ User::joinRelationship('posts.comments', [
     'comments' => function ($join) {
         $join->where('comments.approved', true);
     }
+]);
+```
+
+For **belongs to many** calls, you need to pass an array with the relationship, and then an array with the table names.
+
+```php
+User::joinRelationship('groups', [
+    'groups' => [
+        'groups' => function ($join) {
+            // ...
+        },
+        // group_members is the intermediary table here
+        'group_members' => function ($join) {
+            $join->where('group_members.active', true);
+        },
+    ]
 ]);
 ```
 

@@ -33,6 +33,11 @@ class CreateTables extends Migration
             $table->timestamps();
         });
 
+        Schema::create('group_parent', function (Blueprint $table) {
+            $table->integer('group_id');
+            $table->integer('parent_group_id');
+        });
+
         Schema::create('group_members', function (Blueprint $table) {
             $table->integer('group_id')->unsigned();
             $table->integer('user_id')->unsigned();

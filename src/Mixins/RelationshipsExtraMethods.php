@@ -88,6 +88,14 @@ class RelationshipsExtraMethods
                     );
                 }
 
+                foreach ($this->getQuery()->getQuery()->wheres as $condition) {
+                    if ($condition['type'] === 'Null' || $condition['type'] === 'NotNull') {
+                        continue;
+                    }
+
+                    $join->where($condition['column'], $condition['operator'], $condition['value']);
+                }
+
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }

@@ -2,6 +2,7 @@
 
 namespace KirschbaumDevelopment\EloquentJoins\Tests;
 
+use KirschbaumDevelopment\EloquentJoins\Tests\Models\Category;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
 use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
@@ -332,6 +333,24 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertStringContainsString(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_has_many_relationship_with_additional_conditions()
+    {
+        [$category1, $category2] = factory(Category::class, 2)->create();
+        factory(Post::class)->states('published')->create(['category_id' => $category1->id]);
+
+        $query = Category::joinRelationship('publishedPosts')->toSql();
+        $categories = Category::joinRelationship('publishedPosts')->get();
+
+        $this->assertCount(1, $categories);
+        $this->assertEquals($category1->id, $categories->first()->id);
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."category_id" = "categories"."id" and "posts"."published" = ?',
             $query
         );
     }

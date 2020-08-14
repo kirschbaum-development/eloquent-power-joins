@@ -2,12 +2,13 @@
 
 namespace Kirschbaum\EloquentPowerJoins\Mixins;
 
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Kirschbaum\EloquentPowerJoins\PowerJoins;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 class RelationshipsExtraMethods
 {
@@ -271,7 +272,7 @@ class RelationshipsExtraMethods
     public function getTableOrAliasForModel()
     {
         return function ($model, $default = null) {
-            return JoinRelationship::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
+            return PowerJoins::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
         };
     }
 }

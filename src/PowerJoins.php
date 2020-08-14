@@ -39,7 +39,7 @@ trait PowerJoins
      */
     public function scopeJoinRelationship(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false): void
     {
-        $joinType = static::$joinMethodsMap[$joinType] ?? $joinType;
+        $joinType = PowerJoins::$joinMethodsMap[$joinType] ?? $joinType;
 
         if (is_null($query->getSelect())) {
             $query->select(sprintf('%s.*', $query->getModel()->getTable()));
@@ -233,7 +233,7 @@ trait PowerJoins
      */
     public function relationshipAlreadyJoined($relation)
     {
-        return isset(static::$joinRelationshipCache[spl_object_id($this)][$relation]);
+        return isset(PowerJoins::$joinRelationshipCache[spl_object_id($this)][$relation]);
     }
 
     /**
@@ -241,7 +241,7 @@ trait PowerJoins
      */
     public function markRelationshipAsAlreadyJoined($relation)
     {
-        static::$joinRelationshipCache[spl_object_id($this)][$relation] = true;
+        PowerJoins::$joinRelationshipCache[spl_object_id($this)][$relation] = true;
     }
 
     public function generateAliasForRelationship($relation, $relationName)
@@ -261,7 +261,7 @@ trait PowerJoins
      */
     public function cachePowerJoinAlias($model, $alias)
     {
-        static::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
+        PowerJoins::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
     }
 
     /**
@@ -269,7 +269,7 @@ trait PowerJoins
      */
     public function clearPowerJoinCaches()
     {
-        static::$powerJoinAliasesCache = [];
+        PowerJoins::$powerJoinAliasesCache = [];
 
         return $this;
     }

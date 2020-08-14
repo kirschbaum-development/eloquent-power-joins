@@ -44,13 +44,13 @@ class JoinRelationshipUsingAliasTest extends TestCase
         $category = factory(Category::class)->state('with:parent')->create();
         $post = factory(Post::class)->create(['category_id' => $category->id]);
 
-        $posts = Post::joinRelationship('category.parent', [
+        $posts = Post::query()->joinRelationship('category.parent', [
             'parent' => function ($join) {
                 $join->as('category_parent');
             },
         ])->get();
 
-        $query = Post::joinRelationship('category.parent', [
+        $query = Post::query()->joinRelationship('category.parent', [
             'parent' => function ($join) {
                 $join->as('category_parent');
             },

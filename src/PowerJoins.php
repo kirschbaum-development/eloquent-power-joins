@@ -157,20 +157,20 @@ trait PowerJoins
     /**
      * Order by a field in the defined relationship.
      */
-    public function orderByUsingJoins($sort, $direction = 'asc', $aggregation = null)
+    public function scopeOrderByUsingJoins(Builder $query, $sort, $direction = 'asc', $aggregation = null): void
     {
         $relationships = explode('.', $sort);
         $column = array_pop($relationships);
         $latestRelationshipName = $relationships[count($relationships) - 1];
 
-        $this->joinRelationship(implode('.', $relationships));
+        $query->joinRelationship(implode('.', $relationships));
 
         $latestRelationshipModel = array_reduce($relationships, function ($model, $relationshipName) {
             return $model->$relationshipName()->getModel();
-        }, $this->getModel());
+        }, $query->getModel());
 
         if ($aggregation) {
-            $this->selectRaw(
+            $query->selectRaw(
                 sprintf(
                     '%s(%s.%s) as %s_aggregation',
                     $aggregation,
@@ -182,50 +182,48 @@ trait PowerJoins
                 ->groupBy(sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()))
                 ->orderBy(sprintf('%s_aggregation', $latestRelationshipName), $direction);
         } else {
-            $this->orderBy(sprintf('%s.%s', $latestRelationshipModel->getTable(), $column), $direction);
+            $query->orderBy(sprintf('%s.%s', $latestRelationshipModel->getTable(), $column), $direction);
         }
-
-        return $this;
     }
 
     /**
      * Order by the COUNT aggregation using joins.
      */
-    public function orderByCountUsingJoins($sort, $direction = 'asc')
+    public function scopeOrderByCountUsingJoins(Builder $query, $sort, $direction = 'asc'): void
     {
-        return $this->orderByUsingJoins($sort, $direction, 'COUNT');
+        $query->orderByUsingJoins($sort, $direction, 'COUNT');
     }
 
     /**
      * Order by the SUM aggregation using joins.
      */
-    public function orderBySumUsingJoins($sort, $direction = 'asc')
+    public function scopeOrderBySumUsingJoins(Builder $query, $sort, $direction = 'asc'): void
     {
-        return $this->orderByUsingJoins($sort, $direction, 'SUM');
+        $query->orderByUsingJoins($sort, $direction, 'SUM');
     }
 
     /**
      * Order by the AVG aggregation using joins.
      */
-    public function orderByAvgUsingJoins($sort, $direction = 'asc')
+    public function scopeOrderByAvgUsingJoins(Builder $query, $sort, $direction = 'asc'): void
     {
-        return $this->orderByUsingJoins($sort, $direction, 'AVG');
+        $query->orderByUsingJoins($sort, $direction, 'AVG');
     }
 
     /**
      * Order by the MIN aggregation using joins.
      */
-    public function orderByMinUsingJoins($sort, $direction = 'asc')
+    public function scopeOrderByMinUsingJoins(Builder $query, $sort, $direction = 'asc'): void
     {
-        return $this->orderByUsingJoins($sort, $direction, 'MIN');
+        $query->orderByUsingJoins($sort, $direction, 'MIN');
     }
 
     /**
      * Order by the MAX aggregation using joins.
      */
-    public function orderByMaxUsingJoins($sort, $direction = 'asc')
+    public function scopeOrderByMaxUsingJoins(Builder $query, $sort, $direction = 'asc'): void
     {
-        return $this->orderByUsingJoins($sort, $direction, 'MAX');
+        $query->orderByUsingJoins($sort, $direction, 'MAX');
     }
 
     /**

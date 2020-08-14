@@ -10,6 +10,9 @@ class Comment extends Model
 {
     use PowerJoins;
 
+    /** @var string */
+    protected $table = 'comments';
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

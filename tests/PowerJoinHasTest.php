@@ -52,16 +52,7 @@ class PowerJoinHasTest extends TestCase
         $postUser1 = factory(Post::class)->state('published')->create(['user_id' => $user1->id]);
         $postUser2 = factory(Post::class)->state('unpublished')->create(['user_id' => $user2->id]);
 
-        $extendedUser = new class extends User {
-            public function scopeHasPublishedPosts($query)
-            {
-                $query->powerJoinWhereHas('posts', function ($join) {
-                    $join->where('posts.published', true);
-                });
-            }
-        };
-
-        $this->assertCount(1, $extendedUser->query()->hasPublishedPosts()->get());
+        $this->assertCount(1, User::query()->hasPublishedPosts()->get());
     }
 
     /** @test */

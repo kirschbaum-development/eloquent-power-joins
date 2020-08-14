@@ -10,6 +10,9 @@ class Image extends Model
 {
     use PowerJoins;
 
+    /** @var string */
+    protected $table = 'images';
+
     public function imageable(): MorphTo
     {
         return $this->morphTo();

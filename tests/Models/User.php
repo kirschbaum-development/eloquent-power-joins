@@ -15,6 +15,9 @@ class User extends Model
     use SoftDeletes;
     use PowerJoins;
 
+    /** @var string */
+    protected $table = 'users';
+
     public function groups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_members', 'user_id', 'group_id');
@@ -38,5 +41,12 @@ class User extends Model
     public function commentsThroughPosts(): HasManyThrough
     {
         return $this->hasManyThrough(Comment::class, Post::class);
+    }
+
+    public function scopeHasPublishedPosts($query)
+    {
+        $query->powerJoinWhereHas('posts', function ($join) {
+            $join->where('posts.published', true);
+        });
     }
 }

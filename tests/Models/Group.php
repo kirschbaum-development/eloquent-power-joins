@@ -10,6 +10,9 @@ class Group extends Model
 {
     use PowerJoins;
 
+    /** @var string */
+    protected $table = 'groups';
+
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id');

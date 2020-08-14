@@ -12,6 +12,9 @@ class Post extends Model
 {
     use PowerJoins;
 
+    /** @var string */
+    protected $table = 'posts';
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

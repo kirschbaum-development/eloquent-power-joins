@@ -1,6 +1,6 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Mixins;
+namespace Kirschbaum\EloquentPowerJoins\Mixins;
 
 use Closure;
 use Illuminate\Support\Str;
@@ -10,7 +10,7 @@ class QueryRelationshipExistence
     /**
      * Same as Laravel 'has`, but using joins instead of where exists.
      */
-    public function hasUsingJoins()
+    public function powerJoinHas()
     {
         return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null) {
             if (is_null($this->getSelect())) {
@@ -62,10 +62,10 @@ class QueryRelationshipExistence
         };
     }
 
-    public function doesntHaveUsingJoins()
+    public function powerJoinDoesntHave()
     {
         return function ($relation, $boolean = 'and', Closure $callback = null) {
-            return $this->hasUsingJoins($relation, '<', 1, $boolean, $callback);
+            return $this->powerJoinHas($relation, '<', 1, $boolean, $callback);
         };
     }
 
@@ -76,10 +76,10 @@ class QueryRelationshipExistence
         };
     }
 
-    public function whereHasUsingJoins()
+    public function wherepowerJoinHas()
     {
         return function ($relation, Closure $callback = null, $operator = '>=', $count = 1) {
-            return $this->hasUsingJoins($relation, $operator, $count, 'and', $callback);
+            return $this->powerJoinHas($relation, $operator, $count, 'and', $callback);
         };
     }
 

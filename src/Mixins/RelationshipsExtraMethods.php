@@ -1,6 +1,6 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Mixins;
+namespace Kirschbaum\EloquentPowerJoins\Mixins;
 
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;

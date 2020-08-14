@@ -198,13 +198,13 @@ User::doesntHave('posts');
 **Package equivalent, but using joins**
 
 ```php
-User::hasUsingJoins('posts');
-User::hasUsingJoins('posts.comments');
-User::hasUsingJoins('posts.comments', '>', 3);
-User::whereHasUsingJoins('posts', function ($query) {
-    $query->where('posts.published', true);
+User::powerJoinHas('posts');
+User::powerJoinHas('posts.comments');
+User::powerJoinHas('posts.comments', '>', 3);
+User::powerJoinWhereHas('posts', function ($join) {
+    $join->where('posts.published', true);
 });
-User::doesntHaveUsingJoins('posts');
+User::powerJoinDoesntHave('posts');
 ```
 
 ### 3 - Order by

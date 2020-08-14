@@ -1,14 +1,17 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests\Models;
+namespace Kirschbaum\EloquentPowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Kirschbaum\EloquentPowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 
 class Post extends Model
 {
+    use PowerJoins;
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

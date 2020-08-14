@@ -1,13 +1,13 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests;
+namespace Kirschbaum\EloquentPowerJoins\Tests;
 
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Category;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Group;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\UserProfile;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Group;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipUsingAliasTest extends TestCase
 {

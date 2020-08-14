@@ -1,6 +1,6 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins;
+namespace Kirschbaum\EloquentPowerJoins;
 
 use Illuminate\Support\ServiceProvider;
 

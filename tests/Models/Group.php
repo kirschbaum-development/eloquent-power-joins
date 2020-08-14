@@ -1,12 +1,15 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests\Models;
+namespace Kirschbaum\EloquentPowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\EloquentPowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Group extends Model
 {
+    use PowerJoins;
+
     public function posts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id');

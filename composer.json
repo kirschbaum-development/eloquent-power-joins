@@ -28,12 +28,12 @@
     },
     "autoload": {
         "psr-4": {
-            "KirschbaumDevelopment\\EloquentJoins\\": "src"
+            "Kirschbaum\\EloquentPowerJoins\\": "src"
         }
     },
     "autoload-dev": {
         "psr-4": {
-            "KirschbaumDevelopment\\EloquentJoins\\Tests\\": "tests"
+            "Kirschbaum\\EloquentPowerJoins\\Tests\\": "tests"
         }
     },
     "scripts": {

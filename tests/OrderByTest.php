@@ -1,11 +1,11 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests;
+namespace Kirschbaum\EloquentPowerJoins\Tests;
 
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\UserProfile;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
 
 class OrderByTest extends TestCase
 {
@@ -51,7 +51,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByCountUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship::orderByCountUsingJoins
      */
     public function test_order_by_relationship_count()
     {
@@ -69,7 +69,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderBySumUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship::orderBySumUsingJoins
      */
     public function test_order_by_relationship_sum()
     {
@@ -88,7 +88,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByAvgUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship::orderByAvgUsingJoins
      */
     public function test_order_by_relationship_avg()
     {
@@ -107,8 +107,8 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByMinUsingJoins
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByMaxUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship::orderByMinUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship::orderByMaxUsingJoins
      */
     public function test_order_by_relationship_min_and_max()
     {

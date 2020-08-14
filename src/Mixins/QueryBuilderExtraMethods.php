@@ -1,6 +1,8 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Mixins;
+namespace Kirschbaum\EloquentPowerJoins\Mixins;
+
+use Closure;
 
 class QueryBuilderExtraMethods
 {

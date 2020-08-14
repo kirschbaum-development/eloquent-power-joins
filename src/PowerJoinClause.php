@@ -1,6 +1,6 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins;
+namespace Kirschbaum\EloquentPowerJoins;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder;

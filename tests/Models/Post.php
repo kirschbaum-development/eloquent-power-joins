@@ -20,6 +20,11 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function userWithTrashed(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')->withTrashed();
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);

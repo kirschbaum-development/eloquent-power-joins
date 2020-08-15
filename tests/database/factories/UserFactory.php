@@ -1,5 +1,6 @@
 <?php
 
+use Carbon\Carbon;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
 
 $factory->define(User::class, function (Faker\Generator $faker) {
@@ -7,3 +8,7 @@ $factory->define(User::class, function (Faker\Generator $faker) {
         'name' => $faker->name,
     ];
 });
+
+$factory->state(User::class, 'trashed', [
+    'deleted_at' => Carbon::now(),
+]);

@@ -23,7 +23,7 @@ class CreateTables extends Migration
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('user_id');
-            $table->string('city');
+            $table->string('city')->nullable();
             $table->timestamps();
         });
 

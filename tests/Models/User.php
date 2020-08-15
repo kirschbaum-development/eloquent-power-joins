@@ -28,6 +28,11 @@ class User extends Model
         return $this->hasOne(UserProfile::class);
     }
 
+    public function profileWithCity(): HasOne
+    {
+        return $this->hasOne(UserProfile::class)->whereNotNull('city');
+    }
+
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);

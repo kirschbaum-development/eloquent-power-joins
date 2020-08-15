@@ -5,6 +5,7 @@ namespace Kirschbaum\EloquentPowerJoins\Mixins;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Kirschbaum\EloquentPowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
@@ -37,11 +38,11 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForBelongsTo()
     {
-        return function ($builder, $joinType, $callback = null, $alias = null) {
+        return function ($query, $joinType, $callback = null, $alias = null) {
             $joinedTable = $this->query->getModel()->getTable();
             $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
 
-            $builder->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
+            $query->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
                 if ($alias) {
                     $join->as($alias);
                 }
@@ -55,6 +56,8 @@ class RelationshipsExtraMethods
                 if ($this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn());
                 }
+
+                $this->applyExtraConditions($join, $this->foreignKey);
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
@@ -88,6 +91,8 @@ class RelationshipsExtraMethods
                         $joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn()
                     );
                 }
+
+                $this->applyExtraConditions($join, $this->foreignKey);
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
@@ -183,7 +188,7 @@ class RelationshipsExtraMethods
             $throughTable = $alias1 ?: $this->getThroughParent()->getTable();
             $farTable = $alias2 ?: $this->getModel()->getTable();
 
-            $builder->{$joinType}($this->getThroughParent()->getTable(), function ($join) use ($callback, $throughTable, $alias1) {
+            $builder->{$joinType}($this->getThroughParent()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $alias1) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
@@ -203,7 +208,7 @@ class RelationshipsExtraMethods
                 }
             }, $this->getThroughParent());
 
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $throughTable, $farTable, $alias1, $alias2) {
+            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias1, $alias2) {
                 if ($alias2) {
                     $join->as($alias2);
                 }
@@ -273,6 +278,50 @@ class RelationshipsExtraMethods
     {
         return function ($model, $default = null) {
             return PowerJoins::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
+        };
+    }
+
+    public function applyExtraConditions()
+    {
+        return function (PowerJoinClause $join, $foreignKey) {
+            dd($this->getQuery()->getQuery()->wheres);
+            foreach ($this->getQuery()->getQuery()->wheres as $condition) {
+                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
+                    continue;
+                }
+
+                $method = "apply{$condition['type']}Condition";
+                $this->$method($join, $condition, $foreignKey);
+            }
+        };
+    }
+
+    public function applyBasicCondition()
+    {
+        return function ($join, $condition, $foreignKey) {
+            $join->where($condition['column'], $condition['operator'], $condition['value'], $condition['boolean']);
+        };
+    }
+
+    public function applyNullCondition()
+    {
+        return function ($join, $condition, $foreignKey) {
+            if ($condition['column'] === $foreignKey) {
+                return;
+            }
+
+            $join->whereNull($condition['column'], $condition['boolean']);
+        };
+    }
+
+    public function applyNotNullCondition()
+    {
+        return function ($join, $condition, $foreignKey) {
+            if ($condition['column'] === $foreignKey) {
+                return;
+            }
+
+            $join->whereNotNull($condition['column'], $condition['boolean']);
         };
     }
 }

@@ -2,9 +2,10 @@
 
 namespace Kirschbaum\EloquentPowerJoins\Tests;
 
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipTest extends TestCase

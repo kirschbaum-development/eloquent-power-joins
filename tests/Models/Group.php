@@ -18,6 +18,11 @@ class Group extends Model
         return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id');
     }
 
+    public function publishedPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id')->published();
+    }
+
     public function parentGroups(): BelongsToMany
     {
         return $this->belongsToMany(Group::class, 'group_parent', 'parent_group_id', 'group_id');

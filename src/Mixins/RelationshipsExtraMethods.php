@@ -57,7 +57,7 @@ class RelationshipsExtraMethods
                     $join->whereNull($joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn());
                 }
 
-                $this->applyExtraConditions($join, $this->foreignKey);
+                $this->applyExtraConditions($join, $joinedTable.'.'.$this->ownerKey);
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
@@ -142,6 +142,9 @@ class RelationshipsExtraMethods
                 if ($this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
+
+                // applying any extra conditions to the belongs to many relationship
+                $this->applyExtraConditions($join, $joinedTable.'.'.$this->getForeignPivotKeyName());
 
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
@@ -304,8 +307,8 @@ class RelationshipsExtraMethods
 
     public function applyNullCondition()
     {
-        return function ($join, $condition) {
-            if ($condition['column'] === $this->query->getModel()->getQualifiedKeyName()) {
+        return function ($join, $condition, $foreignKey) {
+            if ($condition['column'] === $foreignKey) {
                 return;
             }
 
@@ -315,8 +318,8 @@ class RelationshipsExtraMethods
 
     public function applyNotNullCondition()
     {
-        return function ($join, $condition) {
-            if ($condition['column'] === $this->query->getModel()->getQualifiedKeyName()) {
+        return function ($join, $condition, $foreignKey) {
+            if ($condition['column'] === $foreignKey) {
                 return;
             }
 

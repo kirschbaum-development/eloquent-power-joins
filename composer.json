@@ -19,8 +19,8 @@
     ],
     "require": {
         "php": "^7.1",
-        "illuminate/support": "^6.0|^7.0",
-        "illuminate/database": "^6.0|^7.0"
+        "illuminate/support": "^6.0|^7.0|^8.0",
+        "illuminate/database": "^6.0|^7.0|^8.0"
     },
     "require-dev": {
         "orchestra/testbench": "4.*|5.*",
@@ -47,7 +47,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "KirschbaumDevelopment\\EloquentJoins\\EloquentJoinsServiceProvider"
+                "KirschbaumDevelopment\\EloquentJoins\\PowerJoinsServiceProvider"
             ]
         }
     }

@@ -4,7 +4,7 @@ namespace Kirschbaum\EloquentPowerJoins;
 
 use Illuminate\Support\ServiceProvider;
 
-class EloquentJoinsServiceProvider extends ServiceProvider
+class PowerJoinsServiceProvider extends ServiceProvider
 {
     /**
      * Bootstrap the application services.

@@ -4,6 +4,7 @@ namespace Kirschbaum\EloquentPowerJoins\Tests;
 
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Group;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
@@ -63,6 +64,26 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertStringContainsString(
             'inner join "user_profiles" on "user_profiles"."user_id" = "users"."id" and "city" is not null',
             $query
+        );
+    }
+
+    /** @test */
+    public function test_extra_conditions_with_belongs_to_many()
+    {
+        $publishedPost = factory(Post::class)->state('published')->create();
+        $group1 = factory(Group::class)->create();
+        $group1->posts()->attach($publishedPost);
+
+        $unpublishedPost = factory(Post::class)->state('unpublished')->create();
+        $group2 = factory(Group::class)->create();
+        $group2->posts()->attach($unpublishedPost);
+
+        $this->assertCount(2, Group::joinRelationship('posts')->get());
+        $this->assertCount(1, Group::joinRelationship('publishedPosts')->get());
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."published" = ?',
+            Group::joinRelationship('publishedPosts')->toSql()
         );
     }
 }

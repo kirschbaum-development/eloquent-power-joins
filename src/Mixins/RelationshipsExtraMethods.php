@@ -284,7 +284,6 @@ class RelationshipsExtraMethods
     public function applyExtraConditions()
     {
         return function (PowerJoinClause $join, $foreignKey) {
-            dd($this->getQuery()->getQuery()->wheres);
             foreach ($this->getQuery()->getQuery()->wheres as $condition) {
                 if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
                     continue;
@@ -305,8 +304,8 @@ class RelationshipsExtraMethods
 
     public function applyNullCondition()
     {
-        return function ($join, $condition, $foreignKey) {
-            if ($condition['column'] === $foreignKey) {
+        return function ($join, $condition) {
+            if ($condition['column'] === $this->query->getModel()->getQualifiedKeyName()) {
                 return;
             }
 
@@ -316,8 +315,8 @@ class RelationshipsExtraMethods
 
     public function applyNotNullCondition()
     {
-        return function ($join, $condition, $foreignKey) {
-            if ($condition['column'] === $foreignKey) {
+        return function ($join, $condition) {
+            if ($condition['column'] === $this->query->getModel()->getQualifiedKeyName()) {
                 return;
             }
 

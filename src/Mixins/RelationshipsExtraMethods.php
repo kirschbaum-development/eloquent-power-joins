@@ -92,7 +92,7 @@ class RelationshipsExtraMethods
                     );
                 }
 
-                $this->applyExtraConditions($join, $this->foreignKey);
+                $this->applyExtraConditions($join);
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
@@ -286,43 +286,43 @@ class RelationshipsExtraMethods
 
     public function applyExtraConditions()
     {
-        return function (PowerJoinClause $join, $foreignKey) {
-            foreach ($this->getQuery()->getQuery()->wheres as $condition) {
+        return function (PowerJoinClause $join) {
+            foreach ($this->getQuery()->getQuery()->wheres as $index => $condition) {
+                // for some reason, Laravel is applying a where null condition with the joined
+                // column, which makes the query not work, because
+                // inner join user_profiles on user_profiles.user_id = users.id and user_profiles.user_id is null
+                // doesn't really make much sense
+                if ($index === 0 && $condition['type'] === 'Null') {
+                    continue;
+                }
+
                 if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
                     continue;
                 }
 
                 $method = "apply{$condition['type']}Condition";
-                $this->$method($join, $condition, $foreignKey);
+                $this->$method($join, $condition);
             }
         };
     }
 
     public function applyBasicCondition()
     {
-        return function ($join, $condition, $foreignKey) {
+        return function ($join, $condition) {
             $join->where($condition['column'], $condition['operator'], $condition['value'], $condition['boolean']);
         };
     }
 
     public function applyNullCondition()
     {
-        return function ($join, $condition, $foreignKey) {
-            if ($condition['column'] === $foreignKey) {
-                return;
-            }
-
+        return function ($join, $condition) {
             $join->whereNull($condition['column'], $condition['boolean']);
         };
     }
 
     public function applyNotNullCondition()
     {
-        return function ($join, $condition, $foreignKey) {
-            if ($condition['column'] === $foreignKey) {
-                return;
-            }
-
+        return function ($join, $condition) {
             $join->whereNotNull($condition['column'], $condition['boolean']);
         };
     }

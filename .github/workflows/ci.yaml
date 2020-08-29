@@ -1,6 +1,6 @@
 name: run-tests
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
     tests:

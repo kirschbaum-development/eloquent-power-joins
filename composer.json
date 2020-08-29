@@ -20,7 +20,7 @@
     "require": {
         "php": "^7.1",
         "illuminate/support": "^6.0|^7.0|^8.0-dev",
-        "illuminate/database": "^6.0|^7.0|^8.0"
+        "illuminate/database": "^6.0|^7.0|^8.0-dev"
     },
     "require-dev": {
         "orchestra/testbench": "4.*|5.*|6.*",

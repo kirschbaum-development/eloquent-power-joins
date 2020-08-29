@@ -49,36 +49,37 @@ jobs:
             -   name: Execute tests
                 run: vendor/bin/phpunit
 
-    tests-php-8:
-        runs-on: ubuntu-latest
-        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    # Laravel 8 not fully ready for PHP 8 yet
+    # tests-php-8:
+    #     runs-on: ubuntu-latest
+    #     name: PHP 8.0 - Laravel 8.0-dev
 
-        steps:
-            -   name: Checkout code
-                uses: actions/checkout@v1
+    #     steps:
+    #         -   name: Checkout code
+    #             uses: actions/checkout@v1
 
-            -   name: Install SQLite 3
-                run: |
-                    sudo apt-get update
-                    sudo apt-get install sqlite3
+    #         -   name: Install SQLite 3
+    #             run: |
+    #                 sudo apt-get update
+    #                 sudo apt-get install sqlite3
 
-            -   name: Cache dependencies
-                uses: actions/cache@v1
-                with:
-                    path: ~/.composer/cache/files
-                    key: dependencies-laravel-8.0-dev-php-8.0-composer-${{ hashFiles('composer.json') }}
+    #         -   name: Cache dependencies
+    #             uses: actions/cache@v1
+    #             with:
+    #                 path: ~/.composer/cache/files
+    #                 key: dependencies-laravel-8.0-dev-php-8.0-composer-${{ hashFiles('composer.json') }}
 
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: 8.0
-                    extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
-                    coverage: none
+    #         -   name: Setup PHP
+    #             uses: shivammathur/setup-php@v2
+    #             with:
+    #                 php-version: 8.0
+    #                 extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
+    #                 coverage: none
 
-            -   name: Install dependencies
-                run: |
-                    composer require "laravel/framework:8.0-dev" "orchestra/testbench:6.*" --no-interaction --no-update
-                    composer update --prefer-dist --no-interaction --no-suggest
+    #         -   name: Install dependencies
+    #             run: |
+    #                 composer require "laravel/framework:8.0-dev" "orchestra/testbench:6.*" --no-interaction --no-update
+    #                 composer update --prefer-dist --no-interaction --no-suggest
 
-            -   name: Execute tests
-                run: vendor/bin/phpunit
+    #         -   name: Execute tests
+    #             run: vendor/bin/phpunit

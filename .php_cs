@@ -25,9 +25,6 @@ return PhpCsFixer\Config::create()
         'cast_spaces' => [
             'space' => 'single',
         ],
-        'concat_space' => [
-            'spacing' => 'one',
-        ],
         'single_quote' => true,
         'lowercase_cast' => true,
         'lowercase_static_reference' => true,

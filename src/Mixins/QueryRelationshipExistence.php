@@ -2,8 +2,6 @@
 
 namespace Kirschbaum\EloquentPowerJoins\Mixins;
 
-use Closure;
-use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
 class QueryRelationshipExistence

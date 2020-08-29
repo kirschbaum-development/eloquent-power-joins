@@ -2,18 +2,13 @@
 
 namespace Kirschbaum\EloquentPowerJoins;
 
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\Relation;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Query\Builder as QueryBuilder;
-use Kirschbaum\EloquentPowerJoins\Mixins\HasManyMixin;
-use Kirschbaum\EloquentPowerJoins\Mixins\BelongsToMixin;
-use Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship;
 use Illuminate\Database\Eloquent\Builder as EloquentQueryBuilder;
+use Illuminate\Database\Eloquent\Relations\Relation;
+use Illuminate\Database\Query\Builder as QueryBuilder;
+use Kirschbaum\EloquentPowerJoins\Mixins\JoinRelationship;
 use Kirschbaum\EloquentPowerJoins\Mixins\QueryBuilderExtraMethods;
-use Kirschbaum\EloquentPowerJoins\Mixins\RelationshipsExtraMethods;
 use Kirschbaum\EloquentPowerJoins\Mixins\QueryRelationshipExistence;
+use Kirschbaum\EloquentPowerJoins\Mixins\RelationshipsExtraMethods;
 
 class EloquentJoins
 {

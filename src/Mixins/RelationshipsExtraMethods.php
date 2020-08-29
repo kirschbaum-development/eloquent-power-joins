@@ -2,15 +2,15 @@
 
 namespace Kirschbaum\EloquentPowerJoins\Mixins;
 
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Kirschbaum\EloquentPowerJoins\PowerJoins;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
+use Kirschbaum\EloquentPowerJoins\PowerJoins;
 
 class RelationshipsExtraMethods
 {
@@ -294,7 +294,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
+                if ( ! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
                     continue;
                 }
 

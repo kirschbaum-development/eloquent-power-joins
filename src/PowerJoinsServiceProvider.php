@@ -11,7 +11,6 @@ class PowerJoinsServiceProvider extends ServiceProvider
      */
     public function boot()
     {
-        //
     }
 
     /**

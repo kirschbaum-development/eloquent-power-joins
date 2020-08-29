@@ -4,10 +4,7 @@ namespace Kirschbaum\EloquentPowerJoins\Mixins;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Illuminate\Support\Str;
 use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
 
 class JoinRelationship

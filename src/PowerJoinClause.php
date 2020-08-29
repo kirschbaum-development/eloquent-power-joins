@@ -74,7 +74,7 @@ class PowerJoinClause extends JoinClause
 
     protected function useTableAliasInConditions()
     {
-        if (! $this->alias || ! $this->model) {
+        if ( ! $this->alias || ! $this->model) {
             return $this;
         }
 

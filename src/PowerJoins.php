@@ -3,12 +3,10 @@
 namespace Kirschbaum\EloquentPowerJoins;
 
 use Closure;
-use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
-use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Support\Str;
 
 trait PowerJoins
 {
@@ -48,6 +46,7 @@ trait PowerJoins
 
         if (Str::contains($relationName, '.')) {
             $query->joinNestedRelationship($relationName, $callback, $joinType, $useAlias);
+
             return;
         }
 
@@ -243,6 +242,7 @@ trait PowerJoins
         if (is_string($relation)) {
             if (Str::contains($relation, '.')) {
                 $query->hasNestedUsingJoins($relation, $operator, $count, 'and', $callback);
+
                 return;
             }
 
@@ -261,7 +261,7 @@ trait PowerJoins
         $latestRelation = null;
 
         foreach ($relations as $index => $relation) {
-            if (! $latestRelation) {
+            if ( ! $latestRelation) {
                 $relation = $query->getRelationWithoutConstraintsProxy($relation);
             } else {
                 $relation = $latestRelation->getModel()->query()->getRelationWithoutConstraintsProxy($relation);

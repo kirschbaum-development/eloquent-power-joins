@@ -49,13 +49,13 @@ class RelationshipsExtraMethods
                 }
 
                 $join->on(
-                    $parentTable.'.'.$this->foreignKey,
+                    "{$parentTable}.{$this->foreignKey}",
                     '=',
-                    $joinedTable.'.'.$this->ownerKey
+                    "{$joinedTable}.{$this->ownerKey}"
                 );
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn());
+                    $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
                 }
 
                 $this->applyExtraConditions($join);
@@ -84,9 +84,9 @@ class RelationshipsExtraMethods
                 }
 
                 $join->on(
-                    $joinedTable.'.'.$this->getForeignPivotKeyName(),
+                    $joinedTable . '.' . $this->getForeignPivotKeyName(),
                     '=',
-                    $parentTable.'.'.$this->parentKey
+                    $parentTable . '.' . $this->parentKey
                 );
 
                 if (is_array($callback) && isset($callback[$this->getTable()])) {
@@ -102,7 +102,7 @@ class RelationshipsExtraMethods
                 $join->on(
                     sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()),
                     '=',
-                    $joinedTable.'.'.$this->getRelatedPivotKeyName()
+                    $joinedTable . '.' . $this->getRelatedPivotKeyName()
                 );
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
@@ -131,7 +131,7 @@ class RelationshipsExtraMethods
                 $join->on(
                     sprintf('%s.%s', $this->getModel()->getTable(), $this->getForeignKeyName()),
                     '=',
-                    $this->parent->getTable().'.'.$this->localKey
+                    $this->parent->getTable() . '.' . $this->localKey
                 )->where($this->getMorphType(), '=', get_class($this->getModel()));
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
@@ -164,12 +164,12 @@ class RelationshipsExtraMethods
                 $join->on(
                     $this->foreignKey,
                     '=',
-                    $parentTable.'.'.$this->localKey
+                    $parentTable . '.' . $this->localKey
                 );
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull(
-                        $joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn()
+                        $joinedTable . '.' . $this->query->getModel()->getDeletedAtColumn()
                     );
                 }
 
@@ -198,7 +198,7 @@ class RelationshipsExtraMethods
                 }
 
                 $join->on(
-                    $throughTable.'.'.$this->getFirstKeyName(),
+                    $throughTable . '.' . $this->getFirstKeyName(),
                     '=',
                     $this->getQualifiedLocalKeyName()
                 );
@@ -218,13 +218,13 @@ class RelationshipsExtraMethods
                 }
 
                 $join->on(
-                    $farTable.'.'.$this->secondKey,
+                    $farTable . '.' . $this->secondKey,
                     '=',
-                    $throughTable.'.'.$this->secondLocalKey
+                    $throughTable . '.' . $this->secondLocalKey
                 );
 
                 if ($this->usesSoftDeletes($this->getModel())) {
-                    $join->whereNull($farTable.'.'.$this->getModel()->getDeletedAtColumn());
+                    $join->whereNull($farTable . '.' . $this->getModel()->getDeletedAtColumn());
                 }
 
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
@@ -294,7 +294,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if ( ! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
+                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
                     continue;
                 }
 

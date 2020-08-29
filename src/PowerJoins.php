@@ -88,7 +88,7 @@ trait PowerJoins
 
     public function scopeJoinRelation(Builder $query, $relationName, $callback = null, $joinType = 'join'): void
     {
-        $query->joinRelationship($relationName, $callback.$joinType);
+        $query->joinRelationship($relationName, $callback . $joinType);
     }
 
     public function scopeLeftJoinRelationship(Builder $query, $relation, $callback = null, $useAlias = false)
@@ -137,6 +137,7 @@ trait PowerJoins
 
             if ($this->relationshipAlreadyJoined($relationName)) {
                 $latestRelation = $relation;
+
                 continue;
             }
 
@@ -261,7 +262,7 @@ trait PowerJoins
         $latestRelation = null;
 
         foreach ($relations as $index => $relation) {
-            if ( ! $latestRelation) {
+            if (! $latestRelation) {
                 $relation = $query->getRelationWithoutConstraintsProxy($relation);
             } else {
                 $relation = $latestRelation->getModel()->query()->getRelationWithoutConstraintsProxy($relation);
@@ -307,12 +308,12 @@ trait PowerJoins
     {
         if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
             return [
-                md5($relationName.'table1'.time()),
-                md5($relationName.'table2'.time()),
+                md5($relationName . 'table1' . time()),
+                md5($relationName . 'table2' . time()),
             ];
         }
 
-        return md5($relationName.time());
+        return md5($relationName . time());
     }
 
     /**

@@ -74,7 +74,7 @@ class PowerJoinClause extends JoinClause
 
     protected function useTableAliasInConditions()
     {
-        if ( ! $this->alias || ! $this->model) {
+        if (! $this->alias || ! $this->model) {
             return $this;
         }
 
@@ -86,8 +86,8 @@ class PowerJoinClause extends JoinClause
 
             if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
                 // if joining the same table, only replace the correct table.key pair
-                $where['first'] = str_replace($table.'.'.$key, $this->alias.'.'.$key, $where['first']);
-                $where['second'] = str_replace($table.'.'.$key, $this->alias.'.'.$key, $where['second']);
+                $where['first'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['first']);
+                $where['second'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['second']);
             } else {
                 $where['first'] = str_replace($table, $this->alias, $where['first']);
                 $where['second'] = str_replace($table, $this->alias, $where['second']);
@@ -101,7 +101,7 @@ class PowerJoinClause extends JoinClause
 
     public function __call($name, $arguments)
     {
-        $scope = 'scope'.ucfirst($name);
+        $scope = 'scope' . ucfirst($name);
 
         if (method_exists($this->getModel(), $scope)) {
             $this->getModel()->{$scope}($this, ...$arguments);

@@ -12,8 +12,6 @@ jobs:
                 php: [7.3, 7.4]
                 laravel: [6.*, 7.*]
                 include:
-                    -   laravel: 8.*-dev
-                        testbench: 6.*
                     -   laravel: 7.*
                         testbench: 5.*
                     -   laravel: 6.*
@@ -53,16 +51,6 @@ jobs:
 
     tests-php-8:
         runs-on: ubuntu-latest
-
-        strategy:
-            fail-fast: true
-            matrix:
-                php: [8.0]
-                laravel: [8.*-dev]
-                include:
-                    -   laravel: 8.*-dev
-                        testbench: 6.*
-
         name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
         steps:
@@ -78,19 +66,19 @@ jobs:
                 uses: actions/cache@v1
                 with:
                     path: ~/.composer/cache/files
-                    key: dependencies-laravel-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+                    key: dependencies-laravel-8.0-dev-php-8.0-composer-${{ hashFiles('composer.json') }}
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: ${{ matrix.php }}
+                    php-version: 8.0
                     extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
                     coverage: none
 
             -   name: Install dependencies
                 run: |
-                    composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-                    composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
+                    composer require "laravel/framework:8.0-dev" "orchestra/testbench:6.*" --no-interaction --no-update
+                    composer update --prefer-dist --no-interaction --no-suggest
 
             -   name: Execute tests
                 run: vendor/bin/phpunit

@@ -7,6 +7,7 @@ use Kirschbaum\EloquentPowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
@@ -55,41 +56,6 @@ class RelationshipsExtraMethods
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn());
-                }
-
-                $this->applyExtraConditions($join, $joinedTable.'.'.$this->ownerKey);
-
-                if ($callback && is_callable($callback)) {
-                    $callback($join);
-                }
-            }, $this->query->getModel());
-        };
-    }
-
-    /**
-     * Perform the JOIN clause for the HasMany (or similar) relationships.
-     */
-    protected function performJoinForEloquentPowerJoinsForHasMany()
-    {
-        return function ($builder, $joinType, $callback = null, $alias = null) {
-            $joinedTable = $alias ?: $this->query->getModel()->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
-
-            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
-                if ($alias) {
-                    $join->as($alias);
-                }
-
-                $join->on(
-                    $this->foreignKey,
-                    '=',
-                    $parentTable.'.'.$this->localKey
-                );
-
-                if ($this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull(
-                        $joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn()
-                    );
                 }
 
                 $this->applyExtraConditions($join);
@@ -144,7 +110,7 @@ class RelationshipsExtraMethods
                 }
 
                 // applying any extra conditions to the belongs to many relationship
-                $this->applyExtraConditions($join, $joinedTable.'.'.$this->getForeignPivotKeyName());
+                $this->applyExtraConditions($join);
 
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
@@ -178,6 +144,41 @@ class RelationshipsExtraMethods
             }, $this->getModel());
 
             return $this;
+        };
+    }
+
+    /**
+     * Perform the JOIN clause for the HasMany (or similar) relationships.
+     */
+    protected function performJoinForEloquentPowerJoinsForHasMany()
+    {
+        return function ($builder, $joinType, $callback = null, $alias = null) {
+            $joinedTable = $alias ?: $this->query->getModel()->getTable();
+            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+
+            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias) {
+                if ($alias) {
+                    $join->as($alias);
+                }
+
+                $join->on(
+                    $this->foreignKey,
+                    '=',
+                    $parentTable.'.'.$this->localKey
+                );
+
+                if ($this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull(
+                        $joinedTable.'.'.$this->query->getModel()->getDeletedAtColumn()
+                    );
+                }
+
+                $this->applyExtraConditions($join);
+
+                if ($callback && is_callable($callback)) {
+                    $callback($join);
+                }
+            }, $this->query->getModel());
         };
     }
 
@@ -287,12 +288,9 @@ class RelationshipsExtraMethods
     public function applyExtraConditions()
     {
         return function (PowerJoinClause $join) {
+            // dd($this->getQuery()->getQuery()->wheres, $this->getPowerJoinExistenceCompareKey());
             foreach ($this->getQuery()->getQuery()->wheres as $index => $condition) {
-                // for some reason, Laravel is applying a where null condition with the joined
-                // column, which makes the query not work, because
-                // inner join user_profiles on user_profiles.user_id = users.id and user_profiles.user_id is null
-                // doesn't really make much sense
-                if ($index === 0 && $condition['type'] === 'Null') {
+                if ($this->shouldNotApplyExtraCondition($condition)) {
                     continue;
                 }
 
@@ -324,6 +322,30 @@ class RelationshipsExtraMethods
     {
         return function ($join, $condition) {
             $join->whereNotNull($condition['column'], $condition['boolean']);
+        };
+    }
+
+    public function shouldNotApplyExtraCondition()
+    {
+        return function ($condition) {
+            return $condition['column'] === $this->getPowerJoinExistenceCompareKey();
+        };
+    }
+
+    public function getPowerJoinExistenceCompareKey()
+    {
+        return function () {
+            if ($this instanceof BelongsTo) {
+                return $this->getQualifiedOwnerKeyName();
+            }
+
+            if ($this instanceof HasMany || $this instanceof HasOne) {
+                return $this->getExistenceCompareKey();
+            }
+
+            if ($this instanceof BelongsToMany) {
+                return $this->getExistenceCompareKey();
+            }
         };
     }
 }

@@ -43,7 +43,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertEquals($category1->id, $categories->first()->id);
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."category_id" = "categories"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."category_id" = "categories"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "posts"."published" = ?',
             $query
         );
     }
@@ -62,7 +67,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertEquals($user1->id, $users->first()->id);
 
         $this->assertStringContainsString(
-            'inner join "user_profiles" on "user_profiles"."user_id" = "users"."id" and "city" is not null',
+            'inner join "user_profiles" on "user_profiles"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "city" is not null',
             $query
         );
     }

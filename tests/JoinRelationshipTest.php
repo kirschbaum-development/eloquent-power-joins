@@ -121,12 +121,22 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_apply_condition_to_join()
     {
-        $query = User::query()->joinRelationship('posts', function ($join) {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
             $join->where('posts.published', true);
-        })->toSql();
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "posts"."published" = ?',
             $query
         );
     }
@@ -134,14 +144,24 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_apply_condition_to_join_using_related_model_scopes()
     {
-        $query = User::query()->joinRelationship('posts', function ($join) {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
             // published() is an scope in the Post model
             // how awesome is that?
             $join->published();
-        })->toSql();
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "posts"."published" = ?',
             $query
         );
     }
@@ -149,22 +169,36 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_apply_condition_to_nested_joins()
     {
-        $query = User::query()->joinRelationship('posts.comments', [
+        $queryBuilder = User::query()->joinRelationship('posts.comments', [
             'posts' => function ($join) {
                 $join->where('posts.published', true);
             },
             'comments' => function ($join) {
                 $join->where('comments.approved', true);
             },
-        ])->toSql();
+        ]);
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
         $this->assertStringContainsString(
-            'inner join "comments" on "comments"."post_id" = "posts"."id" and "comments"."approved" = ?',
+            'and "posts"."published" = ?',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "comments"."approved" = ?',
             $query
         );
     }

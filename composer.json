@@ -50,5 +50,7 @@
                 "KirschbaumDevelopment\\EloquentJoins\\PowerJoinsServiceProvider"
             ]
         }
-    }
+    },
+
+    "minimum-stability": "dev"
 }

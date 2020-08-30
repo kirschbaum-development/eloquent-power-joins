@@ -123,7 +123,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
     /** @test */
     public function test_extra_conditions_in_morph_many()
     {
-        $coverImage = factory(Image::class)->states(['owner:post', 'cover'])->create();
+        factory(Image::class)->states(['owner:post', 'cover'])->create();
         factory(Image::class)->states(['owner:post'])->create();
 
         $query = Post::joinRelationship('coverImages')->toSql();

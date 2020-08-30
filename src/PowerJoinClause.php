@@ -2,10 +2,11 @@
 
 namespace Kirschbaum\EloquentPowerJoins;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Str;
+use InvalidArgumentException;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\JoinClause;
 
 class PowerJoinClause extends JoinClause
 {
@@ -97,6 +98,24 @@ class PowerJoinClause extends JoinClause
         });
 
         return $this;
+    }
+
+    public function whereNull($columns, $boolean = 'and', $not = false)
+    {
+        if ($this->alias && Str::contains($columns, $this->tableName)) {
+            $columns = str_replace("{$this->tableName}.", "{$this->alias}.", $columns);
+        }
+
+        return parent::whereNull($columns, $boolean, $not);
+    }
+
+    public function where($column, $operator = null, $value = null, $boolean = 'and')
+    {
+        if ($this->alias && Str::contains($column, $this->tableName)) {
+            $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
+        }
+
+        return parent::where($column, $operator, $value, $boolean);
     }
 
     public function __call($name, $arguments)

@@ -12,3 +12,7 @@ $factory->define(User::class, function (Faker\Generator $faker) {
 $factory->state(User::class, 'trashed', [
     'deleted_at' => Carbon::now(),
 ]);
+
+$factory->state(User::class, 'rockstar', [
+    'rockstar' => true,
+]);

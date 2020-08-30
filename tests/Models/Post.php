@@ -20,6 +20,11 @@ class Post extends Model
         return $this->belongsTo(User::class);
     }
 
+    public function rockstarUser(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'user_id')->where('users.rockstar', true);
+    }
+
     public function userWithTrashed(): BelongsTo
     {
         return $this->belongsTo(User::class, 'user_id')->withTrashed();

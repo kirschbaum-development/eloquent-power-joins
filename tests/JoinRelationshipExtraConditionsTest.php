@@ -32,6 +32,30 @@ class JoinRelationshipExtraConditionsTest extends TestCase
     }
 
     /** @test */
+    public function test_join_belongs_to_with_additional_conditions_and_alias()
+    {
+        $user1 = factory(User::class)->state('rockstar')->create();
+        $user2 = factory(User::class)->create();
+        $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
+        $post2 = factory(Post::class)->create(['user_id' => $user2->id]);
+
+        $query = Post::query()->joinRelationshipUsingAlias('rockstarUser')->toSql();
+        $posts = Post::query()->joinRelationshipUsingAlias('rockstarUser')->get();
+
+        $this->assertCount(1, $posts);
+
+        $this->assertStringContainsString(
+            '."rockstar" = ?',
+            $query
+        );
+
+        $this->assertStringNotContainsString(
+            'and "users"."rockstar" = ?',
+            $query
+        );
+    }
+
+    /** @test */
     public function test_join_has_many_relationship_with_additional_conditions()
     {
         [$category1, $category2] = factory(Category::class, 2)->create();
@@ -50,6 +74,29 @@ class JoinRelationshipExtraConditionsTest extends TestCase
 
         $this->assertStringContainsString(
             'and "posts"."published" = ?',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_has_many_relationship_with_additional_conditions_and_alias()
+    {
+        [$category1, $category2] = factory(Category::class, 2)->create();
+        factory(Post::class)->states('published')->create(['category_id' => $category1->id]);
+
+        $query = Category::joinRelationshipUsingAlias('publishedPosts')->toSql();
+        $categories = Category::joinRelationshipUsingAlias('publishedPosts')->get();
+
+        $this->assertCount(1, $categories);
+        $this->assertEquals($category1->id, $categories->first()->id);
+
+        $this->assertStringNotContainsString(
+            'inner join "posts" on "posts"."category_id" = "categories"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            '."published" = ?',
             $query
         );
     }

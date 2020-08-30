@@ -35,6 +35,11 @@ class Post extends Model
         return $this->morphMany(Image::class, 'imageable');
     }
 
+    public function coverImages(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable')->where('cover', true);
+    }
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);

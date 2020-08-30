@@ -4,6 +4,7 @@ namespace Kirschbaum\EloquentPowerJoins\Tests;
 
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Image;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
@@ -94,8 +95,12 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_join_morph_relationship()
     {
-        $query = Post::query()->joinRelationship('images')->toSql();
+        factory(Image::class, 5)->state('owner:post')->create();
 
+        $query = Post::query()->joinRelationship('images')->toSql();
+        $posts = Post::query()->joinRelationship('images')->get();
+
+        $this->assertCount(5, $posts);
         $this->assertStringContainsString(
             'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
             $query

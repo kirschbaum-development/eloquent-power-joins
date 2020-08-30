@@ -5,6 +5,7 @@ namespace Kirschbaum\EloquentPowerJoins\Tests;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Group;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Image;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
 use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
@@ -94,6 +95,45 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertStringContainsString(
             'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."published" = ?',
             Group::joinRelationship('publishedPosts')->toSql()
+        );
+    }
+
+    /** @test */
+    public function test_extra_conditions_in_pivot_with_belongs_to_many_in()
+    {
+        $publishedPosts = factory(Post::class, 2)->state('published')->create();
+        $group1 = factory(Group::class)->create();
+        $publishedPosts->each(function ($publishedPost) use ($group1) {
+            $group1->posts()->attach($publishedPost, ['assigned_at' => now()]);
+        });
+
+        $oldPost = factory(Post::class)->state('unpublished')->create();
+        $group2 = factory(Group::class)->create();
+        $group1->posts()->attach($oldPost, ['assigned_at' => now()->subWeeks(2)]);
+
+        $this->assertCount(3, Group::joinRelationship('posts')->get());
+        $this->assertCount(2, Group::joinRelationship('recentPosts')->get());
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "post_groups"."assigned_at" >= ?',
+            Group::joinRelationship('recentPosts')->toSql()
+        );
+    }
+
+    /** @test */
+    public function test_extra_conditions_in_morph_many()
+    {
+        $coverImage = factory(Image::class)->states(['owner:post', 'cover'])->create();
+        factory(Image::class)->states(['owner:post'])->create();
+
+        $query = Post::joinRelationship('coverImages')->toSql();
+        $posts = Post::joinRelationship('coverImages')->get();
+
+        $this->assertCount(1, $posts);
+
+        $this->assertStringContainsString(
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ? and "cover" = ?',
+            $query
         );
     }
 }

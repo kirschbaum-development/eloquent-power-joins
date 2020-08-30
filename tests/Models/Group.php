@@ -18,6 +18,15 @@ class Group extends Model
         return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id');
     }
 
+    /**
+     * Some relationships just don't make a lot of sense, but is just for testing anyway :)
+     */
+    public function recentPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id')
+            ->wherePivot('assigned_at', '>=', now()->subWeek());
+    }
+
     public function publishedPosts(): BelongsToMany
     {
         return $this->belongsToMany(Post::class, 'post_groups', 'group_id', 'post_id')->published();

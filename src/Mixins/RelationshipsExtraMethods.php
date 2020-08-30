@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
@@ -132,11 +133,13 @@ class RelationshipsExtraMethods
                     "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
                     '=',
                     "{$this->parent->getTable()}.{$this->localKey}"
-                )->where($this->getMorphType(), '=', get_class($this->getModel()));
+                )->where($this->getMorphType(), '=', $this->getMorphClass());
 
                 if ($this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
+
+                $this->applyExtraConditions($join);
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
@@ -288,7 +291,6 @@ class RelationshipsExtraMethods
     public function applyExtraConditions()
     {
         return function (PowerJoinClause $join) {
-            // dd($this->getQuery()->getQuery()->wheres, $this->getPowerJoinExistenceCompareKey());
             foreach ($this->getQuery()->getQuery()->wheres as $index => $condition) {
                 if ($this->shouldNotApplyExtraCondition($condition)) {
                     continue;
@@ -328,7 +330,13 @@ class RelationshipsExtraMethods
     public function shouldNotApplyExtraCondition()
     {
         return function ($condition) {
-            return $condition['column'] === $this->getPowerJoinExistenceCompareKey();
+            $key = $this->getPowerJoinExistenceCompareKey();
+
+            if (is_array($key)) {
+                return in_array($condition['column'], $key);
+            }
+
+            return $condition['column'] === $key;
         };
     }
 
@@ -345,6 +353,10 @@ class RelationshipsExtraMethods
 
             if ($this instanceof BelongsToMany) {
                 return $this->getExistenceCompareKey();
+            }
+
+            if ($this instanceof MorphOneOrMany) {
+                return [$this->getQualifiedMorphType(), $this->getExistenceCompareKey()];
             }
         };
     }

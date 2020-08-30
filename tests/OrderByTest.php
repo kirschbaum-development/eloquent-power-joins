@@ -34,6 +34,17 @@ class OrderByTest extends TestCase
     }
 
     /** @test */
+    public function test_can_call_twice_in_a_row()
+    {
+        $user = new User;
+
+        $user->posts()->orderByPowerJoins('comments.created_at', 'desc')->get();
+        $user->posts()->orderByPowerJoins('comments.created_at', 'desc')->get();
+
+        $this->assertTrue(true, 'No exceptions, we are good :)');
+    }
+
+    /** @test */
     public function test_order_by_nested_relationship()
     {
         // just making sure the query doesn't throw any exceptions

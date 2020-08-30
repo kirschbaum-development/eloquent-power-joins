@@ -1,8 +1,8 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests;
+namespace Kirschbaum\EloquentPowerJoins\Tests;
 
-use KirschbaumDevelopment\EloquentJoins\EloquentJoinsServiceProvider;
+use Kirschbaum\EloquentPowerJoins\PowerJoinsServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
@@ -16,7 +16,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
     protected function getPackageProviders($app)
     {
-        return [EloquentJoinsServiceProvider::class];
+        return [PowerJoinsServiceProvider::class];
     }
 
     /**

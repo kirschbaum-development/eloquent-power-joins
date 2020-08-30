@@ -1,17 +1,22 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests\Models;
+namespace Kirschbaum\EloquentPowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Kirschbaum\EloquentPowerJoins\PowerJoins;
+use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
 class User extends Model
 {
     use SoftDeletes;
+    use PowerJoins;
+
+    /** @var string */
+    protected $table = 'users';
 
     public function groups(): BelongsToMany
     {
@@ -21,6 +26,11 @@ class User extends Model
     public function profile(): HasOne
     {
         return $this->hasOne(UserProfile::class);
+    }
+
+    public function profileWithCity(): HasOne
+    {
+        return $this->hasOne(UserProfile::class)->whereNotNull('city');
     }
 
     public function posts(): HasMany
@@ -36,5 +46,12 @@ class User extends Model
     public function commentsThroughPosts(): HasManyThrough
     {
         return $this->hasManyThrough(Comment::class, Post::class);
+    }
+
+    public function scopeHasPublishedPosts($query)
+    {
+        $query->powerJoinWhereHas('posts', function ($join) {
+            $join->where('posts.published', true);
+        });
     }
 }

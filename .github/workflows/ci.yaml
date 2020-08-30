@@ -1,6 +1,6 @@
 name: run-tests
 
-on: [push, pull_request]
+on: [push]
 
 jobs:
     tests:
@@ -10,8 +10,10 @@ jobs:
             fail-fast: true
             matrix:
                 php: [7.3, 7.4]
-                laravel: [6.*, 7.*]
+                laravel: [6.*, 7.*, 8.*-dev]
                 include:
+                    -   laravel: 8.*-dev
+                        testbench: 6.*-dev
                     -   laravel: 7.*
                         testbench: 5.*
                     -   laravel: 6.*

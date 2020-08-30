@@ -1,11 +1,13 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests;
+namespace Kirschbaum\EloquentPowerJoins\Tests;
 
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\UserProfile;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Image;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipTest extends TestCase
 {
@@ -93,8 +95,12 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_join_morph_relationship()
     {
-        $query = Post::query()->joinRelationship('images')->toSql();
+        factory(Image::class, 5)->state('owner:post')->create();
 
+        $query = Post::query()->joinRelationship('images')->toSql();
+        $posts = Post::query()->joinRelationship('images')->get();
+
+        $this->assertCount(5, $posts);
         $this->assertStringContainsString(
             'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
             $query
@@ -120,12 +126,22 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_apply_condition_to_join()
     {
-        $query = User::query()->joinRelationship('posts', function ($join) {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
             $join->where('posts.published', true);
-        })->toSql();
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "posts"."published" = ?',
             $query
         );
     }
@@ -133,14 +149,24 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_apply_condition_to_join_using_related_model_scopes()
     {
-        $query = User::query()->joinRelationship('posts', function ($join) {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
             // published() is an scope in the Post model
             // how awesome is that?
             $join->published();
-        })->toSql();
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "posts"."published" = ?',
             $query
         );
     }
@@ -148,22 +174,36 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_apply_condition_to_nested_joins()
     {
-        $query = User::query()->joinRelationship('posts.comments', [
+        $queryBuilder = User::query()->joinRelationship('posts.comments', [
             'posts' => function ($join) {
                 $join->where('posts.published', true);
             },
             'comments' => function ($join) {
                 $join->where('comments.approved', true);
             },
-        ])->toSql();
+        ]);
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
         $this->assertStringContainsString(
-            'inner join "comments" on "comments"."post_id" = "posts"."id" and "comments"."approved" = ?',
+            'and "posts"."published" = ?',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "comments"."approved" = ?',
             $query
         );
     }

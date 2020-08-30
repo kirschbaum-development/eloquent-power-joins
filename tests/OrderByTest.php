@@ -1,11 +1,11 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests;
+namespace Kirschbaum\EloquentPowerJoins\Tests;
 
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Comment;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\Post;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\User;
-use KirschbaumDevelopment\EloquentJoins\Tests\Models\UserProfile;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
 
 class OrderByTest extends TestCase
 {
@@ -21,7 +21,10 @@ class OrderByTest extends TestCase
             ]);
         });
 
-        $users = User::with('profile')->orderByUsingJoins('profile.city')->get();
+        $users = User::with('profile')->orderByPowerJoins('profile.city')->get();
+
+        // making sure left join do not throw exceptions
+        User::with('profile')->OrderByLeftPowerJoins('profile.city')->get();
 
         $this->assertEquals('Atlanta', $users->get(0)->profile->city);
         $this->assertEquals('Los Angeles', $users->get(1)->profile->city);
@@ -34,9 +37,12 @@ class OrderByTest extends TestCase
     public function test_order_by_nested_relationship()
     {
         // just making sure the query doesn't throw any exceptions
-        User::orderByUsingJoins('posts.category.title', 'desc')->get();
+        User::orderByPowerJoins('posts.category.title', 'desc')->get();
 
-        $query = User::orderByUsingJoins('posts.category.title', 'desc')->toSql();
+        $query = User::orderByPowerJoins('posts.category.title', 'desc')->toSql();
+
+        // making sure left join do not throw exceptions
+        User::orderByLeftPowerJoins('posts.category.title', 'desc')->toSql();
 
         $this->assertStringContainsString(
             'select "users".* from "users"',
@@ -51,7 +57,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByCountUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsCount
      */
     public function test_order_by_relationship_count()
     {
@@ -60,7 +66,10 @@ class OrderByTest extends TestCase
         factory(Post::class)->times(4)->create(['user_id' => $user2->id]);
         factory(Post::class)->times(6)->create(['user_id' => $user3->id]);
 
-        $users = User::orderByCountUsingJoins('posts.id', 'desc')->get();
+        $users = User::orderByPowerJoinsCount('posts.id', 'desc')->get();
+
+        // making sure left join do not throw exceptions
+        User::orderByLeftPowerJoinsCount('posts.id', 'desc')->get();
 
         $this->assertEquals($user3->id, $users->get(0)->id);
         $this->assertEquals($user2->id, $users->get(1)->id);
@@ -69,7 +78,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderBySumUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsSum
      */
     public function test_order_by_relationship_sum()
     {
@@ -78,7 +87,10 @@ class OrderByTest extends TestCase
         factory(Comment::class)->times(2)->create(['post_id' => $post2->id, 'votes' => 10]); // 20 SUM
         factory(Comment::class)->times(4)->create(['post_id' => $post3->id, 'votes' => 3]);  // 12 SUM
 
-        $posts = Post::orderBySumUsingJoins('comments.votes', 'desc')->get();
+        $posts = Post::orderByPowerJoinsSum('comments.votes', 'desc')->get();
+
+        // making sure left join do not throw exceptions
+        User::orderByLeftPowerJoinsSum('posts.id', 'desc')->get();
 
         $this->assertCount(3, $posts);
         $this->assertEquals($post2->id, $posts->get(0)->id);
@@ -88,7 +100,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByAvgUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsAvg
      */
     public function test_order_by_relationship_avg()
     {
@@ -97,7 +109,10 @@ class OrderByTest extends TestCase
         factory(Comment::class)->times(2)->create(['post_id' => $post2->id, 'votes' => 10]); // 20 SUM
         factory(Comment::class)->times(4)->create(['post_id' => $post3->id, 'votes' => 3]);  // 12 SUM
 
-        $posts = Post::orderByAvgUsingJoins('comments.votes', 'desc')->get();
+        $posts = Post::orderByPowerJoinsAvg('comments.votes', 'desc')->get();
+
+        // making sure left join do not throw exceptions
+        User::orderByLeftPowerJoinsAvg('posts.id', 'desc')->get();
 
         $this->assertCount(3, $posts);
         $this->assertEquals($post2->id, $posts->get(0)->id);
@@ -107,8 +122,8 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByMinUsingJoins
-     * @covers \KirschbaumDevelopment\EloquentJoins\Mixins\JoinRelationship::orderByMaxUsingJoins
+     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsMin
+     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsMax
      */
     public function test_order_by_relationship_min_and_max()
     {
@@ -120,16 +135,20 @@ class OrderByTest extends TestCase
         factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 10]);
         factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 1]);
 
-        $posts = Post::orderByMinUsingJoins('comments.votes')->get();
+        $posts = Post::orderByPowerJoinsMin('comments.votes')->get();
         $this->assertCount(3, $posts);
         $this->assertEquals($post1->id, $posts->get(0)->id);
         $this->assertEquals($post2->id, $posts->get(1)->id);
         $this->assertEquals($post3->id, $posts->get(2)->id);
 
-        $posts = Post::orderByMaxUsingJoins('comments.votes')->get();
+        $posts = Post::orderByPowerJoinsMax('comments.votes')->get();
         $this->assertCount(3, $posts);
         $this->assertEquals($post2->id, $posts->get(0)->id);
         $this->assertEquals($post3->id, $posts->get(1)->id);
         $this->assertEquals($post1->id, $posts->get(2)->id);
+
+        // making sure left join do not throw exceptions
+        User::orderByLeftPowerJoinsMin('comments.votes')->get();
+        User::orderByLeftPowerJoinsMax('comments.votes')->get();
     }
 }

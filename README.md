@@ -1,12 +1,10 @@
 ![Eloquent Power Joins](screenshots/eloquent-power-joins.jpg "Eloquent Power Joins")
 
-![Laravel Supported Versions](https://img.shields.io/badge/laravel-6.x/7.x-green.svg)
+![Laravel Supported Versions](https://img.shields.io/badge/laravel-6.x/7.x/8.x-green.svg)
 [![Actions Status](https://github.com/kirschbaum-development/eloquent-power-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
-[![StyleCI](https://github.styleci.io/repos/247844867/shield?branch=master)](https://github.styleci.io/repos/247844867)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins/?branch=master)
 
 The Laravel magic you know, now applied to joins.
 
@@ -198,21 +196,21 @@ User::doesntHave('posts');
 **Package equivalent, but using joins**
 
 ```php
-User::hasUsingJoins('posts');
-User::hasUsingJoins('posts.comments');
-User::hasUsingJoins('posts.comments', '>', 3);
-User::whereHasUsingJoins('posts', function ($query) {
-    $query->where('posts.published', true);
+User::powerJoinHas('posts');
+User::powerJoinHas('posts.comments');
+User::powerJoinHas('posts.comments', '>', 3);
+User::powerJoinWhereHas('posts', function ($join) {
+    $join->where('posts.published', true);
 });
-User::doesntHaveUsingJoins('posts');
+User::powerJoinDoesntHave('posts');
 ```
 
 ### 3 - Order by
 
-You can also sort your query results using a column from another table using the `orderByUsingJoins` method.
+You can also sort your query results using a column from another table using the `orderByPowerJoins` method.
 
 ```php
-User::orderByUsingJoins('profile.city');
+User::orderByPowerJoins('profile.city');
 ```
 
 This query will sort the results based on the `city` column on the `user_profiles` table. You can also sort your results by aggregations (`COUNT`, `SUM`, `AVG`, `MIN` or `MAX`).
@@ -220,21 +218,31 @@ This query will sort the results based on the `city` column on the `user_profile
 For instance, to sort users with the highest number of posts, you can do this:
 
 ```php
-$users = User::orderByCountUsingJoins('posts.id', 'desc')->get();
+$users = User::orderByPowerJoinsCount('posts.id', 'desc')->get();
 ```
 
 Or, to get the list of posts where the comments contain the highest average of votes.
 
 ```php
-$posts = Post::orderByAvgUsingJoins('comments.votes', 'desc')->get();
+$posts = Post::orderByPowerJoinsAvg('comments.votes', 'desc')->get();
 ```
 
-And you also have methods for `SUM`, `MIN` and `MAX`:
+You also have methods for `SUM`, `MIN` and `MAX`:
 
 ```php
-Post::orderBySumUsingJoins('comments.votes');
-Post::orderByMinUsingJoins('comments.votes');
-Post::orderByMaxUsingJoins('comments.votes');
+Post::orderByPowerJoinsSum('comments.votes');
+Post::orderByPowerJoinsMin('comments.votes');
+Post::orderByPowerJoinsMax('comments.votes');
+```
+
+In case you want to use left joins in sorting, you also can:
+
+```php
+Post::orderByLeftPowerJoinsCount('comments.votes');
+Post::orderByLeftPowerJoinsAvg('comments.votes');
+Post::orderByLeftPowerJoinsSum('comments.votes');
+Post::orderByLeftPowerJoinsMin('comments.votes');
+Post::orderByLeftPowerJoinsMax('comments.votes');
 ```
 
 ***

@@ -16,6 +16,7 @@ class CreateTables extends Migration
         Schema::create('users', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
+            $table->boolean('rockstar')->default(false);
             $table->timestamps();
             $table->softDeletes();
         });
@@ -23,7 +24,7 @@ class CreateTables extends Migration
         Schema::create('user_profiles', function (Blueprint $table) {
             $table->increments('id');
             $table->unsignedInteger('user_id');
-            $table->string('city');
+            $table->string('city')->nullable();
             $table->timestamps();
         });
 
@@ -55,6 +56,7 @@ class CreateTables extends Migration
         Schema::create('post_groups', function (Blueprint $table) {
             $table->unsignedInteger('group_id');
             $table->unsignedInteger('post_id');
+            $table->timestamp('assigned_at')->nullable()->default(null);
         });
 
         Schema::create('categories', function (Blueprint $table) {
@@ -77,6 +79,7 @@ class CreateTables extends Migration
         Schema::create('images', function (Blueprint $table) {
             $table->increments('id');
             $table->morphs('imageable');
+            $table->boolean('cover')->default(false);
             $table->timestamps();
         });
     }

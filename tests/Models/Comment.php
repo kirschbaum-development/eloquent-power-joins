@@ -1,12 +1,18 @@
 <?php
 
-namespace KirschbaumDevelopment\EloquentJoins\Tests\Models;
+namespace Kirschbaum\EloquentPowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Kirschbaum\EloquentPowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Comment extends Model
 {
+    use PowerJoins;
+
+    /** @var string */
+    protected $table = 'comments';
+
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);

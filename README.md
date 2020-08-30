@@ -5,8 +5,6 @@
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
-[![StyleCI](https://github.styleci.io/repos/247844867/shield?branch=master)](https://github.styleci.io/repos/247844867)
-[![Scrutinizer Code Quality](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins/badges/quality-score.png?b=master)](https://scrutinizer-ci.com/g/kirschbaum-development/eloquent-power-joins/?branch=master)
 
 The Laravel magic you know, now applied to joins.
 

@@ -158,13 +158,13 @@ trait PowerJoins
     /**
      * Order by a field in the defined relationship.
      */
-    public function scopeOrderByUsingJoins(Builder $query, $sort, $direction = 'asc', $aggregation = null): void
+    public function scopeOrderByPowerJoins(Builder $query, $sort, $direction = 'asc', $aggregation = null, $joinType = 'join'): void
     {
         $relationships = explode('.', $sort);
         $column = array_pop($relationships);
         $latestRelationshipName = $relationships[count($relationships) - 1];
 
-        $query->joinRelationship(implode('.', $relationships));
+        $query->joinRelationship(implode('.', $relationships), null, $joinType);
 
         $latestRelationshipModel = array_reduce($relationships, function ($model, $relationshipName) {
             return $model->$relationshipName()->getModel();
@@ -187,44 +187,74 @@ trait PowerJoins
         }
     }
 
+    public function scopeOrderByLeftPowerJoins(Builder $query, $sort, $direction = 'asc'): void
+    {
+        $query->orderByPowerJoins($sort, $direction, null, 'leftJoin');
+    }
+
     /**
      * Order by the COUNT aggregation using joins.
      */
-    public function scopeOrderByCountUsingJoins(Builder $query, $sort, $direction = 'asc'): void
+    public function scopeOrderByPowerJoinsCount(Builder $query, $sort, $direction = 'asc'): void
     {
-        $query->orderByUsingJoins($sort, $direction, 'COUNT');
+        $query->orderByPowerJoins($sort, $direction, 'COUNT');
+    }
+
+    public function scopeOrderByLeftPowerJoinsCount(Builder $query, $sort, $direction = 'asc'): void
+    {
+        $query->orderByPowerJoins($sort, $direction, 'COUNT', 'leftJoin');
     }
 
     /**
      * Order by the SUM aggregation using joins.
      */
-    public function scopeOrderBySumUsingJoins(Builder $query, $sort, $direction = 'asc'): void
+    public function scopeOrderByPowerJoinsSum(Builder $query, $sort, $direction = 'asc'): void
     {
-        $query->orderByUsingJoins($sort, $direction, 'SUM');
+        $query->orderByPowerJoins($sort, $direction, 'SUM');
+    }
+
+    public function scopeOrderByLeftPowerJoinsSum(Builder $query, $sort, $direction = 'asc'): void
+    {
+        $query->orderByPowerJoins($sort, $direction, 'SUM', 'leftJoin');
     }
 
     /**
      * Order by the AVG aggregation using joins.
      */
-    public function scopeOrderByAvgUsingJoins(Builder $query, $sort, $direction = 'asc'): void
+    public function scopeOrderByPowerJoinsAvg(Builder $query, $sort, $direction = 'asc'): void
     {
-        $query->orderByUsingJoins($sort, $direction, 'AVG');
+        $query->orderByPowerJoins($sort, $direction, 'AVG');
+    }
+
+    public function scopeOrderByLeftPowerJoinsAvg(Builder $query, $sort, $direction = 'asc'): void
+    {
+        $query->orderByPowerJoins($sort, $direction, 'AVG', 'leftJoin');
     }
 
     /**
      * Order by the MIN aggregation using joins.
      */
-    public function scopeOrderByMinUsingJoins(Builder $query, $sort, $direction = 'asc'): void
+    public function scopeOrderByPowerJoinsMin(Builder $query, $sort, $direction = 'asc'): void
     {
-        $query->orderByUsingJoins($sort, $direction, 'MIN');
+        $query->orderByPowerJoins($sort, $direction, 'MIN');
+    }
+
+    public function scopeOrderByLeftPowerJoinsMin(Builder $query, $sort, $direction = 'asc'): void
+    {
+        $query->orderByPowerJoins($sort, $direction, 'MIN', 'leftJoin');
     }
 
     /**
      * Order by the MAX aggregation using joins.
      */
-    public function scopeOrderByMaxUsingJoins(Builder $query, $sort, $direction = 'asc'): void
+    public function scopeOrderByPowerJoinsMax(Builder $query, $sort, $direction = 'asc'): void
     {
-        $query->orderByUsingJoins($sort, $direction, 'MAX');
+        $query->orderByPowerJoins($sort, $direction, 'MAX');
+    }
+
+    public function scopeOrderByLeftPowerJoinsMax(Builder $query, $sort, $direction = 'asc'): void
+    {
+        $query->orderByPowerJoins($sort, $direction, 'MAX', 'leftJoin');
     }
 
     /**

@@ -71,7 +71,7 @@ User::leftJoinRelationship('posts.comments');
 User::rightJoinRelationship('posts.comments');
 ```
 
-**Joining polymorphic relationships**
+#### Joining polymorphic relationships
 
 Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you would also need to apply the `where imageable_type = Image::class` condition, otherwise you could get messy results.
 
@@ -120,7 +120,7 @@ User::joinRelationship('groups', [
 ]);
 ```
 
-**Using model scopes inside the callbacks 🤯**
+#### Using model scopes inside the join callbacks 🤯
 
 We consider this one of the most useful features of this package. Let's say, you have a `published` scope on your `Post` model:
 
@@ -142,7 +142,7 @@ User::joinRelationship('posts', function ($join) {
 
 When using model scopes inside a join clause, you **can't** type hint the `$query` parameter in your scope. Also, keep in mind you are inside a join, so you are limited to use only conditions supported by joins.
 
-**Using aliases**
+#### Using aliases
 
 Sometimes, you are going to need to use table aliases on your joins because you are joining the same table more than once. One option to accomplish this is to use the `joinRelationshipUsingAlias` method.
 
@@ -160,7 +160,7 @@ Post::joinRelationship('category.parent', [
 ])->get()
 ```
 
-**Select * from table**
+#### Select * from table
 
 When making joins, using `select * from ...` can be dangerous as fields with the same name between the parent and the joined tables could conflict. Thinking on that, if you call the `joinRelationship` method without previously selecting any specific columns, Eloquent Power Joins will automatically include that for you. For instance, take a look at the following examples:
 
@@ -176,12 +176,32 @@ User::select('users.id')->joinRelationship('posts')->toSql();
 // select users.id from users inner join posts on posts.user_id = users.id
 ```
 
-**Soft deletes**
+#### Soft deletes
 
 When joining any models which uses the `SoftDeletes` trait, the following condition will be also automatically applied to all your joins:
 
 ```sql
 and "users"."deleted_at" is null
+```
+
+#### Extra conditions defined in relationships
+
+If you have extra conditions in your relationship definitions, they will get automatically applied for you.
+
+```php
+class User extends Model
+{
+    public function publishedPosts()
+    {
+        return $this->hasMany(Post::class)->published();
+    }
+}
+```
+
+If you call `User::joinRelationship('publishedPosts')->get()`, it will also apply the additional published scope to the join clause. It would produce an SQL more or less like this:
+
+```sql
+select users.* from users inner join posts on posts.user_id = posts.id and posts.published = 1
 ```
 
 ### 2 - Querying relationship existence (Using Joins)

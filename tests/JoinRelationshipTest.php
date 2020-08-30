@@ -253,6 +253,9 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('posts.images')
             ->toSql();
 
+        // making sure it doesn't throw any errors
+        User::query()->select('users.*')->joinRelationship('posts.comments')->joinRelationship('posts.images')->get();
+
         $this->assertStringContainsString(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query

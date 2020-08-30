@@ -1,9 +1,9 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Tests\Models;
+namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\EloquentPowerJoins\PowerJoins;
+use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Group extends Model

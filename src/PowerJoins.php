@@ -1,6 +1,6 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins;
+namespace Kirschbaum\PowerJoins;
 
 use Closure;
 use Illuminate\Database\Eloquent\Builder;

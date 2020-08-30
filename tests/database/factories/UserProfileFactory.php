@@ -1,7 +1,7 @@
 <?php
 
-use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
+use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 $factory->define(UserProfile::class, function (Faker\Generator $faker) {
     return [

@@ -1,17 +1,16 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Mixins;
+namespace Kirschbaum\PowerJoins\Mixins;
 
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasOneOrMany;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
-use Kirschbaum\EloquentPowerJoins\PowerJoins;
+use Kirschbaum\PowerJoins\PowerJoinClause;
+use Kirschbaum\PowerJoins\PowerJoins;
 
 class RelationshipsExtraMethods
 {

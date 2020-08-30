@@ -1,11 +1,11 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Tests;
+namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Group;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
+use Kirschbaum\PowerJoins\Tests\Models\Group;
+use Kirschbaum\PowerJoins\Tests\Models\Post;
+use Kirschbaum\PowerJoins\Tests\Models\User;
 
 class PowerJoinHasTest extends TestCase
 {

@@ -1,8 +1,8 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Tests;
+namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\EloquentPowerJoins\PowerJoinsServiceProvider;
+use Kirschbaum\PowerJoins\PowerJoinsServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {

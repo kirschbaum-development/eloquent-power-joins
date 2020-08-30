@@ -1,10 +1,10 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Tests\Models;
+namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Kirschbaum\EloquentPowerJoins\PowerJoins;
+use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;

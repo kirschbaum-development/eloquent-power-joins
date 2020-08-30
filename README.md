@@ -27,9 +27,18 @@ You can install the package via composer:
 composer require kirschbaum-development/eloquent-power-joins
 ```
 
-And that's it, you are ready to use the package.
-
 ## Usage
+
+On any model you want to be able to use the methods described below, you should use the following trait:
+
+```php
+use Kirschbaum\PowerJoins\PowerJoins;
+
+class User extends Model
+{
+    use PowerJoins;
+}
+```
 
 This package provides a few features.
 

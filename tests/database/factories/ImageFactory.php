@@ -1,8 +1,8 @@
 <?php
 
 use Carbon\Carbon;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Image;
+use Kirschbaum\PowerJoins\Tests\Models\Post;
+use Kirschbaum\PowerJoins\Tests\Models\Image;
 
 $factory->define(Image::class, function (Faker\Generator $faker) {
     return [

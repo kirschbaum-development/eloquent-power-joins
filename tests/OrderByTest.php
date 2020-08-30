@@ -1,11 +1,11 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Tests;
+namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Comment;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Post;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\UserProfile;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
+use Kirschbaum\PowerJoins\Tests\Models\Post;
+use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 class OrderByTest extends TestCase
 {
@@ -57,7 +57,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsCount
+     * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsCount
      */
     public function test_order_by_relationship_count()
     {
@@ -78,7 +78,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsSum
+     * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsSum
      */
     public function test_order_by_relationship_sum()
     {
@@ -100,7 +100,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsAvg
+     * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsAvg
      */
     public function test_order_by_relationship_avg()
     {
@@ -122,8 +122,8 @@ class OrderByTest extends TestCase
 
     /**
      * @test
-     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsMin
-     * @covers \Kirschbaum\EloquentPowerJoins\PowerJoins::scopeOrderByPowerJoinsMax
+     * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsMin
+     * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsMax
      */
     public function test_order_by_relationship_min_and_max()
     {

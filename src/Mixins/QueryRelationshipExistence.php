@@ -1,6 +1,6 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Mixins;
+namespace Kirschbaum\PowerJoins\Mixins;
 
 use Illuminate\Database\Eloquent\Relations\Relation;
 

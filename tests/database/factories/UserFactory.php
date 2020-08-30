@@ -1,7 +1,7 @@
 <?php
 
 use Carbon\Carbon;
-use Kirschbaum\EloquentPowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\User;
 
 $factory->define(User::class, function (Faker\Generator $faker) {
     return [

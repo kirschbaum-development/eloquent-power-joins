@@ -1,12 +1,12 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins;
+namespace Kirschbaum\PowerJoins;
 
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\JoinClause;
 
 class PowerJoinClause extends JoinClause
 {

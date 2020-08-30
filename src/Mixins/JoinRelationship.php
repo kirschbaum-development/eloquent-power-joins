@@ -1,11 +1,11 @@
 <?php
 
-namespace Kirschbaum\EloquentPowerJoins\Mixins;
+namespace Kirschbaum\PowerJoins\Mixins;
 
 use Closure;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
-use Kirschbaum\EloquentPowerJoins\PowerJoinClause;
+use Kirschbaum\PowerJoins\PowerJoinClause;
 
 class JoinRelationship
 {

@@ -1,6 +1,6 @@
 <?php
 
-use Kirschbaum\EloquentPowerJoins\Tests\Models\Category;
+use Kirschbaum\PowerJoins\Tests\Models\Category;
 
 $factory->define(Category::class, function (Faker\Generator $faker) {
     return [

@@ -8,6 +8,8 @@ All notable changes to `eloquent-power-joins` will be documented in this file.
 - Ability to order by using left joins;
 - Laravel 8 support;
 _ Lots of bugfixes;
+- Changed the method signature for sorting;
+- Changed the method signature for querying relationship existence;
 
 ## 1.1.0
 - Added the ability to use table aliases;

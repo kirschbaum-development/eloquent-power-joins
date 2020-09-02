@@ -19,12 +19,11 @@
     ],
     "require": {
         "php": "^7.1",
-        "illuminate/support": "^6.0|^7.0|^8.0-dev",
-        "illuminate/database": "^6.0|^7.0|^8.0-dev"
+        "illuminate/support": "^6.0|^7.0",
+        "illuminate/database": "^6.0|^7.0"
     },
     "require-dev": {
-        "laravel/legacy-factories": "^1.0.4",
-        "orchestra/testbench": "4.*|5.*|6.*",
+        "orchestra/testbench": "4.*|5.*",
         "phpunit/phpunit": "^8.0"
     },
     "autoload": {

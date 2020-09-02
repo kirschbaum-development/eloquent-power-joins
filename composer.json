@@ -48,7 +48,7 @@
     "extra": {
         "laravel": {
             "providers": [
-                "KirschbaumDevelopment\\EloquentJoins\\PowerJoinsServiceProvider"
+                "Kirschbaum\\PowerJoins\\PowerJoinsServiceProvider"
             ]
         }
     },

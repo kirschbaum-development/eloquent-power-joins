@@ -12,7 +12,9 @@ $factory->define(Image::class, function (Faker\Generator $faker) {
 
 $factory->state(Image::class, 'owner:post', [
     'imageable_type' => Post::class,
-    'imageable_id' => factory(Post::class),
+    'imageable_id' => function () {
+        return factory(Post::class)->create()->id;
+    },
 ]);
 
 $factory->state(Image::class, 'cover', [

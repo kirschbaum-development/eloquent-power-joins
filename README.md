@@ -184,6 +184,22 @@ When joining any models which uses the `SoftDeletes` trait, the following condit
 and "users"."deleted_at" is null
 ```
 
+In case you want to include trashed models, you can call the `->withTrashed()` method in the join callback.
+
+```php
+UserProfile::joinRelationship('users', function ($join) {
+    $join->withTrashed();
+});
+```
+
+You can also call the `onlyTrashed` model as well:
+
+```php
+UserProfile::joinRelationship('users', function ($join) {
+    $join->onlyTrashed();
+});
+```
+
 #### Extra conditions defined in relationships
 
 If you have extra conditions in your relationship definitions, they will get automatically applied for you.

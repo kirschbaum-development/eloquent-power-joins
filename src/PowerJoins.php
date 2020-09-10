@@ -36,7 +36,7 @@ trait PowerJoins
     /**
      * Join the relationship(s).
      */
-    public function scopeJoinRelationship(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false): void
+    public function scopeJoinRelationship(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
         $joinType = PowerJoins::$joinMethodsMap[$joinType] ?? $joinType;
 
@@ -45,7 +45,7 @@ trait PowerJoins
         }
 
         if (Str::contains($relationName, '.')) {
-            $query->joinNestedRelationship($relationName, $callback, $joinType, $useAlias);
+            $query->joinNestedRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions);
 
             return;
         }
@@ -56,7 +56,7 @@ trait PowerJoins
 
         $relation = $query->getModel()->{$relationName}();
         $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
-        $relation->performJoinForEloquentPowerJoins($query, $joinType, $callback, $alias);
+        $relation->performJoinForEloquentPowerJoins($query, $joinType, $callback, $alias, $disableExtraConditions);
 
         $this->markRelationshipAsAlreadyJoined($relationName);
         $this->clearPowerJoinCaches();
@@ -65,56 +65,56 @@ trait PowerJoins
     /**
      * Join the relationship(s) using table aliases.
      */
-    public function scopeJoinRelationshipUsingAlias(Builder $query, $relationName, $callback = null): void
+    public function scopeJoinRelationshipUsingAlias(Builder $query, $relationName, $callback = null, bool $disableExtraConditions = false): void
     {
-        $query->joinRelationship($relationName, $callback, 'join', true);
+        $query->joinRelationship($relationName, $callback, 'join', true, $disableExtraConditions);
     }
 
     /**
      * Left join the relationship(s) using table aliases.
      */
-    public function scopeLeftJoinRelationshipUsingAlias(Builder $query, $relationName, $callback = null): void
+    public function scopeLeftJoinRelationshipUsingAlias(Builder $query, $relationName, $callback = null, bool $disableExtraConditions = false): void
     {
-        $query->joinRelationship($relationName, $callback, 'leftJoin', true);
+        $query->joinRelationship($relationName, $callback, 'leftJoin', true, $disableExtraConditions);
     }
 
     /**
      * Right join the relationship(s) using table aliases.
      */
-    public function scopeRightJoinRelationshipUsingAlias(Builder $query, $relationName, $callback = null)
+    public function scopeRightJoinRelationshipUsingAlias(Builder $query, $relationName, $callback = null, bool $disableExtraConditions = false)
     {
-        $query->joinRelationship($relationName, $callback, 'rightJoin', true);
+        $query->joinRelationship($relationName, $callback, 'rightJoin', true, $disableExtraConditions);
     }
 
-    public function scopeJoinRelation(Builder $query, $relationName, $callback = null, $joinType = 'join'): void
+    public function scopeJoinRelation(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
-        $query->joinRelationship($relationName, $callback . $joinType);
+        $query->joinRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions);
     }
 
-    public function scopeLeftJoinRelationship(Builder $query, $relation, $callback = null, $useAlias = false)
+    public function scopeLeftJoinRelationship(Builder $query, $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false)
     {
-        $query->joinRelationship($relation, $callback, 'leftJoin', $useAlias);
+        $query->joinRelationship($relation, $callback, 'leftJoin', $useAlias, $disableExtraConditions);
     }
 
-    public function scopeLeftJoinRelation(Builder $query, $relation, $callback = null, $useAlias = false)
+    public function scopeLeftJoinRelation(Builder $query, $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false)
     {
-        $query->joinRelationship($relation, $callback, 'leftJoin', $useAlias);
+        $query->joinRelationship($relation, $callback, 'leftJoin', $useAlias, $disableExtraConditions);
     }
 
-    public function scopeRightJoinRelationship(Builder $query, $relation, $callback = null, $useAlias = false): void
+    public function scopeRightJoinRelationship(Builder $query, $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false): void
     {
-        $query->joinRelationship($relation, $callback, 'rightJoin', $useAlias);
+        $query->joinRelationship($relation, $callback, 'rightJoin', $useAlias, $disableExtraConditions);
     }
 
-    public function scopeRightJoinRelation(Builder $query, $relation, $callback = null, $useAlias = false): void
+    public function scopeRightJoinRelation(Builder $query, $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false): void
     {
-        $query->joinRelationship($relation, $callback, 'rightJoin', $useAlias);
+        $query->joinRelationship($relation, $callback, 'rightJoin', $useAlias, $disableExtraConditions);
     }
 
     /**
      * Join nested relationships.
      */
-    public function scopeJoinNestedRelationship(Builder $query, $relations, $callback = null, $joinType = 'join', $useAlias = false): void
+    public function scopeJoinNestedRelationship(Builder $query, $relations, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
         $relations = explode('.', $relations);
 
@@ -145,7 +145,8 @@ trait PowerJoins
                 $query,
                 $joinType,
                 $relationCallback,
-                $alias
+                $alias,
+                $disableExtraConditions
             );
 
             $latestRelation = $relation;

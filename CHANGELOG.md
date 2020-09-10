@@ -2,6 +2,9 @@
 
 All notable changes to `eloquent-power-joins` will be documented in this file.
 
+## 2.1.0 - 2020-09
+- Added the ability to include trashed models in join clauses;
+
 ## 2.0.0 - 2020-09
 - Introduced trait that has to be used by models;
 - Automatically applying extra relationship conditions;

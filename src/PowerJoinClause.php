@@ -2,11 +2,12 @@
 
 namespace Kirschbaum\PowerJoins;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\Builder;
-use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Query\JoinClause;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PowerJoinClause extends JoinClause
 {
@@ -60,7 +61,7 @@ class PowerJoinClause extends JoinClause
         return $this;
     }
 
-    public function on($first, $operator = null, $second = null, $boolean = 'and')
+    public function on($first, $operator = null, $second = null, $boolean = 'and'): self
     {
         parent::on($first, $operator, $second, $boolean);
         $this->useTableAliasInConditions();
@@ -73,6 +74,9 @@ class PowerJoinClause extends JoinClause
         return $this->model;
     }
 
+    /**
+     * Apply the table alias in the existing join conditions.
+     */
     protected function useTableAliasInConditions()
     {
         if (! $this->alias || ! $this->model) {
@@ -116,6 +120,46 @@ class PowerJoinClause extends JoinClause
         }
 
         return parent::where($column, $operator, $value, $boolean);
+    }
+
+    /**
+     * Remove the soft delete condition in case the model implements soft deletes.
+     */
+    public function withTrashed(): self
+    {
+        if (! in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
+            return $this;
+        }
+
+        $this->wheres = array_filter($this->wheres, function ($where) {
+            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+                return false;
+            }
+
+            return true;
+        });
+
+        return $this;
+    }
+
+    /**
+     * Remove the soft delete condition in case the model implements soft deletes.
+     */
+    public function onlyTrashed(): self
+    {
+        if (! in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
+            return $this;
+        }
+
+        $this->wheres = array_map(function ($where) {
+            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+                $where['type'] = 'NotNull';
+            }
+
+            return $where;
+        }, $this->wheres);
+
+        return $this;
     }
 
     public function __call($name, $arguments)

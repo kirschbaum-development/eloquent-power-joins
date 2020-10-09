@@ -378,4 +378,23 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_it_joins_different_tables_with_same_relationship_name()
+    {
+        $query = Post::query()
+            ->joinRelationship('translations')
+            ->joinRelationship('images.translations')
+            ->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "post_translations" on "post_translations"."post_id" = "posts"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "image_translations" on "image_translations"."image_id" = "images"."id"',
+            $query
+        );
+    }
 }

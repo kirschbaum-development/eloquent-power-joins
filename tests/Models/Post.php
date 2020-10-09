@@ -54,4 +54,9 @@ class Post extends Model
     {
         $query->where('posts.published', true);
     }
+
+    public function translations(): HasMany
+    {
+        return $this->hasMany(PostTranslation::class);
+    }
 }

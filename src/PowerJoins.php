@@ -50,7 +50,10 @@ trait PowerJoins
             return;
         }
 
-        if ($this->relationshipAlreadyJoined($relationName)) {
+        $relationQuery = $query->getModel()->{$relationName}()->getQuery();
+        $relationJoinCache = "{$relationQuery->getModel()->getTable()}.{$relationName}";
+
+        if ($this->relationshipAlreadyJoined($relationJoinCache)) {
             return;
         }
 
@@ -58,7 +61,7 @@ trait PowerJoins
         $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
         $relation->performJoinForEloquentPowerJoins($query, $joinType, $callback, $alias, $disableExtraConditions);
 
-        $this->markRelationshipAsAlreadyJoined($relationName);
+        $this->markRelationshipAsAlreadyJoined($relationJoinCache);
         $this->clearPowerJoinCaches();
     }
 
@@ -126,6 +129,7 @@ trait PowerJoins
             $relation = $currentModel->{$relationName}();
             $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
             $relationCallback = null;
+            $relationJoinCache = "{$relation->getQuery()->getModel()->getTable()}.{$relationName}";
 
             if ($useAlias) {
                 $this->cachePowerJoinAlias($relation->getModel(), $alias);
@@ -135,7 +139,7 @@ trait PowerJoins
                 $relationCallback = $callback[$relationName];
             }
 
-            if ($this->relationshipAlreadyJoined($relationName)) {
+            if ($this->relationshipAlreadyJoined($relationJoinCache)) {
                 $latestRelation = $relation;
 
                 continue;
@@ -150,7 +154,7 @@ trait PowerJoins
             );
 
             $latestRelation = $relation;
-            $this->markRelationshipAsAlreadyJoined($relationName);
+            $this->markRelationshipAsAlreadyJoined($relationJoinCache);
         }
 
         $this->clearPowerJoinCaches();

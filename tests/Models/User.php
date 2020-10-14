@@ -38,6 +38,13 @@ class User extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function publishedPosts(): HasMany
+    {
+        return $this->hasMany(Post::class)->where(function ($query) {
+            $query->where('published', true);
+        });
+    }
+
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);

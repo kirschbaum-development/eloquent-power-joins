@@ -183,4 +183,16 @@ class JoinRelationshipExtraConditionsTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_extra_conditions_with_closure()
+    {
+        $query = User::joinRelationship('publishedPosts')->toSql();
+        User::joinRelationship('publishedPosts')->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id" and "published" = ?',
+            $query
+        );
+    }
 }

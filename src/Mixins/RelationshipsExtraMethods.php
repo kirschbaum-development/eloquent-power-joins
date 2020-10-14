@@ -307,7 +307,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull'])) {
+                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
                     continue;
                 }
 
@@ -338,10 +338,24 @@ class RelationshipsExtraMethods
         };
     }
 
+    public function applyNestedCondition()
+    {
+        return function ($join, $condition) {
+            foreach ($condition['query']->wheres as $condition) {
+                $method = "apply{$condition['type']}Condition";
+                $this->$method($join, $condition);
+            }
+        };
+    }
+
     public function shouldNotApplyExtraCondition()
     {
         return function ($condition) {
             $key = $this->getPowerJoinExistenceCompareKey();
+
+            if (isset($condition['query'])) {
+                return false;
+            }
 
             if (is_array($key)) {
                 return in_array($condition['column'], $key);

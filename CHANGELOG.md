@@ -2,6 +2,9 @@
 
 All notable changes to `eloquent-power-joins` will be documented in this file.
 
+## 2.1.1 - 2020-10
+- Fixed nested conditions in relationship definitions;
+
 ## 2.1.0 - 2020-09
 - Added the ability to include trashed models in join clauses;
 

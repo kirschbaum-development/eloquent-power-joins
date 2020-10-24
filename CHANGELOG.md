@@ -2,6 +2,9 @@
 
 All notable changes to `eloquent-power-joins` will be documented in this file.
 
+## 2.2.2 - 2020-10
+- Fixed the ability to pass nested closures in join callbacks when using aliases;
+
 ## 2.2.1 - 2020-10
 - Fixed nested conditions in relationship definitions;
 

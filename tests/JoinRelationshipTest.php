@@ -397,4 +397,27 @@ class JoinRelationshipTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function test_passing_where_closure_inside_join_callback()
+    {
+        $query = Post::query()
+            ->joinRelationship('category', function ($join) {
+                $join->as('category_alias')
+                    ->where(function ($query) {
+                        $query->whereNull('category_alias.parent_id')
+                            ->orWhere('category_alias.parent_id', 3);
+                    });
+            });
+
+        $sql = $query->toSql();
+
+        // executing to make sure it does not throw exceptions
+        $query->get();
+
+        $this->assertStringContainsString(
+            'inner join "categories" as "category_alias" on "posts"."category_id" = "category_alias"."id" and ("category_alias"."parent_id" is null or "category_alias"."parent_id" = ?)',
+            $sql
+        );
+    }
 }

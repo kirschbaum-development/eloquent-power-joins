@@ -115,7 +115,7 @@ class PowerJoinClause extends JoinClause
 
     public function where($column, $operator = null, $value = null, $boolean = 'and')
     {
-        if ($this->alias && Str::contains($column, $this->tableName)) {
+        if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
         }
 

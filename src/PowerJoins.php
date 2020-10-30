@@ -368,4 +368,9 @@ trait PowerJoins
 
         return $this;
     }
+
+    public function __destruct()
+    {
+        PowerJoins::$joinRelationshipCache = [];
+    }
 }

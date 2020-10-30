@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Kirschbaum\PowerJoins\PowerJoins;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
 use Kirschbaum\PowerJoins\Tests\Models\Image;
@@ -419,5 +420,15 @@ class JoinRelationshipTest extends TestCase
             'inner join "categories" as "category_alias" on "posts"."category_id" = "category_alias"."id" and ("category_alias"."parent_id" is null or "category_alias"."parent_id" = ?)',
             $sql
         );
+    }
+
+    /** @test */
+    public function test_join_cache_is_cleared_between_queries()
+    {
+        $query = User::query()->joinRelationship('posts')->toSql();
+        $this->assertEmpty(PowerJoins::$joinRelationshipCache, 'Join Relationship Cache not cleared after query');
+
+        $query = User::query()->joinRelationship('posts')->toSql();
+        $this->assertEmpty(PowerJoins::$joinRelationshipCache, 'Join Relationship Cache not cleared after query');
     }
 }

@@ -250,6 +250,30 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()
             ->select('users.*')
+            ->joinRelationship('posts')
+            ->joinRelationship('posts')
+            ->toSql();
+
+        // making sure it doesn't throw any errors
+        User::query()->select('users.*')->joinRelationship('posts')->joinRelationship('posts')->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertEquals(
+            1,
+            substr_count($query, 'inner join "posts" on "posts"."user_id" = "users"."id"'),
+            'It should only make 1 join with the posts table'
+        );
+    }
+
+    /** @test */
+    public function test_it_doesnt_join_the_same_relationship_twice_with_nested()
+    {
+        $query = User::query()
+            ->select('users.*')
             ->joinRelationship('posts.comments')
             ->joinRelationship('posts.images')
             ->toSql();
@@ -420,15 +444,5 @@ class JoinRelationshipTest extends TestCase
             'inner join "categories" as "category_alias" on "posts"."category_id" = "category_alias"."id" and ("category_alias"."parent_id" is null or "category_alias"."parent_id" = ?)',
             $sql
         );
-    }
-
-    /** @test */
-    public function test_join_cache_is_cleared_between_queries()
-    {
-        $query = User::query()->joinRelationship('posts')->toSql();
-        $this->assertEmpty(PowerJoins::$joinRelationshipCache, 'Join Relationship Cache not cleared after query');
-
-        $query = User::query()->joinRelationship('posts')->toSql();
-        $this->assertEmpty(PowerJoins::$joinRelationshipCache, 'Join Relationship Cache not cleared after query');
     }
 }

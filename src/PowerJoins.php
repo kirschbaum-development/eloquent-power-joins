@@ -15,7 +15,7 @@ trait PowerJoins
      *
      * @var array
      */
-    public static $joinRelationshipCache = [];
+    private $joinRelationshipCache = [];
 
     /**
      * Cache to not join the same relationship twice.
@@ -328,7 +328,7 @@ trait PowerJoins
      */
     public function relationshipAlreadyJoined($relation)
     {
-        return isset(PowerJoins::$joinRelationshipCache[spl_object_id($this)][$relation]);
+        return isset($this->joinRelationshipCache[spl_object_id($this)][$relation]);
     }
 
     /**
@@ -336,7 +336,7 @@ trait PowerJoins
      */
     public function markRelationshipAsAlreadyJoined($relation)
     {
-        PowerJoins::$joinRelationshipCache[spl_object_id($this)][$relation] = true;
+        $this->joinRelationshipCache[spl_object_id($this)][$relation] = true;
     }
 
     public function generateAliasForRelationship($relation, $relationName)
@@ -367,10 +367,5 @@ trait PowerJoins
         PowerJoins::$powerJoinAliasesCache = [];
 
         return $this;
-    }
-
-    public function __destruct()
-    {
-        PowerJoins::$joinRelationshipCache = [];
     }
 }

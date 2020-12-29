@@ -25,6 +25,7 @@ class CreateTables extends Migration
             $table->increments('id');
             $table->unsignedInteger('user_id');
             $table->string('city')->nullable();
+            $table->string('state')->nullable();
             $table->timestamps();
         });
 

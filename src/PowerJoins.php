@@ -3,10 +3,11 @@
 namespace Kirschbaum\PowerJoins;
 
 use Closure;
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
-use Illuminate\Support\Str;
 
 trait PowerJoins
 {
@@ -165,9 +166,15 @@ trait PowerJoins
      */
     public function scopeOrderByPowerJoins(Builder $query, $sort, $direction = 'asc', $aggregation = null, $joinType = 'join'): void
     {
-        $relationships = explode('.', $sort);
-        $column = array_pop($relationships);
-        $latestRelationshipName = $relationships[count($relationships) - 1];
+        if (is_array($sort)) {
+            $relationships = explode('.', $sort[0]);
+            $column = $sort[1];
+            $latestRelationshipName = $relationships[count($relationships) - 1];
+        } else {
+            $relationships = explode('.', $sort);
+            $column = array_pop($relationships);
+            $latestRelationshipName = $relationships[count($relationships) - 1];
+        }
 
         $query->joinRelationship(implode('.', $relationships), null, $joinType);
 
@@ -188,7 +195,15 @@ trait PowerJoins
                 ->groupBy(sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()))
                 ->orderBy(sprintf('%s_aggregation', $latestRelationshipName), $direction);
         } else {
-            $query->orderBy(sprintf('%s.%s', $latestRelationshipModel->getTable(), $column), $direction);
+            if ($column instanceof Expression) {
+                // dd($column);
+                $query->orderBy($column, $direction);
+            } else {
+                $query->orderBy(
+                    sprintf('%s.%s', $latestRelationshipModel->getTable(), $column),
+                    $direction
+                );
+            }
         }
     }
 

@@ -2,9 +2,10 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
+use Illuminate\Support\Facades\DB;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 class OrderByTest extends TestCase
@@ -24,13 +25,28 @@ class OrderByTest extends TestCase
         $users = User::with('profile')->orderByPowerJoins('profile.city')->get();
 
         // making sure left join do not throw exceptions
-        User::with('profile')->OrderByLeftPowerJoins('profile.city')->get();
+        User::with('profile')->orderByLeftPowerJoins('profile.city')->get();
 
         $this->assertEquals('Atlanta', $users->get(0)->profile->city);
         $this->assertEquals('Los Angeles', $users->get(1)->profile->city);
         $this->assertEquals('Manchester', $users->get(2)->profile->city);
         $this->assertEquals('New York', $users->get(3)->profile->city);
         $this->assertEquals('Veneza', $users->get(4)->profile->city);
+    }
+
+    /** @test */
+    public function test_order_by_relationship_with_concat()
+    {
+        User::with('profile')
+            ->select('user_profiles.*', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state) as locale'))
+            ->orderByPowerJoins(['profile', DB::raw('locale')])
+            ->get();
+
+        User::with('profile')
+            ->orderByPowerJoins(['profile', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state)')])
+            ->get();
+
+        $this->expectNotToPerformAssertions();
     }
 
     /** @test */

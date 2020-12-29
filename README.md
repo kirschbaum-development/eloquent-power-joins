@@ -258,6 +258,12 @@ You can also sort your query results using a column from another table using the
 User::orderByPowerJoins('profile.city');
 ```
 
+If you need to pass some raw values for the order by function, you can do like this:
+
+```php
+User::orderByPowerJoins(['profile', DB::raw('concat(city, ", ", state)']);
+```
+
 This query will sort the results based on the `city` column on the `user_profiles` table. You can also sort your results by aggregations (`COUNT`, `SUM`, `AVG`, `MIN` or `MAX`).
 
 For instance, to sort users with the highest number of posts, you can do this:

@@ -304,6 +304,57 @@ class JoinRelationshipTest extends TestCase
     }
 
     /** @test */
+    public function test_it_doesnt_join_the_same_relationship_twice_with_complex_nested()
+    {
+        $query = User::query()
+            ->select('users.*')
+            ->leftJoinRelationship('posts')
+            ->rightJoinRelationship('posts.comments')
+            ->leftJoinRelationship('posts.images')
+            ->joinRelationship('posts.category')
+            ->leftJoinRelationship('posts.category.parent', [
+                'parent' => function ($join) {
+                    $join->as('category_parent');
+                },
+            ])
+            ->toSql();
+
+        // making sure it doesn't throw any errors
+        User::query()->select('users.*')->joinRelationship('posts.comments')->joinRelationship('posts.images')->get();
+
+        $this->assertStringContainsString(
+            'left join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertEquals(
+            1,
+            substr_count($query, 'left join "posts" on "posts"."user_id" = "users"."id"'),
+            'It should only make 1 join with the posts table'
+        );
+
+        $this->assertStringContainsString(
+            'right join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'left join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "categories" on "posts"."category_id" = "categories"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'left join "categories" as "category_parent" on "categories"."parent_id" = "category_parent"."id"',
+            $query
+        );
+    }
+
+    /** @test */
     public function test_it_join_belongs_to_relationship()
     {
         $posts = factory(Post::class)->times(2)->create();

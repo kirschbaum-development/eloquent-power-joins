@@ -167,7 +167,7 @@ class PowerJoinClause extends JoinClause
         $scope = 'scope' . ucfirst($name);
 
         if (method_exists($this->getModel(), $scope)) {
-            $this->getModel()->{$scope}($this, ...$arguments);
+            return $this->getModel()->{$scope}($this, ...$arguments);
         } else {
             throw new InvalidArgumentException(sprintf('Method %s does not exist in PowerJoinClause class', $name));
         }

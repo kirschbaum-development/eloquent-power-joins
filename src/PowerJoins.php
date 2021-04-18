@@ -118,9 +118,9 @@ trait PowerJoins
     /**
      * Join nested relationships.
      */
-    public function scopeJoinNestedRelationship(Builder $query, $relations, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
+    public function scopeJoinNestedRelationship(Builder $query, string $relationships, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
-        $relations = explode('.', $relations);
+        $relations = explode('.', $relationships);
 
         /** @var \Illuminate\Database\Eloquent\Relations\Relation */
         $latestRelation = null;
@@ -130,7 +130,9 @@ trait PowerJoins
             $relation = $currentModel->{$relationName}();
             $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
             $relationCallback = null;
-            $relationJoinCache = "{$relation->getQuery()->getModel()->getTable()}.{$relationName}";
+            $relationJoinCache = $index === 0
+                ? "{$relation->getQuery()->getModel()->getTable()}.{$index}.{$relationName}"
+                : "{$relation->getQuery()->getModel()->getTable()}.{$latestRelation->getModel()->getTable()}.{$relationName}";
 
             if ($useAlias) {
                 $this->cachePowerJoinAlias($relation->getModel(), $alias);

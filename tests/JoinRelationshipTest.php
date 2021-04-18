@@ -355,6 +355,43 @@ class JoinRelationshipTest extends TestCase
     }
 
     /** @test */
+    public function test_it_runs_same_relationship_twice_if_defined_in_different_places()
+    {
+        $query = User::query()
+            ->joinRelationship('comments')
+            ->joinRelationship('posts.comments', [
+                'comments' => function ($join) {
+                    $join->as('post_comments');
+                }
+            ])
+            ->toSql();
+
+        User::query()
+            ->joinRelationship('comments')
+            ->joinRelationship('posts.comments', [
+                'comments' => function ($join) {
+                    $join->as('post_comments');
+                }
+            ])
+            ->get();
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" as "post_comments" on "post_comments"."post_id" = "posts"."id"',
+            $query
+        );
+    }
+
+    /** @test */
     public function test_it_join_belongs_to_relationship()
     {
         $posts = factory(Post::class)->times(2)->create();

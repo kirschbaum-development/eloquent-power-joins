@@ -320,7 +320,16 @@ class JoinRelationshipTest extends TestCase
             ->toSql();
 
         // making sure it doesn't throw any errors
-        User::query()->select('users.*')->joinRelationship('posts.comments')->joinRelationship('posts.images')->get();
+        User::query()
+            ->select('users.*')
+            ->leftJoinRelationship('posts.comments')
+            ->leftJoinRelationship('posts.images')
+            ->leftJoinRelationship('posts.category')
+            ->leftJoinRelationship('posts.category.parent', [
+                'parent' => function ($join) {
+                    $join->as('category_parent');
+                },
+            ])->get();
 
         $this->assertStringContainsString(
             'left join "posts" on "posts"."user_id" = "users"."id"',
@@ -554,5 +563,17 @@ class JoinRelationshipTest extends TestCase
             'inner join "categories" as "category_alias" on "posts"."category_id" = "category_alias"."id" and ("category_alias"."parent_id" is null or "category_alias"."parent_id" = ?)',
             $sql
         );
+    }
+
+    /** @test */
+    public function test_nested_join_with_aliases()
+    {
+        $query = Post::query()
+            ->where('posts.id', '>', 10)
+            ->joinRelationship('category.parent', [
+                'category' => fn ($join) => $join->as('category_alias'),
+                'parent' => fn ($join) => $join->as('parent_alias'),
+            ])
+            ->get();
     }
 }

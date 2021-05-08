@@ -40,6 +40,7 @@ trait PowerJoins
     public function scopeJoinRelationship(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
         $joinType = PowerJoins::$joinMethodsMap[$joinType] ?? $joinType;
+        $callback = $this->formatJoinCallback($relationName, $callback);
 
         if (is_null($query->getSelect())) {
             $query->select(sprintf('%s.*', $query->getModel()->getTable()));
@@ -384,5 +385,23 @@ trait PowerJoins
         PowerJoins::$powerJoinAliasesCache = [];
 
         return $this;
+    }
+
+    /**
+     * Format the join callback.
+     *
+     * @param string $relationName
+     * @param mixed $callback
+     * @return mixed
+     */
+    protected function formatJoinCallback(string $relationName, $callback)
+    {
+        if (is_string($callback)) {
+            return function ($join) use ($callback) {
+                $join->as($callback);
+            };
+        }
+
+        return $callback;
     }
 }

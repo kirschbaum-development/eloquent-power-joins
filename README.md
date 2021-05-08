@@ -150,10 +150,21 @@ Sometimes, you are going to need to use table aliases on your joins because you 
 Post::joinRelationshipUsingAlias('category.parent')->get();
 ```
 
-Or, you can also call the `as` function inside the join callback.
+In case you need to specify the name of the alias which is going to be used, you can do in two different ways:
+
+1. Passing a string as the second parameter (this won't work for nested joins):
+
+```php
+Post::joinRelationshipUsingAlias('category', 'category_alias')->get();
+```
+
+2. Calling the `as` function inside the join callback.
 
 ```php
 Post::joinRelationship('category.parent', [
+    'category' => function ($join) {
+        $join->as('category_alias');
+    },
     'parent' => function ($join) {
         $join->as('category_parent');
     },

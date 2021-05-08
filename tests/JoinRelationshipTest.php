@@ -437,6 +437,28 @@ class JoinRelationshipTest extends TestCase
     }
 
     /** @test */
+    public function test_join_model_has_one_with_alias_and_select()
+    {
+        $profile = factory(UserProfile::class)->create();
+
+        $user = User::query()->select('profile.city')->leftJoinRelationship('profile', function ($join) {
+            $join->as('profile');
+        })->first();
+
+        $this->assertEquals($profile->city, $user->city);
+    }
+
+    /** @test */
+    public function test_join_with_alias_using_alias_as_string()
+    {
+        $innerJoinQuery = User::query()->select('profile.city')->joinRelationship('profile', 'p')->toSql();
+        $leftJoinQuery = User::query()->select('profile.city')->leftJoinRelationship('profile', 'p')->toSql();
+
+        $this->assertStringContainsString('inner join "user_profiles" as "p"', $innerJoinQuery);
+        $this->assertStringContainsString('left join "user_profiles" as "p"', $leftJoinQuery);
+    }
+
+    /** @test */
     public function test_it_automatically_includes_select_statement_if_not_defined()
     {
         $query = User::joinRelationship('posts')->toSql();

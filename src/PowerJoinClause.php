@@ -57,7 +57,8 @@ class PowerJoinClause extends JoinClause
         $this->alias = $alias;
         $this->table = sprintf('%s as %s', $this->table, $alias);
         $this->useTableAliasInConditions();
-
+        PowerJoins::$powerJoinAliasesCache[spl_object_id($this->model)] = $alias;
+        
         return $this;
     }
 

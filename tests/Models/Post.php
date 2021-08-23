@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests\Models;
 
+use Awobaz\Compoships\Compoships;
 use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\MorphMany;
 class Post extends Model
 {
     use PowerJoins;
+    use Compoships;
 
     /** @var string */
     protected $table = 'posts';
@@ -48,6 +50,15 @@ class Post extends Model
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
+    }
+
+    public function userComments(): HasMany
+    {
+        return $this->hasMany(
+            Comment::class,
+            ['id', 'user_id'],
+            ['post_id', 'user_id']
+        );
     }
 
     public function scopePublished($query)

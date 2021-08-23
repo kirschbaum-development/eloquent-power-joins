@@ -23,6 +23,7 @@
         "illuminate/database": "^6.0|^7.0|^8.0"
     },
     "require-dev": {
+        "awobaz/compoships": "^2.1",
         "laravel/legacy-factories": "^1.0@dev",
         "orchestra/testbench": "4.*|5.*|6.*",
         "phpunit/phpunit": "^8.0"

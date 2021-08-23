@@ -48,11 +48,21 @@ class RelationshipsExtraMethods
                     $join->as($alias);
                 }
 
-                $join->on(
-                    "{$parentTable}.{$this->foreignKey}",
-                    '=',
-                    "{$joinedTable}.{$this->ownerKey}"
-                );
+                if (is_array($this->foreignKey)) {
+                    foreach ($this->foreignKey as $i => $fk) {
+                        $join->on(
+                            "{$parentTable}.{$fk}",
+                            '=',
+                            "{$joinedTable}.{$this->ownerKey[$i]}"
+                        );
+                    }
+                } else {
+                    $join->on(
+                        "{$parentTable}.{$this->foreignKey}",
+                        '=',
+                        "{$joinedTable}.{$this->ownerKey}"
+                    );
+                }
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
@@ -169,11 +179,21 @@ class RelationshipsExtraMethods
                     $join->as($alias);
                 }
 
-                $join->on(
-                    $this->foreignKey,
-                    '=',
-                    "{$parentTable}.{$this->localKey}"
-                );
+                if (is_array($this->foreignKey)) {
+                    foreach ($this->foreignKey as $i => $fk) {
+                        $join->on(
+                            $fk,
+                            '=',
+                            "{$parentTable}.{$this->localKey[$i]}"
+                        );
+                    }
+                } else {
+                    $join->on(
+                        $this->foreignKey,
+                        '=',
+                        "{$parentTable}.{$this->localKey}"
+                    );
+                }
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull(

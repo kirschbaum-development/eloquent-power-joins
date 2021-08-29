@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
 
+/**
+ * @method getModel
+ */
 class RelationshipsExtraMethods
 {
     /**
@@ -223,6 +226,10 @@ class RelationshipsExtraMethods
 
                 if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
                     $callback[$this->getThroughParent()->getTable()]($join);
+                }
+
+                if ($callback && is_callable($callback)) {
+                    $callback($join);
                 }
             }, $this->getThroughParent());
 

@@ -130,8 +130,8 @@ class JoinRelationshipUsingAliasTest extends TestCase
         $user1->groups()->attach($group);
         $group->posts()->attach($post);
 
-        $users = User::query()->joinRelationshipUsingAlias('groups.posts')->get();
         $query = User::query()->joinRelationshipUsingAlias('groups.posts')->toSql();
+        $users = User::query()->joinRelationshipUsingAlias('groups.posts')->get();
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);

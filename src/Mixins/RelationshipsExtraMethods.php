@@ -81,7 +81,7 @@ class RelationshipsExtraMethods
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent)[1] ?? $this->parent->getTable();
+            $parentTable = $this->getTableOrAliasForModel($this->parent) ?? $this->parent->getTable();
 
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1) {
                 if ($alias1) {

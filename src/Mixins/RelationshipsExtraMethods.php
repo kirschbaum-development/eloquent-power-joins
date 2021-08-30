@@ -12,6 +12,9 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
 
+/**
+ * @method getModel
+ */
 class RelationshipsExtraMethods
 {
     /**
@@ -78,7 +81,7 @@ class RelationshipsExtraMethods
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent)[1] ?? $this->parent->getTable();
+            $parentTable = $this->getTableOrAliasForModel($this->parent) ?? $this->parent->getTable();
 
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1) {
                 if ($alias1) {
@@ -223,6 +226,10 @@ class RelationshipsExtraMethods
 
                 if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
                     $callback[$this->getThroughParent()->getTable()]($join);
+                }
+
+                if ($callback && is_callable($callback)) {
+                    $callback($join);
                 }
             }, $this->getThroughParent());
 

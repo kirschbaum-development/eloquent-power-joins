@@ -8,7 +8,6 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
 
@@ -56,10 +55,6 @@ class RelationshipsExtraMethods
                     '=',
                     "{$joinedTable}.{$this->ownerKey}"
                 );
-
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
-                }
 
                 if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
@@ -110,10 +105,6 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
-                }
-
                 // applying any extra conditions to the belongs to many relationship
                 if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
@@ -140,10 +131,6 @@ class RelationshipsExtraMethods
                     '=',
                     "{$this->parent->getTable()}.{$this->localKey}"
                 )->where($this->getMorphType(), '=', $this->getMorphClass());
-
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
-                }
 
                 if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
@@ -178,12 +165,6 @@ class RelationshipsExtraMethods
                     "{$parentTable}.{$this->localKey}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull(
-                        "{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}"
-                    );
-                }
-
                 if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
@@ -216,10 +197,6 @@ class RelationshipsExtraMethods
                     $this->getQualifiedLocalKeyName()
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
-                    $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
-                }
-
                 if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
@@ -244,10 +221,6 @@ class RelationshipsExtraMethods
                     "{$throughTable}.{$this->secondLocalKey}"
                 );
 
-                if ($this->usesSoftDeletes($this->getModel())) {
-                    $join->whereNull("{$farTable}.{$this->getModel()->getDeletedAtColumn()}");
-                }
-
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
                 }
@@ -266,16 +239,6 @@ class RelationshipsExtraMethods
             $builder
                 ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
                 ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
-        };
-    }
-
-    /**
-     * Checks if the relationship model uses soft deletes.
-     */
-    public function usesSoftDeletes()
-    {
-        return function ($model) {
-            return in_array(SoftDeletes::class, class_uses_recursive($model));
         };
     }
 

@@ -79,6 +79,22 @@ class PowerJoinClause extends JoinClause
     }
 
     /**
+     * Apply the global scopes to the joined query.
+     */
+    public function withGlobalScopes(): self
+    {
+        if (! $this->model) {
+            return $this;
+        }
+
+        foreach ($this->model->getGlobalScopes() as $identifier => $scope) {
+            (new $scope())->apply($this, $this->model);
+        }
+
+        return $this;
+    }
+
+    /**
      * Apply the table alias in the existing join conditions.
      */
     protected function useTableAliasInConditions()

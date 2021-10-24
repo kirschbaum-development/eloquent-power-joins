@@ -231,6 +231,18 @@ If you call `User::joinRelationship('publishedPosts')->get()`, it will also appl
 select users.* from users inner join posts on posts.user_id = posts.id and posts.published = 1
 ```
 
+#### Global Scopes
+
+If your model have global scopes applied to it, you can enable the global scopes by calling the `withGlobalScopes` method in your join clause, like this:
+
+```php
+UserProfile::joinRelationship('users', function ($join) {
+    $join->withGlobalScopes();
+});
+```
+
+There's, though, a gotcha here. Your global scope **cannot** type-hint the `Eloquent\Builder` class in the first parameter of the `apply` method, otherwise you will get errors.
+
 ### 2 - Querying relationship existence (Using Joins)
 
 [Querying relationship existence](https://laravel.com/docs/7.x/eloquent-relationships#querying-relationship-existence) is a very powerful and convenient feature of Eloquent. However, it uses the `where exists` syntax which is not always the best and may not be the more performant choice, depending on how many records you have or the structure of your tables.

@@ -40,6 +40,7 @@ trait PowerJoins
     public function scopeJoinRelationship(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
         $joinType = PowerJoins::$joinMethodsMap[$joinType] ?? $joinType;
+        $useAlias = is_string($callback) ? false : $useAlias;
         $callback = $this->formatJoinCallback($relationName, $callback);
 
         if (is_null($query->getSelect())) {

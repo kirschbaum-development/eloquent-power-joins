@@ -27,6 +27,19 @@ class JoinRelationshipUsingAliasTest extends TestCase
     /**
      * @test
      */
+    public function test_joining_using_provided_alias()
+    {
+        $category = factory(Category::class)->state('with:parent')->create();
+        $post = factory(Post::class)->create(['category_id' => $category->id]);
+
+        $sql = Post::joinRelationshipUsingAlias('category', 'my_alias')->toSql();
+
+        $this->assertStringContainsString('my_alias', $sql);
+    }
+
+    /**
+     * @test
+     */
     public function test_joining_the_same_table_twice_using_aliases()
     {
         $category = factory(Category::class)->state('with:parent')->create();

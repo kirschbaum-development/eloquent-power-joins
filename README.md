@@ -273,6 +273,14 @@ User::powerJoinWhereHas('posts', function ($join) {
 User::powerJoinDoesntHave('posts');
 ```
 
+When using the `powerJoinWhereHas` method with relationships that involves more than 1 table (One to Many, Many to Many, etc.), use the array syntax to pass the callback:
+
+```php
+User::powerJoinWhereHas('commentsThroughPosts', [
+    'comments' => fn ($query) => $query->where('body', 'a')
+])->get());
+```
+
 ### 3 - Order by
 
 You can also sort your query results using a column from another table using the `orderByPowerJoins` method.

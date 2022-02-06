@@ -284,7 +284,7 @@ trait PowerJoins
     /**
      * Same as Laravel 'has`, but using joins instead of where exists.
      */
-    public function scopePowerJoinHas(Builder $query, $relation, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null): void
+    public function scopePowerJoinHas(Builder $query, $relation, $operator = '>=', $count = 1, $boolean = 'and', $callback = null): void
     {
         if (is_null($query->getSelect())) {
             $query->select(sprintf('%s.*', $query->getModel()->getTable()));
@@ -337,7 +337,7 @@ trait PowerJoins
         $query->powerJoinHas($relation, '<', 1, $boolean, $callback);
     }
 
-    public function scopePowerJoinWhereHas(Builder $query, $relation, Closure $callback = null, $operator = '>=', $count = 1): void
+    public function scopePowerJoinWhereHas(Builder $query, $relation, $callback = null, $operator = '>=', $count = 1): void
     {
         $query->powerJoinHas($relation, $operator, $count, 'and', $callback);
     }

@@ -121,4 +121,27 @@ class PowerJoinHasTest extends TestCase
         $this->assertCount(1, User::doesntHave('posts')->get());
         $this->assertCount(1, User::powerJoinDoesntHave('posts')->get());
     }
+
+    /** @test */
+    public function test_where_has_with_joins_on_has_many_through_relationship()
+    {
+        [$user1, $user2, $user3] = factory(User::class)->times(3)->create();
+        $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
+        $post2 = factory(Post::class)->create(['user_id' => $user2->id]);
+        $post3 = factory(Post::class)->create(['user_id' => $user3->id]);
+        $commentsPost1 = factory(Comment::class)->times(2)->create(['post_id' => $post1->id]);
+        $commentsPost2 = factory(Comment::class)->times(2)->create(['post_id' => $post2->id]);
+        $commentsPost3 = factory(Comment::class)->times(1)->create(['post_id' => $post3->id]);
+        $commentsPost1[0]->body = 'a';
+        $commentsPost1[1]->body = 'a';
+        $commentsPost1[0]->save();
+        $commentsPost1[1]->save();
+        $commentsPost2[0]->body = 'a';
+        $commentsPost2[0]->save();
+
+        $closure = fn ($query) => $query->where('body', 'a');
+
+        $this->assertCount(2, User::whereHas('commentsThroughPosts', $closure)->get());
+        $this->assertCount(2, User::powerJoinWhereHas('commentsThroughPosts', ['comments' => $closure])->get());
+    }
 }

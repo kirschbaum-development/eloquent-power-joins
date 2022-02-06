@@ -22,7 +22,7 @@ class RelationshipsExtraMethods
      */
     public function performJoinForEloquentPowerJoins()
     {
-        return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null, bool $disableExtraConditions = false) {
+        return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null, bool $disableExtraConditions = false, $assertExistence = false) {
             if ($this instanceof BelongsToMany) {
                 return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof MorphOneOrMany) {
@@ -30,7 +30,7 @@ class RelationshipsExtraMethods
             } elseif ($this instanceof HasMany || $this instanceof HasOne) {
                 return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof HasManyThrough) {
-                return $this->performJoinForEloquentPowerJoinsForHasManyThrough($builder, $joinType, $callback, $alias, $disableExtraConditions);
+                return $this->performJoinForEloquentPowerJoinsForHasManyThrough($builder, $joinType, $callback, $alias, $disableExtraConditions, $assertExistence);
             } else {
                 return $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $alias, $disableExtraConditions);
             }
@@ -200,12 +200,12 @@ class RelationshipsExtraMethods
      */
     protected function performJoinForEloquentPowerJoinsForHasManyThrough()
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false, $assertExistence = false) {
             [$alias1, $alias2] = $alias;
             $throughTable = $alias1 ?: $this->getThroughParent()->getTable();
             $farTable = $alias2 ?: $this->getModel()->getTable();
 
-            $builder->{$joinType}($this->getThroughParent()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $alias1, $disableExtraConditions) {
+            $builder->{$joinType}($this->getThroughParent()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $alias1, $disableExtraConditions, $assertExistence) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
@@ -228,12 +228,12 @@ class RelationshipsExtraMethods
                     $callback[$this->getThroughParent()->getTable()]($join);
                 }
 
-                if ($callback && is_callable($callback)) {
+                if ($callback && $assertExistence && is_callable($callback)) {
                     $callback($join);
                 }
             }, $this->getThroughParent());
 
-            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias1, $alias2) {
+            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias1, $alias2, $assertExistence) {
                 if ($alias2) {
                     $join->as($alias2);
                 }
@@ -250,6 +250,10 @@ class RelationshipsExtraMethods
 
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
                     $callback[$this->getModel()->getTable()]($join);
+                }
+
+                if ($callback && !$assertExistence && is_callable($callback)) {
+                    $callback($join);
                 }
             }, $this->getModel());
 

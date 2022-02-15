@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
+use Kirschbaum\PowerJoins\FakeJoinCallback;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
@@ -53,15 +54,19 @@ trait PowerJoins
             return;
         }
 
-        $relationQuery = $query->getModel()->{$relationName}()->getQuery();
-        $relationJoinCache = "{$relationQuery->getModel()->getTable()}.{$relationName}";
+        $relation = $query->getModel()->{$relationName}();
+        $relationQuery = $relation->getQuery();
+        $alias = $this->getAliasName($useAlias, $relation, $relationName, $callback);
+        $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
+
+        $relationJoinCache = $alias
+            ? "{$aliasString}.{$relationQuery->getModel()->getTable()}.{$relationName}"
+            : "{$relationQuery->getModel()->getTable()}.{$relationName}";
 
         if ($this->relationshipAlreadyJoined($relationJoinCache)) {
             return;
         }
 
-        $relation = $query->getModel()->{$relationName}();
-        $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
         $relation->performJoinForEloquentPowerJoins($query, $joinType, $callback, $alias, $disableExtraConditions);
 
         $this->markRelationshipAsAlreadyJoined($relationJoinCache);
@@ -200,7 +205,6 @@ trait PowerJoins
                 ->orderBy(sprintf('%s_aggregation', $latestRelationshipName), $direction);
         } else {
             if ($column instanceof Expression) {
-                // dd($column);
                 $query->orderBy($column, $direction);
             } else {
                 $query->orderBy(
@@ -404,5 +408,26 @@ trait PowerJoins
         }
 
         return $callback;
+    }
+
+    /**
+     * Get the join alias name from all the different options.
+     */
+    protected function getAliasName($useAlias, $relation, $relationName, $callback)
+    {
+        if ($callback) {
+            if (is_callable($callback)) {
+                $fakeJoinCallback = new FakeJoinCallback();
+                $callback($fakeJoinCallback);
+
+                if ($fakeJoinCallback->getAlias()) {
+                    return $fakeJoinCallback->getAlias();
+                }
+            }
+        }
+
+        return $useAlias
+            ? $this->generateAliasForRelationship($relation, $relationName)
+            : null;
     }
 }

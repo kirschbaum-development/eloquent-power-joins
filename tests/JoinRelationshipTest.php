@@ -576,4 +576,42 @@ class JoinRelationshipTest extends TestCase
             ])
             ->get();
     }
+
+    /** @test */
+    public function test_join_same_relationship_using_named_alias()
+    {
+        $query = Post::query()
+            ->where('posts.id', '>', 10)
+            ->joinRelationship('category', function ($join) {
+                $join->as('category_1');
+            })
+            ->joinRelationship('category', function ($join) {
+                $join->as('category_2');
+            })
+            ->toSql();
+
+        $this->assertStringContainsString('inner join "categories" as "category_1" on "posts"."category_id" = "category_1"."id"', $query);
+        $this->assertStringContainsString('inner join "categories" as "category_2" on "posts"."category_id" = "category_2"."id"', $query);
+    }
+
+    /** @test */
+    public function test_join_same_nested_relationship_using_named_alias()
+    {
+        $this->markTestSkipped('Still to implement this using the array syntax');
+
+        $query = Post::query()
+            ->where('posts.id', '>', 10)
+            ->joinRelationship('category.parent', [
+                'category' => fn ($join) => $join->as('category_alias_1'),
+                'parent' => fn ($join) => $join->as('parent_alias_1'),
+            ])
+            ->joinRelationship('category.parent', [
+                'category' => fn ($join) => $join->as('category_alias_2'),
+                'parent' => fn ($join) => $join->as('parent_alias_2'),
+            ])
+            ->toSql();
+
+        $this->assertStringContainsString('inner join "categories" as "category_alias_1" on "posts"."category_id" = "category_alias_1"."id"', $query);
+        $this->assertStringContainsString('inner join "categories" as "category_alias_2" on "posts"."category_id" = "category_alias_2"."id"', $query);
+    }
 }

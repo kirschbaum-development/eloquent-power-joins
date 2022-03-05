@@ -352,7 +352,7 @@ trait PowerJoins
     public function relationshipAlreadyJoined($relation)
     {
         $objectId = spl_object_id($this);
-        $beforeLast = Str::beforeLast(Str::replace('.0', '', $relation), '.');
+        $beforeLast = Str::beforeLast(str_replace('.0', '', $relation), '.');
 
         if (isset($this->joinRelationshipCache[$objectId])) {
             foreach (array_keys($this->joinRelationshipCache[$objectId]) as $relationshipKey) {

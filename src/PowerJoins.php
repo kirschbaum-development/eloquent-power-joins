@@ -351,7 +351,18 @@ trait PowerJoins
      */
     public function relationshipAlreadyJoined($relation)
     {
-        return isset($this->joinRelationshipCache[spl_object_id($this)][$relation]);
+        $objectId = spl_object_id($this);
+        $beforeLast = Str::beforeLast(Str::replace('.0', '', $relation), '.');
+
+        if (isset($this->joinRelationshipCache[$objectId])) {
+            foreach (array_keys($this->joinRelationshipCache[$objectId]) as $relationshipKey) {
+                if (Str::contains($relationshipKey, $beforeLast)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 
     /**

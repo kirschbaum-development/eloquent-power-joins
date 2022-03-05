@@ -274,12 +274,17 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()
             ->select('users.*')
+            ->joinRelationship('posts')
             ->joinRelationship('posts.comments')
             ->joinRelationship('posts.images')
             ->toSql();
 
         // making sure it doesn't throw any errors
-        User::query()->select('users.*')->joinRelationship('posts.comments')->joinRelationship('posts.images')->get();
+        User::query()->select('users.*')
+            ->joinRelationship('posts')
+            ->joinRelationship('posts.comments')
+            ->joinRelationship('posts.images')
+            ->get();
 
         $this->assertStringContainsString(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
@@ -575,6 +580,9 @@ class JoinRelationshipTest extends TestCase
                 'parent' => fn ($join) => $join->as('parent_alias'),
             ])
             ->get();
+
+        // if it does not throw any exceptions, we are good
+        $this->assertTrue(true);
     }
 
     /** @test */

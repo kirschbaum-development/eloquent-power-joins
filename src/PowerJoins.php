@@ -56,7 +56,7 @@ trait PowerJoins
 
         $relation = $query->getModel()->{$relationName}();
         $relationQuery = $relation->getQuery();
-        $alias = $this->getAliasName($useAlias, $relation, $relationName, $callback);
+        $alias = $this->getAliasName($useAlias, $relation, $relationName, $relationQuery->getModel()->getTable(), $callback);
         $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
         $relationJoinCache = $alias
@@ -64,6 +64,7 @@ trait PowerJoins
             : "{$relationQuery->getModel()->getTable()}.{$relationName}";
 
         if ($this->relationshipAlreadyJoined($relationJoinCache)) {
+            // dump($relationJoinCache, $relationName, $aliasString);
             return;
         }
 
@@ -132,22 +133,33 @@ trait PowerJoins
         /** @var \Illuminate\Database\Eloquent\Relations\Relation */
         $latestRelation = null;
 
-        foreach ($relations as $index => $relationName) {
+        foreach ($relations as $relationName) {
             $currentModel = $latestRelation ? $latestRelation->getModel() : $query->getModel();
             $relation = $currentModel->{$relationName}();
-            $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
             $relationCallback = null;
-            $relationJoinCache = $index === 0
-                ? "{$relation->getQuery()->getModel()->getTable()}.{$index}.{$relationName}"
-                : "{$relation->getQuery()->getModel()->getTable()}.{$latestRelation->getModel()->getTable()}.{$relationName}";
+
+            if ($callback && is_array($callback) && isset($callback[$relationName])) {
+                $relationCallback = $callback[$relationName];
+            }
+
+            $alias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getQuery()->getModel()->getTable(), $callback);
+            $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
+            $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
+
+            if ($alias) {
+                $relationJoinCache = $latestRelation
+                    ? "{$aliasString}.{$relation->getQuery()->getModel()->getTable()}.{$latestRelation->getModel()->getTable()}.{$relationName}"
+                    : "{$aliasString}.{$relation->getQuery()->getModel()->getTable()}.{$relationName}";
+            } else {
+                $relationJoinCache = $latestRelation
+                    ? "{$relation->getQuery()->getModel()->getTable()}.{$latestRelation->getModel()->getTable()}.{$relationName}"
+                    : "{$relation->getQuery()->getModel()->getTable()}.{$relationName}";
+            }
 
             if ($useAlias) {
                 $this->cachePowerJoinAlias($relation->getModel(), $alias);
             }
 
-            if ($callback && is_array($callback) && isset($callback[$relationName])) {
-                $relationCallback = $callback[$relationName];
-            }
 
             if ($this->relationshipAlreadyJoined($relationJoinCache)) {
                 $latestRelation = $relation;
@@ -412,13 +424,24 @@ trait PowerJoins
 
     /**
      * Get the join alias name from all the different options.
+     *
+     * @return string|null
      */
-    protected function getAliasName($useAlias, $relation, $relationName, $callback)
+    protected function getAliasName($useAlias, $relation, $relationName, $tableName, $callback)
     {
         if ($callback) {
             if (is_callable($callback)) {
                 $fakeJoinCallback = new FakeJoinCallback();
                 $callback($fakeJoinCallback);
+
+                if ($fakeJoinCallback->getAlias()) {
+                    return $fakeJoinCallback->getAlias();
+                }
+            }
+
+            if (is_array($callback) && isset($callback[$tableName])) {
+                $fakeJoinCallback = new FakeJoinCallback();
+                $callback[$tableName]($fakeJoinCallback);
 
                 if ($fakeJoinCallback->getAlias()) {
                     return $fakeJoinCallback->getAlias();

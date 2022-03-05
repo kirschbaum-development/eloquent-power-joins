@@ -20,13 +20,6 @@ trait PowerJoins
     private $joinRelationshipCache = [];
 
     /**
-     * Cache to not join the same relationship twice.
-     *
-     * @var array
-     */
-    public static $powerJoinAliasesCache = [];
-
-    /**
      * Join method map.
      */
     public static $joinMethodsMap = [
@@ -40,7 +33,7 @@ trait PowerJoins
      */
     public function scopeJoinRelationship(Builder $query, $relationName, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
-        $joinType = PowerJoins::$joinMethodsMap[$joinType] ?? $joinType;
+        $joinType = static::$joinMethodsMap[$joinType] ?? $joinType;
         $useAlias = is_string($callback) ? false : $useAlias;
         $callback = $this->formatJoinCallback($relationName, $callback);
 
@@ -391,7 +384,7 @@ trait PowerJoins
      */
     public function cachePowerJoinAlias($model, $alias)
     {
-        PowerJoins::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
+        StaticCache::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
     }
 
     /**
@@ -399,7 +392,7 @@ trait PowerJoins
      */
     public function clearPowerJoinCaches()
     {
-        PowerJoins::$powerJoinAliasesCache = [];
+        StaticCache::$powerJoinAliasesCache = [];
 
         return $this;
     }

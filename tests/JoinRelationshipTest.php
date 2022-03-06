@@ -622,4 +622,25 @@ class JoinRelationshipTest extends TestCase
         $this->assertStringContainsString('inner join "categories" as "category_alias_1" on "posts"."category_id" = "category_alias_1"."id"', $query);
         $this->assertStringContainsString('inner join "categories" as "category_alias_2" on "posts"."category_id" = "category_alias_2"."id"', $query);
     }
+
+    public function test_union_query()
+    {
+        $query1 = User::joinRelationship('posts');
+        $query2 = User::joinRelationship('posts.comments');
+
+        $sql = $query1->union($query2)->toSql();
+
+        // making sure it doesn't trigger any exceptions
+        $query1->union($query2)->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $sql
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $sql
+        );
+    }
 }

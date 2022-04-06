@@ -119,7 +119,7 @@ class PowerJoinClause extends JoinClause
             }
 
             return $where;
-        });
+        })->toArray();
 
         return $this;
     }

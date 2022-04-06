@@ -62,4 +62,31 @@ class SoftDeletesTest extends TestCase
             $query
         );
     }
+
+    /** @test */
+    public function it_can_disable_soft_deletes_when_using_an_alias()
+    {
+        // making sure the query doesn't fail
+        UserProfile::query()
+            ->joinRelationship('user', function ($join) {
+                $join->withTrashed();
+            })->get();
+
+        $query = UserProfile::query()
+            ->joinRelationship('user', function ($join) {
+                $join->as('myAlias');
+                $join->withTrashed();
+            })
+            ->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "users" as "myAlias" on "user_profiles"."user_id" = "myAlias"."id"',
+            $query
+        );
+
+        $this->assertStringNotContainsString(
+            '"users"."deleted_at" is null',
+            $query
+        );
+    }
 }

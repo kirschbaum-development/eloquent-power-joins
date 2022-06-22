@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins\Tests;
 
 use Kirschbaum\PowerJoins\PowerJoins;
+use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
 use Kirschbaum\PowerJoins\Tests\Models\Image;
@@ -524,6 +525,48 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertStringContainsString(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_has_many_through_relationship_with_alias()
+    {
+        $query = User::joinRelationship('commentsThroughPosts.user', [
+            'commentsThroughPosts' => [
+                'posts' => fn($join) => $join->as('posts_alias'),
+                'comments' => fn($join) => $join->as('comments_alias'),
+            ],
+        ])->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" as "posts_alias"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" as "comments_alias"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_belongs_to_many_relationship_with_alias()
+    {
+        $query = Group::joinRelationship('posts.user', [
+            'posts' => [
+                'posts' => fn($join) => $join->as('posts_alias'),
+                'post_groups' => fn($join) => $join->as('post_groups_alias'),
+            ],
+        ])->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" as "posts_alias"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "post_groups" as "post_groups_alias"',
             $query
         );
     }

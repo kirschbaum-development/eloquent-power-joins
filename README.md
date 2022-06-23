@@ -171,6 +171,21 @@ Post::joinRelationship('category.parent', [
 ])->get()
 ```
 
+For *belongs to many* or *has many through* calls, you need to pass an array with the relationship, and then an array with the table names.
+
+```php
+Group::joinRelationship('posts.user', [
+    'posts' => [
+        'posts' => function ($join) {
+            $join->as('posts_alias');
+        },
+        'post_groups' => function($join) {
+            $join->as('post_groups_alias');
+        },
+    ],
+])->toSql();
+```
+
 #### Select * from table
 
 When making joins, using `select * from ...` can be dangerous as fields with the same name between the parent and the joined tables could conflict. Thinking on that, if you call the `joinRelationship` method without previously selecting any specific columns, Eloquent Power Joins will automatically include that for you. For instance, take a look at the following examples:

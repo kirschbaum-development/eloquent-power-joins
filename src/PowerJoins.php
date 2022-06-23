@@ -35,7 +35,7 @@ trait PowerJoins
     {
         $joinType = static::$joinMethodsMap[$joinType] ?? $joinType;
         $useAlias = is_string($callback) ? false : $useAlias;
-        $callback = $this->formatJoinCallback($relationName, $callback);
+        $callback = $this->formatJoinCallback($callback);
 
         if (is_null($query->getSelect())) {
             $query->select(sprintf('%s.*', $query->getModel()->getTable()));
@@ -57,7 +57,6 @@ trait PowerJoins
             : "{$relationQuery->getModel()->getTable()}.{$relationName}";
 
         if ($this->relationshipAlreadyJoined($relationJoinCache)) {
-            // dump($relationJoinCache, $relationName, $aliasString);
             return;
         }
 
@@ -135,7 +134,6 @@ trait PowerJoins
                 $relationCallback = $callback[$relationName];
             }
 
-            $alias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getQuery()->getModel()->getTable(), $callback);
             $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
@@ -400,11 +398,10 @@ trait PowerJoins
     /**
      * Format the join callback.
      *
-     * @param string $relationName
      * @param mixed $callback
      * @return mixed
      */
-    protected function formatJoinCallback(string $relationName, $callback)
+    protected function formatJoinCallback($callback)
     {
         if (is_string($callback)) {
             return function ($join) use ($callback) {

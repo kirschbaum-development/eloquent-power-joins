@@ -87,7 +87,7 @@ class PowerJoinClause extends JoinClause
             return $this;
         }
 
-        foreach ($this->model->getGlobalScopes() as $identifier => $scope) {
+        foreach ($this->model->getGlobalScopes() as $scope) {
             (new $scope())->apply($this, $this->model);
         }
 

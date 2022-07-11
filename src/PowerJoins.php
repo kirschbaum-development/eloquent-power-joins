@@ -49,6 +49,9 @@ trait PowerJoins
 
         $relation = $query->getModel()->{$relationName}();
         $relationQuery = $relation->getQuery();
+
+        $joinType = $this->getJoinType($joinType, $relationQuery->getModel()->getTable(), $callback);
+
         $alias = $this->getAliasName($useAlias, $relation, $relationName, $relationQuery->getModel()->getTable(), $callback);
         $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
@@ -133,6 +136,8 @@ trait PowerJoins
             if ($callback && is_array($callback) && isset($callback[$relationName])) {
                 $relationCallback = $callback[$relationName];
             }
+
+			$joinType = $this->getJoinType($joinType, $relation->getQuery()->getModel()->getTable(), $callback);
 
             $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
@@ -442,5 +447,27 @@ trait PowerJoins
         return $useAlias
             ? $this->generateAliasForRelationship($relation, $relationName)
             : null;
+    }
+
+    protected function getJoinType($originalJoinType, $tableName, $callback)
+    {
+		$joinType = null;
+        if ($callback) {
+            if (is_callable($callback)) {
+                $fakeJoinCallback = new FakeJoinCallback();
+                $callback($fakeJoinCallback);
+
+				$joinType = $fakeJoinCallback->getJoinType();
+            }
+
+            if (is_array($callback) && isset($callback[$tableName])) {
+                $fakeJoinCallback = new FakeJoinCallback();
+                $callback[$tableName]($fakeJoinCallback);
+
+				$joinType = $fakeJoinCallback->getJoinType();
+            }
+        }
+
+        return $joinType ?? $originalJoinType;
     }
 }

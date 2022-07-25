@@ -460,10 +460,9 @@ trait PowerJoins
 				$joinType = $fakeJoinCallback->getJoinType();
             }
 
-            if (is_array($callback) && isset($callback[$tableName])) {
+            if (is_array($callback) && isset($callback[$tableName]) && is_callable($callback[$tableName])) {
                 $fakeJoinCallback = new FakeJoinCallback();
                 $callback[$tableName]($fakeJoinCallback);
-                dump($callback);
 				$joinType = $fakeJoinCallback->getJoinType();
             }
         }

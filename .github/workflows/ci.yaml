@@ -18,7 +18,11 @@ jobs:
 #                    8.0,
 #                    8.1
                 ]
-                laravel: [7.*, 8.*, 9.*]
+                laravel: [
+#                    7.*,
+                    8.*,
+#                    9.*
+                ]
                 include:
 #                    -   laravel: 9.*
 #                        testbench: 7.*

@@ -463,7 +463,7 @@ trait PowerJoins
             if (is_array($callback) && isset($callback[$tableName])) {
                 $fakeJoinCallback = new FakeJoinCallback();
                 $callback[$tableName]($fakeJoinCallback);
-
+                dd($callback[$tableName]);
 				$joinType = $fakeJoinCallback->getJoinType();
             }
         }

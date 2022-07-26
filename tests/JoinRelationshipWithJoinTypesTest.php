@@ -33,7 +33,7 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
     /**
      * @test
      */
-    public function test_categoreis_inner_join_published_posts() {
+/*    public function test_categoreis_inner_join_published_posts() {
         $this->prepare_test_case_1();
 
         $categories = Category::query()->joinRelationship('posts', [
@@ -59,6 +59,6 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
 
         dump($categories->toSql(), $categories->get()->toArray());
         $this->assertCount(3, $categories);
-    }
+    }*/
 
 }

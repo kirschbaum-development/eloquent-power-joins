@@ -63,7 +63,7 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
 
 
     /** @test */
-    public function test_apply_condition_to_join()
+    public function test_apply_condition_to_join_1()
     {
         $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
             $join->where('posts.published', true);

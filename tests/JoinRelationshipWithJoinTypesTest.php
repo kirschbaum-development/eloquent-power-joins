@@ -38,7 +38,8 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
 
         $categories = Category::joinRelationship('posts', [
             'posts' => function($join){
-                $join->where('posts.published', true);
+                $join->as('post');
+                $join->published();
             }
         ]);
         // should only get categories with assigned posts.

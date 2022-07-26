@@ -36,7 +36,7 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
     public function test_categoreis_inner_join_published_posts() {
         $this->prepare_test_case_1();
 
-        $categories = Category::joinRelationship('posts', [
+        $categories = Category::query()->joinRelationship('posts', [
             'posts' => function($join){
                 $join->as('post');
                 $join->published();

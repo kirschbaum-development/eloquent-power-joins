@@ -21,8 +21,8 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
      *      |- $post_2_1 (unpublished)
      */
     protected function prepare_test_case_1(){
-        $category_1 = factory(Category::class)->state('with:parent')->create();
-        $category_2 = factory(Category::class)->state('with:parent')->create(); // with no posts assigned
+        $category_1 = factory(Category::class)->create();
+        $category_2 = factory(Category::class)->create(); // with no posts assigned
 
         $post_1_1 = factory(Post::class)->create(['category_id' => $category_1->id]);
         $post_1_2 = factory(Post::class)->create(['category_id' => $category_1->id]);
@@ -40,23 +40,23 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
             'posts' => function($join){
                 $join->where('posts.published', true);
             }
-        ])->get();
+        ]);
         // should only get categories with assigned posts.
-        dump($categories->toArray());
+        dump($categories->toSql(), $categories->get()->toArray());
         $this->assertCount(2, $categories);
     }
 
     public function test_categoreis_left_join_published_posts() {
-        $this->prepare_test_case_1();
+        // $this->prepare_test_case_1();
 
         $categories = Category::joinRelationship('posts', [
             'posts' => function($join){
                 $join->where('posts.published', true);
                 $join->left();
             }
-        ])->get();
+        ]);
 
-        dump($categories->toArray());
+        dump($categories->toSql(), $categories->get()->toArray());
         $this->assertCount(3, $categories);
     }
 

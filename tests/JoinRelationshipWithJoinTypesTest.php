@@ -61,4 +61,28 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
         $this->assertCount(3, $categories);
     }*/
 
+
+    /** @test */
+    public function test_apply_condition_to_join()
+    {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
+            $join->where('posts.published', true);
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "posts"."published" = ?',
+            $query
+        );
+    }
+
 }

@@ -25,6 +25,8 @@ class FakeJoinCallback
             $this->joinType = $arguments[0];
         }elseif ($name === 'left') {
             $this->joinType = 'leftPowerJoin';
+        }elseif ($name === 'right') {
+            $this->joinType = 'rightPowerJoin';
         }elseif ($name === 'inner') {
             $this->joinType = 'powerJoin';
         }

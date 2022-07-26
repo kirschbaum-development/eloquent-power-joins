@@ -434,7 +434,7 @@ trait PowerJoins
                 }
             }
 
-            if (is_array($callback) && isset($callback[$tableName])) {
+            if (is_array($callback) && isset($callback[$tableName]) && is_callable($callback[$tableName])) {
                 $fakeJoinCallback = new FakeJoinCallback();
                 $callback[$tableName]($fakeJoinCallback);
 
@@ -458,9 +458,7 @@ trait PowerJoins
                 $callback($fakeJoinCallback);
 
 				$joinType = $fakeJoinCallback->getJoinType();
-            }
-
-            if (is_array($callback) && isset($callback[$tableName]) && is_callable($callback[$tableName])) {
+            }elseif (is_array($callback) && isset($callback[$tableName]) && is_callable($callback[$tableName])) {
                 $fakeJoinCallback = new FakeJoinCallback();
                 $callback[$tableName]($fakeJoinCallback);
 				$joinType = $fakeJoinCallback->getJoinType();

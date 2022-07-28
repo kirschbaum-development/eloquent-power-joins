@@ -9,33 +9,7 @@ use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
 use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
-class JoinRelationshipWithJoinTypesTest extends TestCase
-{
-
-
-    /** @test */
-    public function test_apply_condition_to_join_1()
-    {
-        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
-            $join->where('posts.published', true);
-        });
-
-        $query = $queryBuilder->toSql();
-
-        // running to make sure it doesn't throw any exceptions
-        $queryBuilder->get();
-
-        $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id"',
-            $query
-        );
-
-        $this->assertStringContainsString(
-            'and "posts"."published" = ?',
-            $query
-        );
-    }
-
+class JoinRelationshipWithJoinTypesTest extends TestCase {
 
     /**
      * $category_1
@@ -53,39 +27,80 @@ class JoinRelationshipWithJoinTypesTest extends TestCase
         $post_1_2 = factory(Post::class)->create(['category_id' => $category_1->id]);
 
         $post_2_1 = factory(Post::class)->create(['category_id' => $category_2->id, 'published' => false]);
+
+        $post_no_category_1 = factory(Post::class)->create(['category_id' => 0, 'published' => true]);
+        $post_no_category_2 = factory(Post::class)->create(['category_id' => 0, 'published' => false]);
+        $post_no_category_3 = factory(Post::class)->create(['category_id' => 0, 'published' => false]);
     }
 
     /**
      * @test
      */
-    public function test_categoreis_inner_join_published_posts() {
+    public function test_categories_inner_join_published_posts() {
         $this->prepare_test_case_1();
 
-        $categories = Category::query()->joinRelationship('posts', [
-            'posts' => function($join){
-                $join->as('post');
-                $join->published();
-            }
-        ]);
-        // should only get categories with assigned posts.
-        dump($categories->toSql(), $categories->get()->toArray());
-        $this->assertCount(2, $categories);
+        $categories_with_published_posts = Category::query()->joinRelationship('posts', function($join){
+            $join->as('post');
+            $join->published();
+        });
+
+        $categories_with_UNpublished_posts = Category::query()->joinRelationship('posts', function($join){
+            $join->where('published', false);
+        });
+
+        // dump($categories_with_published_posts->toSql(), $categories_with_published_posts->get()->toArray());
+        $this->assertCount(2, $categories_with_published_posts->get());
+        $this->assertCount(1, $categories_with_UNpublished_posts->get());
     }
 
-    public function test_categoreis_left_join_published_posts() {
-        // $this->prepare_test_case_1();
+    /**
+     * @test
+     */
+    public function test_categories_left_join_posts_num() {
+        $this->prepare_test_case_1();
 
-        $categories = Category::joinRelationship('posts', [
-            'posts' => function($join){
-                $join->where('posts.published', true);
-                $join->left();
-            }
-        ]);
+        $categories_with_posts_num = Category::query()->joinRelationship('posts', function($join){
+            $join->as('post');
+            $join->left();
+            $join->published();
+        })
+            ->groupby('categories.id')
+            ->select(['categories.*'])
+            ->selectRaw('SUM(CASE WHEN post.id IS NULL THEN 0 ELSE 1 END) as posts_num')
+            ->orderby('categories.id');
 
-        dump($categories->toSql(), $categories->get()->toArray());
-        $this->assertCount(3, $categories);
+        $rows = $categories_with_posts_num->get()->toArray();
+        // $rows = $categories_with_posts_num->get(); //TODO: Array to string conversion
+        // dump($categories_with_posts_num->toSql());
+        $this->assertCount(2, $rows);
+        $this->assertEquals($rows[0]['posts_num'], 2);
+        $this->assertEquals($rows[1]['posts_num'], 0);
     }
 
+    /**
+     * @test
+     */
+    public function test_categories_right_join_posts_inexistent_category() {
+        $this->markTestSkipped('[SKIPPED] Right joins are not supported by SQLite, so unable to test in this environment');
+        return;
 
+        $this->prepare_test_case_1();
+
+        // just to test right joins, we'll obtain posts through Category model
+        $posts_inexistent_category = Category::query()->joinRelationship('posts', function($join){
+            $join->as('post');
+            $join->right();
+            // $join->published();
+        });
+
+        $rows = $posts_inexistent_category->get()->toArray();
+
+        $this->assertCount(3, $rows);
+        // now only published
+        $this->assertCount(1, (clone $posts_inexistent_category)->where('post.published', true)->get()->toArray());
+        // now only unpublished
+        $this->assertCount(2, (clone $posts_inexistent_category)->where('post.published', false)->get()->toArray());
+
+    }
 
 }

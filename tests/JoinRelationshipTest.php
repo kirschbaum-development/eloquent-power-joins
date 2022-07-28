@@ -13,7 +13,7 @@ use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipTest extends TestCase
 {
-    /** @test  */
+    /** @test */
     public function test_join_first_level_relationship()
     {
         $query = User::query()->joinRelationship('posts')->toSql();

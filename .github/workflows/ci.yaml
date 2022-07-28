@@ -2,9 +2,6 @@ name: run-tests
 
 on:
   push:
-    branches:
-#      - "**"
-      - "tests"
   pull_request:
 
 jobs:
@@ -14,23 +11,15 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php: [
-                    7.4,
-#                    8.0,
-#                    8.1
-                ]
-                laravel: [
-#                    7.*,
-                    8.*,
-#                    9.*
-                ]
+                php: [7.4, 8.0, 8.1]
+                laravel: [7.*, 8.*, 9.*]
                 include:
-#                    -   laravel: 9.*
-#                        testbench: 7.*
+                    -   laravel: 9.*
+                        testbench: 7.*
                     -   laravel: 8.*
                         testbench: 6.*
-#                    -   laravel: 7.*
-#                        testbench: 5.*
+                    -   laravel: 7.*
+                        testbench: 5.*
                 exclude:
                     -   laravel: 9.*
                         php: 7.4
@@ -42,8 +31,6 @@ jobs:
         steps:
             -   name: Checkout code
                 uses: actions/checkout@v1
-                with:
-                    ref: tests
 
             -   name: Install SQLite 3
                 run: |

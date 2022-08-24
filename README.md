@@ -73,7 +73,7 @@ User::rightJoinRelationship('posts.comments');
 
 #### Joining polymorphic relationships
 
-Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you would also need to apply the `where imageable_type = Image::class` condition, otherwise you could get messy results.
+Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you would also need to apply the `where imageable_type = Post::class` condition, otherwise you could get messy results.
 
 Turns out, if you join a polymorphic relationship, Eloquent Power Joins automatically applies this condition for you. You simply need to call the same method.
 

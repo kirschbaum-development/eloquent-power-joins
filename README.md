@@ -1,7 +1,7 @@
 ![Eloquent Power Joins](screenshots/eloquent-power-joins.jpg "Eloquent Power Joins")
 
 ![Laravel Supported Versions](https://img.shields.io/badge/laravel-6.x/7.x/8.x/9.x-green.svg)
-[![Actions Status](https://github.com/kirschbaum-development/eloquent-power-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions)
+[![run-tests](https://github.com/kirschbaum-development/eloquent-power-joins/actions/workflows/ci.yaml/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions/workflows/ci.yaml)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)

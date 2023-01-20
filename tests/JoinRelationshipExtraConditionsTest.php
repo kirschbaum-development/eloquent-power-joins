@@ -191,7 +191,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         User::joinRelationship('publishedPosts')->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "published" = ?',
+            'inner join "posts" on "posts"."user_id" = "users"."id" and ("published" = ?)',
             $query
         );
     }

@@ -348,10 +348,12 @@ class RelationshipsExtraMethods
     public function applyNestedCondition()
     {
         return function ($join, $condition) {
-            foreach ($condition['query']->wheres as $condition) {
-                $method = "apply{$condition['type']}Condition";
-                $this->$method($join, $condition);
-            }
+            $join->where(function($q) use($condition){
+                foreach ($condition['query']->wheres as $condition) {
+                    $method = "apply{$condition['type']}Condition";
+                    $this->$method($q, $condition);
+                }
+            });
         };
     }
 

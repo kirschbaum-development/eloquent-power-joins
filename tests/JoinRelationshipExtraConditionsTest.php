@@ -187,11 +187,11 @@ class JoinRelationshipExtraConditionsTest extends TestCase
     /** @test */
     public function test_extra_conditions_with_closure()
     {
-        $query = User::joinRelationship('publishedPosts')->toSql();
-        User::joinRelationship('publishedPosts')->get();
+        $query = User::joinRelationship('publishedOrReviewedPosts')->toSql();
+        User::joinRelationship('publishedOrReviewedPosts')->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and ("published" = ?)',
+            'inner join "posts" on "posts"."user_id" = "users"."id" and ("published" = ? or "reviewed" = ?)',
             $query
         );
     }

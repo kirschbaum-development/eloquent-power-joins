@@ -50,6 +50,7 @@ class CreateTables extends Migration
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('category_id');
             $table->string('title');
+            $table->boolean('reviewed')->default(true);
             $table->boolean('published')->default(true);
             $table->timestamps();
         });

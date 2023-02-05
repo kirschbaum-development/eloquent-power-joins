@@ -47,9 +47,10 @@ class User extends Model
 
     public function publishedOrReviewedPosts(): HasMany
     {
-        return $this->hasMany(Post::class)->where(function($query){
-           $query->where('published', true);
-           $query->orWhere('reviewed', true);
+        return $this->hasMany(Post::class)->where(function ($query) {
+            $query
+                ->where('published', true)
+                ->orWhere('reviewed', true);
         });
     }
 

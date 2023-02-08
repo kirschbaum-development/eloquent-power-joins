@@ -2,12 +2,15 @@
 
 namespace Kirschbaum\PowerJoins;
 
+use Closure;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
 use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Laravel\SerializableClosure\Support\ReflectionClosure;
+use ReflectionClass;
 
 class PowerJoinClause extends JoinClause
 {
@@ -133,6 +136,11 @@ class PowerJoinClause extends JoinClause
         return parent::whereNull($columns, $boolean, $not);
     }
 
+    public function newQuery()
+    {
+        return new static($this->newParentQuery(), $this->type, $this->table, $this->model); // <-- The model param is needed
+    }
+
     public function where($column, $operator = null, $value = null, $boolean = 'and')
     {
         if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
@@ -140,8 +148,9 @@ class PowerJoinClause extends JoinClause
         }
 
         if (is_callable($column)) {
-            $column($this);
-            return $this;
+            $query = new self($this, $this->type, $this->table, $this->model);
+            $column($query);
+            return $this->addNestedWhereQuery($query);
         } else {
             return parent::where($column, $operator, $value, $boolean);
         }

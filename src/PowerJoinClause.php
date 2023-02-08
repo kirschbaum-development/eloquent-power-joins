@@ -139,7 +139,12 @@ class PowerJoinClause extends JoinClause
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
         }
 
-        return parent::where($column, $operator, $value, $boolean);
+        if (is_callable($column)) {
+            $column($this);
+            return $this;
+        } else {
+            return parent::where($column, $operator, $value, $boolean);
+        }
     }
 
     /**

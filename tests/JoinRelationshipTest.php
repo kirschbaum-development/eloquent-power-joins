@@ -686,4 +686,24 @@ class JoinRelationshipTest extends TestCase
             $sql
         );
     }
+
+    public function test_scope_inside_nested_where()
+    {
+        Comment::joinRelationship('post', function ($join) {
+            $join->where(function($innerQuery) {
+                $innerQuery->published();
+            });
+        })->get();
+
+        $sql = Comment::joinRelationship('post', function ($join) {
+            $join->where(function($innerQuery) {
+                $innerQuery->published();
+            });
+        })->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "comments"."post_id" = "posts"."id" and "posts"."published" = ?',
+            $sql
+        );
+    }
 }

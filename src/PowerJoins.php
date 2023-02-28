@@ -49,7 +49,7 @@ trait PowerJoins
 
         $relation = $query->getModel()->{$relationName}();
         $relationQuery = $relation->getQuery();
-        $alias = $this->getAliasName($useAlias, $relation, $relationName, $relationQuery->getModel()->getTable(), $callback);
+        $alias = $this->getAliasName($useAlias, $relation, $relationName, $callback);
         $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
         $relationJoinCache = $alias
@@ -120,21 +120,25 @@ trait PowerJoins
      */
     public function scopeJoinNestedRelationship(Builder $query, string $relationships, $callback = null, $joinType = 'join', $useAlias = false, bool $disableExtraConditions = false): void
     {
+        $parts = [];
         $relations = explode('.', $relationships);
 
         /** @var \Illuminate\Database\Eloquent\Relations\Relation */
         $latestRelation = null;
 
         foreach ($relations as $relationName) {
+            $parts[] = $relationName;
+            $callbackName = join(".", $parts);
+
             $currentModel = $latestRelation ? $latestRelation->getModel() : $query->getModel();
             $relation = $currentModel->{$relationName}();
             $relationCallback = null;
 
-            if ($callback && is_array($callback) && isset($callback[$relationName])) {
-                $relationCallback = $callback[$relationName];
+            if ($callback && is_array($callback) && isset($callback[$callbackName]) && is_callable($callback[$callbackName])) {
+                $relationCallback = $callback[$callbackName];
             }
 
-            $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
+            $alias = $this->getAliasName($useAlias, $relation, $callbackName, $callback);
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
             if ($alias) {
@@ -147,7 +151,7 @@ trait PowerJoins
                     : "{$relation->getQuery()->getModel()->getTable()}.{$relationName}";
             }
 
-            if ($useAlias) {
+            if ($alias) {
                 $this->cachePowerJoinAlias($relation->getModel(), $alias);
             }
 
@@ -170,7 +174,7 @@ trait PowerJoins
             $this->markRelationshipAsAlreadyJoined($relationJoinCache);
         }
 
-        $this->clearPowerJoinCaches();
+        //$this->clearPowerJoinCaches();
     }
 
     /**
@@ -323,7 +327,7 @@ trait PowerJoins
         $latestRelation = null;
 
         foreach ($relations as $index => $relation) {
-            if (! $latestRelation) {
+            if (!$latestRelation) {
                 $relation = $query->getRelationWithoutConstraintsProxy($relation);
             } else {
                 $relation = $latestRelation->getModel()->query()->getRelationWithoutConstraintsProxy($relation);
@@ -417,7 +421,7 @@ trait PowerJoins
      *
      * @return string|null
      */
-    protected function getAliasName($useAlias, $relation, $relationName, $tableName, $callback)
+    protected function getAliasName($useAlias, $relation, $relationName, $callback)
     {
         if ($callback) {
             if (is_callable($callback)) {
@@ -429,12 +433,16 @@ trait PowerJoins
                 }
             }
 
-            if (is_array($callback) && isset($callback[$tableName])) {
-                $fakeJoinCallback = new FakeJoinCallback();
-                $callback[$tableName]($fakeJoinCallback);
+            if (is_array($callback) && isset($callback[$relationName])) {
+                if (is_callable($callback[$relationName])) {
+                    $fakeJoinCallback = new FakeJoinCallback();
+                    $callback[$relationName]($fakeJoinCallback);
 
-                if ($fakeJoinCallback->getAlias()) {
-                    return $fakeJoinCallback->getAlias();
+                    if ($fakeJoinCallback->getAlias()) {
+                        return $fakeJoinCallback->getAlias();
+                    }
+                } else {
+                    return $callback[$relationName];
                 }
             }
         }

@@ -61,13 +61,13 @@ jobs:
                     php-version: ${{ matrix.php }}
                     extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
                     coverage: none
-                    tools: composer:v1
+                    tools: composer:v2
 
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update
-                    composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest
+                    composer require "laravel/framework:${{ matrix.laravel }}" "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer update --${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
             -   name: Execute tests

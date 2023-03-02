@@ -117,8 +117,8 @@ class PowerJoinClause extends JoinClause
                 $where['first'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['first']);
                 $where['second'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['second']);
             } else {
-                $where['first'] = str_replace($table, $this->alias, $where['first']);
-                $where['second'] = str_replace($table, $this->alias, $where['second']);
+                $where['first'] = str_replace($table . '.', $this->alias . '.', $where['first']);
+                $where['second'] = str_replace($table . '.', $this->alias . '.', $where['second']);
             }
 
             return $where;

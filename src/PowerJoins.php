@@ -50,6 +50,12 @@ trait PowerJoins
         $relation = $query->getModel()->{$relationName}();
         $relationQuery = $relation->getQuery();
         $alias = $this->getAliasName($useAlias, $relation, $relationName, $relationQuery->getModel()->getTable(), $callback);
+
+        if ($relation instanceof BelongsToMany && ! is_array($alias)) {
+            $extraAlias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getTable(), $callback);
+            $alias = [$extraAlias, $alias];
+        }
+
         $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
         $relationJoinCache = $alias
@@ -60,7 +66,13 @@ trait PowerJoins
             return;
         }
 
-        $relation->performJoinForEloquentPowerJoins($query, $joinType, $callback, $alias, $disableExtraConditions);
+        $relation->performJoinForEloquentPowerJoins(
+            builder: $query,
+            joinType: $joinType,
+            callback: $callback,
+            alias: $alias,
+            disableExtraConditions: $disableExtraConditions
+        );
 
         $this->markRelationshipAsAlreadyJoined($relationJoinCache);
         $this->clearPowerJoinCaches();

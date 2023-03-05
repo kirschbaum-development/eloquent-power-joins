@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
+use ReflectionFunction;
 use Kirschbaum\PowerJoins\StaticCache;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -14,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 
 /**
  * @method getModel
+ * @mixin \Illuminate\Database\Eloquent\Relations\Relation
  */
 class RelationshipsExtraMethods
 {

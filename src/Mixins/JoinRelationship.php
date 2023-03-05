@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 
+/**
+ * @mixin \Illuminate\Database\Eloquent\Builder
+ */
 class JoinRelationship
 {
     /**

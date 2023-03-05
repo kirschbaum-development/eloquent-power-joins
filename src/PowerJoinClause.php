@@ -9,8 +9,6 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Laravel\SerializableClosure\Support\ReflectionClosure;
-use ReflectionClass;
 
 class PowerJoinClause extends JoinClause
 {
@@ -28,10 +26,13 @@ class PowerJoinClause extends JoinClause
 
     /**
      * Alias name.
-     *
-     * @var string
      */
-    public $alias;
+    public ?string $alias = null;
+
+    /**
+     * Joined table alias name (mostly for belongs to many aliases).
+     */
+    public ?string $joinedTableAlias = null;
 
     /**
      * Create a new join clause instance.
@@ -52,12 +53,11 @@ class PowerJoinClause extends JoinClause
 
     /**
      * Add an alias to the table being joined.
-     *
-     * @return self
      */
-    public function as(string $alias)
+    public function as(string $alias, ?string $joinedTableAlias = null): self
     {
         $this->alias = $alias;
+        $this->joinedTableAlias = $joinedTableAlias;
         $this->table = sprintf('%s as %s', $this->table, $alias);
         $this->useTableAliasInConditions();
 
@@ -100,7 +100,7 @@ class PowerJoinClause extends JoinClause
     /**
      * Apply the table alias in the existing join conditions.
      */
-    protected function useTableAliasInConditions()
+    protected function useTableAliasInConditions(): self
     {
         if (! $this->alias || ! $this->model) {
             return $this;
@@ -136,15 +136,17 @@ class PowerJoinClause extends JoinClause
         return parent::whereNull($columns, $boolean, $not);
     }
 
-    public function newQuery()
+    public function newQuery(): self
     {
         return new static($this->newParentQuery(), $this->type, $this->table, $this->model); // <-- The model param is needed
     }
 
-    public function where($column, $operator = null, $value = null, $boolean = 'and')
+    public function where($column, $operator = null, $value = null, $boolean = 'and'): self
     {
         if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
+        } elseif ($this->alias && ! is_callable($column)) {
+            $column = $this->alias . '.' . $column;
         }
 
         if (is_callable($column)) {

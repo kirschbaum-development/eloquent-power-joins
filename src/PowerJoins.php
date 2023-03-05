@@ -51,7 +51,7 @@ trait PowerJoins
         $relationQuery = $relation->getQuery();
         $alias = $this->getAliasName($useAlias, $relation, $relationName, $relationQuery->getModel()->getTable(), $callback);
 
-        if ($relation instanceof BelongsToMany && ! is_array($alias)) {
+        if ($relation instanceof BelongsToMany && !is_array($alias)) {
             $extraAlias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getTable(), $callback);
             $alias = [$extraAlias, $alias];
         }
@@ -140,17 +140,17 @@ trait PowerJoins
 
         foreach ($relations as $relationName) {
             $parts[] = $relationName;
-            $callbackName = join(".", $parts);
+            $relationsFullName = join(".", $parts);
 
             $currentModel = $latestRelation ? $latestRelation->getModel() : $query->getModel();
             $relation = $currentModel->{$relationName}();
             $relationCallback = null;
 
-            if ($callback && is_array($callback) && isset($callback[$callbackName]) && is_callable($callback[$callbackName])) {
-                $relationCallback = $callback[$callbackName];
+            if ($callback && is_array($callback) && (isset($callback[$relationName]) || isset($callback[$relationsFullName]))) {
+                $relationCallback = $callback[$relationsFullName] ?? $callback[$relationName];
             }
 
-            $alias = $this->getAliasName($useAlias, $relation, $callbackName, $query->getModel()->getTable(), $callback);
+            $alias = $this->getAliasName($useAlias, $relation, $relationName, $query->getModel()->getTable(), $callback, $relationsFullName);
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
             if ($alias) {
@@ -186,7 +186,7 @@ trait PowerJoins
             $this->markRelationshipAsAlreadyJoined($relationJoinCache);
         }
 
-        //$this->clearPowerJoinCaches();
+        $this->clearPowerJoinCaches();
     }
 
     /**
@@ -433,7 +433,7 @@ trait PowerJoins
      *
      * @return string|null
      */
-    protected function getAliasName($useAlias, $relation, $relationName, $tableName, $callback)
+    protected function getAliasName($useAlias, $relation, $relationName, $tableName, $callback, $relationsFullName = null)
     {
         if ($callback) {
             if (is_callable($callback)) {
@@ -445,17 +445,19 @@ trait PowerJoins
                 }
             }
 
-            if (is_array($callback) && (isset($callback[$relationName]) || isset($callback[$tableName])) ) {
-                $callback = $callback[$relationName] ?? $callback[$tableName];
-                if (is_callable($callback)) {
-                    $fakeJoinCallback = new FakeJoinCallback();
-                    $callback[$relationName]($fakeJoinCallback);
+            if (is_array($callback) && (isset($callback[$tableName]) || isset($callback[$relationsFullName]))) {
+                $callback = $callback[$tableName] ?? $callback[$relationsFullName];
+                if (is_array($callback) == false) {
+                    if (is_callable($callback)) {
+                        $fakeJoinCallback = new FakeJoinCallback();
+                        $callback($fakeJoinCallback);
 
-                    if ($fakeJoinCallback->getAlias()) {
-                        return $fakeJoinCallback->getAlias();
+                        if ($fakeJoinCallback->getAlias()) {
+                            return $fakeJoinCallback->getAlias();
+                        }
+                    } else {
+                        return $callback;
                     }
-                } else {
-                    return $callback;
                 }
             }
         }

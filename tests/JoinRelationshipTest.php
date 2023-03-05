@@ -702,4 +702,27 @@ class JoinRelationshipTest extends TestCase
             $sql
         );
     }
+
+    public function test_it_can_alias_belongs_to_many()
+    {
+        Group::query()->joinRelationship('posts', [
+            'posts' => fn ($join) => $join->as('posts_1')->where('id', 2),
+            'post_groups' => fn ($join) => $join->as('pivot_posts_1'),
+        ])->get();
+
+        $sql = Group::query()->joinRelationship('posts', [
+            'posts' => fn ($join) => $join->as('posts_1')->where('id', 2),
+            'post_groups' => fn ($join) => $join->as('pivot_posts_1'),
+        ])->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "post_groups" as "pivot_posts_1" on "pivot_posts_1"."group_id" = "groups"."id"',
+            $sql
+        );
+
+        $this->assertStringContainsString(
+            'inner join "posts" as "posts_1" on "posts_1"."id" = "pivot_posts_1"."post_id" and "posts_1"."id" = ?',
+            $sql
+        );
+    }
 }

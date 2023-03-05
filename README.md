@@ -1,6 +1,6 @@
 ![Eloquent Power Joins](screenshots/eloquent-power-joins.jpg "Eloquent Power Joins")
 
-![Laravel Supported Versions](https://img.shields.io/badge/laravel-6.x/7.x/8.x/9.x/10.x-green.svg)
+![Laravel Supported Versions](https://img.shields.io/badge/laravel-8.x/9.x/10.x-green.svg)
 [![run-tests](https://github.com/kirschbaum-development/eloquent-power-joins/actions/workflows/ci.yaml/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions/workflows/ci.yaml)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
@@ -25,6 +25,12 @@ You can install the package via composer:
 
 ```bash
 composer require kirschbaum-development/eloquent-power-joins
+```
+
+For Laravel versions < 8, use the 2.* version:
+
+```bash
+composer require kirschbaum-development/eloquent-power-joins:2.*
 ```
 
 ## Usage

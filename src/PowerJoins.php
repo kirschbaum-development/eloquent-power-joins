@@ -49,7 +49,13 @@ trait PowerJoins
 
         $relation = $query->getModel()->{$relationName}();
         $relationQuery = $relation->getQuery();
-        $alias = $this->getAliasName($useAlias, $relation, $relationName, $callback);
+        $alias = $this->getAliasName($useAlias, $relation, $relationName, $relationQuery->getModel()->getTable(), $callback);
+
+        if ($relation instanceof BelongsToMany && ! is_array($alias)) {
+            $extraAlias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getTable(), $callback);
+            $alias = [$extraAlias, $alias];
+        }
+
         $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
         $relationJoinCache = $alias
@@ -60,7 +66,13 @@ trait PowerJoins
             return;
         }
 
-        $relation->performJoinForEloquentPowerJoins($query, $joinType, $callback, $alias, $disableExtraConditions);
+        $relation->performJoinForEloquentPowerJoins(
+            builder: $query,
+            joinType: $joinType,
+            callback: $callback,
+            alias: $alias,
+            disableExtraConditions: $disableExtraConditions
+        );
 
         $this->markRelationshipAsAlreadyJoined($relationJoinCache);
         $this->clearPowerJoinCaches();
@@ -138,7 +150,7 @@ trait PowerJoins
                 $relationCallback = $callback[$callbackName];
             }
 
-            $alias = $this->getAliasName($useAlias, $relation, $callbackName, $callback);
+            $alias = $this->getAliasName($useAlias, $relation, $callbackName, $query->getModel()->getTable(), $callback);
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
             if ($alias) {
@@ -421,7 +433,7 @@ trait PowerJoins
      *
      * @return string|null
      */
-    protected function getAliasName($useAlias, $relation, $relationName, $callback)
+    protected function getAliasName($useAlias, $relation, $relationName, $tableName, $callback)
     {
         if ($callback) {
             if (is_callable($callback)) {
@@ -433,8 +445,9 @@ trait PowerJoins
                 }
             }
 
-            if (is_array($callback) && isset($callback[$relationName])) {
-                if (is_callable($callback[$relationName])) {
+            if (is_array($callback) && (isset($callback[$relationName]) || isset($callback[$tableName])) ) {
+                $callback = $callback[$relationName] ?? $callback[$tableName];
+                if (is_callable($callback)) {
                     $fakeJoinCallback = new FakeJoinCallback();
                     $callback[$relationName]($fakeJoinCallback);
 
@@ -442,7 +455,7 @@ trait PowerJoins
                         return $fakeJoinCallback->getAlias();
                     }
                 } else {
-                    return $callback[$relationName];
+                    return $callback;
                 }
             }
         }

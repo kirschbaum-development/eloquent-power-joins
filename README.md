@@ -106,6 +106,7 @@ User::joinRelationship('posts.comments', [
     },
     'comments' => function ($join) {
         $join->where('comments.approved', true);
+        $join->left(); // you may also indicate join type using methods ->left()/->inner()
     }
 ]);
 ```

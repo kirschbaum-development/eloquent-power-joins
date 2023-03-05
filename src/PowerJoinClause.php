@@ -212,4 +212,21 @@ class PowerJoinClause extends JoinClause
             }
         }
     }
+
+    public function left(){
+        return $this->joinType('left');
+    }
+
+    public function right(){
+        return $this->joinType('right');
+    }
+
+    public function inner(){
+        return $this->joinType('inner');
+    }
+
+    public function joinType($join_type){
+        $this->type = $join_type;
+        return $this;
+    }
 }

@@ -58,6 +58,10 @@ class PowerJoinClause extends JoinClause
     {
         $this->alias = $alias;
         $this->joinedTableAlias = $joinedTableAlias;
+        $cut = strpos($this->table," as ");
+        if ($cut !== false) {
+            $this->table = substr($this->table, 0, $cut);
+        }
         $this->table = sprintf('%s as %s', $this->table, $alias);
         $this->useTableAliasInConditions();
 
@@ -86,7 +90,7 @@ class PowerJoinClause extends JoinClause
      */
     public function withGlobalScopes(): self
     {
-        if (! $this->model) {
+        if (!$this->model) {
             return $this;
         }
 
@@ -102,7 +106,7 @@ class PowerJoinClause extends JoinClause
      */
     protected function useTableAliasInConditions(): self
     {
-        if (! $this->alias || ! $this->model) {
+        if (!$this->alias || !$this->model) {
             return $this;
         }
 
@@ -114,11 +118,11 @@ class PowerJoinClause extends JoinClause
 
             if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
                 // if joining the same table, only replace the correct table.key pair
-                $where['first'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['first']);
-                $where['second'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['second']);
+                $where['first'] = preg_replace('/^' . $table . '.' . $key . '/', $this->alias . '.' . $key, $where['first']);
+                $where['second'] = preg_replace('/^' . $table . '.' . $key . '/', $this->alias . '.' . $key, $where['second']);
             } else {
-                $where['first'] = str_replace($table . '.', $this->alias . '.', $where['first']);
-                $where['second'] = str_replace($table . '.', $this->alias . '.', $where['second']);
+                $where['first'] = preg_replace('/^' . $table . '.' . '/', $this->alias . '.', $where['first']);
+                $where['second'] = preg_replace('/^' . $table . '.' . '/', $this->alias . '.', $where['second']);
             }
 
             return $where;
@@ -145,7 +149,7 @@ class PowerJoinClause extends JoinClause
     {
         if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
-        } elseif ($this->alias && ! is_callable($column)) {
+        } elseif ($this->alias && !is_callable($column)) {
             $column = $this->alias . '.' . $column;
         }
 
@@ -163,7 +167,7 @@ class PowerJoinClause extends JoinClause
      */
     public function withTrashed(): self
     {
-        if (! in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
+        if (!in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
             return $this;
         }
 
@@ -183,7 +187,7 @@ class PowerJoinClause extends JoinClause
      */
     public function onlyTrashed(): self
     {
-        if (! in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
+        if (!in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
             return $this;
         }
 

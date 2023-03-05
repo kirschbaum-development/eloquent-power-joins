@@ -150,7 +150,7 @@ trait PowerJoins
                 $relationCallback = $callback[$relationsFullName] ?? $callback[$relationName];
             }
 
-            $alias = $this->getAliasName($useAlias, $relation, $relationName, $query->getModel()->getTable(), $callback, $relationsFullName);
+            $alias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getRelated()->getTable(), $callback, $relationsFullName);
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
 
             if ($alias) {

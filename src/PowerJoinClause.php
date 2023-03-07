@@ -118,11 +118,11 @@ class PowerJoinClause extends JoinClause
 
             if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
                 // if joining the same table, only replace the correct table.key pair
-                $where['first'] = preg_replace('/^' . $table . '.' . $key . '/', $this->alias . '.' . $key, $where['first']);
-                $where['second'] = preg_replace('/^' . $table . '.' . $key . '/', $this->alias . '.' . $key, $where['second']);
+                $where['first'] = preg_replace('/^' . $table . '\.' . $key . '/', $this->alias . '.' . $key, $where['first']);
+                $where['second'] = preg_replace('/^' . $table . '\.' . $key . '/', $this->alias . '.' . $key, $where['second']);
             } else {
-                $where['first'] = preg_replace('/^' . $table . '.' . '/', $this->alias . '.', $where['first']);
-                $where['second'] = preg_replace('/^' . $table . '.' . '/', $this->alias . '.', $where['second']);
+                $where['first'] = preg_replace('/^' . $table . '\.' . '/', $this->alias . '.', $where['first']);
+                $where['second'] = preg_replace('/^' . $table . '\.' . '/', $this->alias . '.', $where['second']);
             }
 
             return $where;

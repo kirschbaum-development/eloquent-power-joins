@@ -109,8 +109,14 @@ class PowerJoinClause extends JoinClause
         $this->wheres = collect($this->wheres)->filter(function ($where) {
             return in_array($where['type'] ?? '', ['Column']);
         })->map(function ($where) {
+            // dd($where);
             $key = $this->model->getKeyName();
             $table = $this->tableName;
+
+            // if it was already replaced, skip
+            if (Str::startsWith($where['first'] . '.', $this->alias) || Str::startsWith($where['second'] . '.', $this->alias)) {
+                return $where;
+            }
 
             if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
                 // if joining the same table, only replace the correct table.key pair

@@ -8,7 +8,6 @@ use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
 use Kirschbaum\PowerJoins\Tests\Models\Image;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
-use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipTest extends TestCase
@@ -456,9 +455,12 @@ class JoinRelationshipTest extends TestCase
     {
         $profile = factory(UserProfile::class)->create();
 
-        $user = User::query()->select('profile.city')->leftJoinRelationship('profile', function ($join) {
-            $join->as('profile');
-        })->first();
+        $user = User::query()
+            ->select('profile.city')
+            ->leftJoinRelationship('profile', function ($join) {
+                $join->as('profile');
+            })
+            ->first();
 
         $this->assertEquals($profile->city, $user->city);
     }

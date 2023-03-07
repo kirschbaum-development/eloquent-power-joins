@@ -206,4 +206,25 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertStringContainsString('inner join "groups" as "groups_2" on "groups_2"."id" = "group_parent"."group_id"', $query);
     }
+
+    /** @test */
+    public function test_joining_deep_relation_using_same_base_table()
+    {
+        $alias = [
+            'posts' => function ($join) {
+                $join->as('post_alias');
+            },
+            'comments' => function ($join) {
+                $join->as('comments_alias');
+            },
+            'category' => function ($join) {
+                $join->as('categories_alias');
+            },
+        ];
+        $query = User::joinRelationship('posts.comments', $alias)->joinRelationship('posts.category', $alias);
+        $sql = $query->toSql();
+        $query->get();
+
+        $this->assertStringContainsString('inner join "categories" as "categories_alias" on "post_alias"."category_id" = "categories_alias"."id"', $sql);
+    }
 }

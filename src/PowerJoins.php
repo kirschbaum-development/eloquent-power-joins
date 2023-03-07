@@ -7,6 +7,7 @@ use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Query\Expression;
 use Kirschbaum\PowerJoins\FakeJoinCallback;
+use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
@@ -146,8 +147,9 @@ trait PowerJoins
                 $relationCallback = $callback[$relationName];
             }
 
-            $alias = $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
+            $alias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getQuery()->getModel()->getTable(), $relationCallback);
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
+            $useAlias = $alias ? true : $useAlias;
 
             if ($alias) {
                 $relationJoinCache = $latestRelation
@@ -429,7 +431,7 @@ trait PowerJoins
      *
      * @return string|null
      */
-    protected function getAliasName($useAlias, $relation, $relationName, $tableName, $callback)
+    protected function getAliasName(bool $useAlias, Relation $relation, string $relationName, string $tableName, $callback)
     {
         if ($callback) {
             if (is_callable($callback)) {

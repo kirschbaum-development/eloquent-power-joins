@@ -44,7 +44,6 @@ trait PowerJoins
 
         if (Str::contains($relationName, '.')) {
             $query->joinNestedRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions);
-
             return;
         }
 
@@ -138,7 +137,11 @@ trait PowerJoins
         /** @var \Illuminate\Database\Eloquent\Relations\Relation */
         $latestRelation = null;
 
+        $part = [];
         foreach ($relations as $relationName) {
+            $part[] = $relationName;
+            $fullRelationName = join(".", $part);
+            
             $currentModel = $latestRelation ? $latestRelation->getModel() : $query->getModel();
             $relation = $currentModel->{$relationName}();
             $relationCallback = null;
@@ -147,7 +150,16 @@ trait PowerJoins
                 $relationCallback = $callback[$relationName];
             }
 
+            if ($callback && is_array($callback) && isset($callback[$fullRelationName])) {
+                $relationCallback = $callback[$fullRelationName];
+            }
+
             $alias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getQuery()->getModel()->getTable(), $relationCallback);
+            if ($alias && $relation instanceof BelongsToMany && ! is_array($alias)) {
+                $extraAlias = $this->getAliasName($useAlias, $relation, $relationName, $relation->getTable(), $relationCallback);
+                $alias = [$extraAlias, $alias];
+            }
+
             $aliasString = is_array($alias) ? implode('.', $alias) : $alias;
             $useAlias = $alias ? true : $useAlias;
 

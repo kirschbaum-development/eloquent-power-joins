@@ -114,7 +114,7 @@ class PowerJoinClause extends JoinClause
             $table = $this->tableName;
 
             // if it was already replaced, skip
-            if (Str::startsWith($where['first'] . '.', $this->alias) || Str::startsWith($where['second'] . '.', $this->alias)) {
+            if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.', $this->alias . '.')) {
                 return $where;
             }
 

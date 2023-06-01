@@ -727,4 +727,28 @@ class JoinRelationshipTest extends TestCase
             $sql
         );
     }
+
+    public function test_has_one_of_many()
+    {
+        $post = factory(Post::class)->create();
+        $comment = factory(Comment::class)->state('approved')->create(['body' => 'worst comment', 'votes' => 0]);
+        $bestComment = factory(Comment::class)->state('approved')->create(['body' => 'best comment', 'votes' => 2]);
+
+        $sql = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->joinRelationship('bestComment')
+            ->toSql();
+
+        $post = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->joinRelationship('bestComment')
+            ->first();
+
+        $this->assertStringContainsString(
+            'max("comments"."votes") as "votes_aggregate"',
+            $sql
+        );
+
+        $this->assertEquals($bestComment->body, $post->body);
+    }
 }

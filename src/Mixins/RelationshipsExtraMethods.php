@@ -168,6 +168,15 @@ class RelationshipsExtraMethods
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $alias ?: $this->query->getModel()->getTable();
             $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+            $isOneOfMany = $this->isOneOfMany();
+
+            if ($isOneOfMany) {
+                foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {
+                    $builder->addSelect($column);
+                }
+
+                $builder->take(1);
+            }
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
                 if ($alias) {

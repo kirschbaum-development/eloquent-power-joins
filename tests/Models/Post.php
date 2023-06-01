@@ -37,6 +37,13 @@ class Post extends Model
         return $this->hasMany(Comment::class);
     }
 
+    public function lastComment(): HasOne
+    {
+        return $this
+            ->hasOne(Comment::class)
+            ->ofMany();
+    }
+
     public function bestComment(): HasOne
     {
         return $this

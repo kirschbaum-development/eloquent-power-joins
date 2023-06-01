@@ -168,7 +168,7 @@ class RelationshipsExtraMethods
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $alias ?: $this->query->getModel()->getTable();
             $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
-            $isOneOfMany = $this->isOneOfMany();
+            $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
             if ($isOneOfMany) {
                 foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {

@@ -731,24 +731,41 @@ class JoinRelationshipTest extends TestCase
     public function test_has_one_of_many()
     {
         $post = factory(Post::class)->create();
-        $comment = factory(Comment::class)->state('approved')->create(['body' => 'worst comment', 'votes' => 0]);
         $bestComment = factory(Comment::class)->state('approved')->create(['body' => 'best comment', 'votes' => 2]);
+        $lastComment = factory(Comment::class)->state('approved')->create(['body' => 'worst comment', 'votes' => 0]);
 
-        $sql = Post::query()
+        $bestCommentSql = Post::query()
             ->select('posts.*', 'comments.body')
             ->joinRelationship('bestComment')
             ->toSql();
 
-        $post = Post::query()
+        $bestCommentPost = Post::query()
             ->select('posts.*', 'comments.body')
             ->joinRelationship('bestComment')
             ->first();
 
         $this->assertStringContainsString(
             'max("comments"."votes") as "votes_aggregate"',
-            $sql
+            $bestCommentSql
         );
 
-        $this->assertEquals($bestComment->body, $post->body);
+        $this->assertEquals($bestComment->body, $bestCommentPost->body);
+
+        $lastCommentSql = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->joinRelationship('lastComment')
+            ->toSql();
+
+        $lastCommentPost = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->joinRelationship('lastComment')
+            ->first();
+
+        $this->assertStringContainsString(
+            'max("comments"."id") as "id_aggregate"',
+            strtolower($lastCommentSql)
+        );
+
+        $this->assertEquals($lastComment->body, $lastCommentPost->body);
     }
 }

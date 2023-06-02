@@ -727,4 +727,24 @@ class JoinRelationshipTest extends TestCase
             $sql
         );
     }
+
+    public function test_nested_join_conditions()
+    {
+        $sql = User::query()
+            ->joinRelationship('posts.comments', [
+                'posts'    => fn ($join) => $join->where('posts.published', true),
+                'comments' => fn ($join) => $join->where('comments.approved', true),
+            ])
+            ->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."published" = ?',
+            $sql
+        );
+
+        $this->assertStringContainsString(
+            'inner join "comments" on "comments"."post_id" = "posts"."id" and "comments"."approved" = ?',
+            $sql
+        );
+    }
 }

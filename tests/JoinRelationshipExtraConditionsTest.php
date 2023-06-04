@@ -179,7 +179,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, $posts);
 
         $this->assertStringContainsString(
-            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ? and "cover" = ?',
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? and "cover" = ?',
             $query
         );
     }

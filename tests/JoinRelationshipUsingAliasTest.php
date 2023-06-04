@@ -248,4 +248,23 @@ class JoinRelationshipUsingAliasTest extends TestCase
         $sql = $query->toSql();
         $this->assertStringContainsString('inner join "posts" as "post_alias" on "post_alias"."id" = "post_groups_alias"."post_id"', $sql);
     }
+
+    /** @test */
+    public function test_morph_join_using_alias()
+    {
+        $query = Post::query()
+            ->with(['images'])
+            ->joinRelationshipUsingAlias('images', 'foo')
+            ->toSql();
+
+        Post::query()
+            ->with(['images'])
+            ->joinRelationshipUsingAlias('images', 'foo')
+            ->get();
+
+        $this->assertStringContainsString(
+            'inner join "images" as "foo" on "foo"."imageable_id" = "posts"."id" and "foo"."imageable_type" = ?',
+            $query
+        );
+    }
 }

@@ -103,7 +103,7 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertCount(5, $posts);
         $this->assertStringContainsString(
-            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
     }
@@ -119,7 +119,7 @@ class JoinRelationshipTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
     }
@@ -303,7 +303,7 @@ class JoinRelationshipTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
     }
@@ -353,7 +353,7 @@ class JoinRelationshipTest extends TestCase
         );
 
         $this->assertStringContainsString(
-            'left join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ?',
+            'left join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
 

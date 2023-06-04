@@ -141,7 +141,7 @@ class RelationshipsExtraMethods
                     "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
                     '=',
                     "{$this->parent->getTable()}.{$this->localKey}"
-                )->where($this->getMorphType(), '=', $this->getMorphClass());
+                )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());

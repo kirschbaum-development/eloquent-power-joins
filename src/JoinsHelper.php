@@ -8,17 +8,16 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 class JoinsHelper
 {
-
-    static self $instance;
+    static array $instances = [];
 
     protected function __construct()
     {
 
     }
 
-    public static function make(): static
+    public static function make($builder): static
     {
-        return static::$instance ??= new self();
+        return static::$instances[spl_object_id($builder)] ??= new self();
     }
 
     /**
@@ -42,7 +41,7 @@ class JoinsHelper
     /**
      * Format the join callback.
      *
-     * @param mixed $callback
+     * @param  mixed  $callback
      * @return mixed
      */
     public function formatJoinCallback($callback)
@@ -60,12 +59,12 @@ class JoinsHelper
     {
         if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
             return [
-                md5($relationName . 'table1' . time()),
-                md5($relationName . 'table2' . time()),
+                md5($relationName.'table1'.time()),
+                md5($relationName.'table2'.time()),
             ];
         }
 
-        return md5($relationName . time());
+        return md5($relationName.time());
     }
 
     /**

@@ -2,9 +2,12 @@
 
 namespace Kirschbaum\PowerJoins;
 
+/**
+ * @method static as(string $alias)
+ */
 class FakeJoinCallback
 {
-    protected $alias = null;
+    protected ?string $alias = null;
 
     public function getAlias(): ?string
     {

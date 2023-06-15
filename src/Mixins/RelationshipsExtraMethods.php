@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
  * @method getModel
@@ -25,10 +26,12 @@ class RelationshipsExtraMethods
     public function performJoinForEloquentPowerJoins()
     {
         return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            if ($this instanceof BelongsToMany) {
+            if ($this instanceof MorphToMany) {
+                return $this->performJoinForEloquentPowerJoinsForMorphToMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
+            } elseif ($this instanceof BelongsToMany) {
                 return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof MorphOneOrMany) {
-                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $alias, $disableExtraConditions);
+                return $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof HasMany || $this instanceof HasOne) {
                 return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof HasManyThrough) {
@@ -119,6 +122,62 @@ class RelationshipsExtraMethods
                 // applying any extra conditions to the belongs to many relationship
                 if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                    $callback[$this->getModel()->getTable()]($join);
+                }
+            }, $this->getModel());
+
+            return $this;
+        };
+    }
+
+    /**
+     * Perform the JOIN clause for the MorphToMany (or similar) relationships.
+     */
+    protected function performJoinForEloquentPowerJoinsForMorphToMany()
+    {
+        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            [$alias1, $alias2] = $alias;
+
+            $joinedTable = $alias1 ?: $this->getTable();
+            $parentTable = $this->getTableOrAliasForModel($this->parent) ?? $this->parent->getTable();
+
+            $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1, $disableExtraConditions) {
+                if ($alias1) {
+                    $join->as($alias1);
+                }
+
+                $join->on(
+                    "{$joinedTable}.{$this->getForeignPivotKeyName()}",
+                    '=',
+                    "{$parentTable}.{$this->parentKey}"
+                );
+
+                // applying any extra conditions to the belongs to many relationship
+                if ($disableExtraConditions === false) {
+                    $this->applyExtraConditions($join);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getTable()])) {
+                    $callback[$this->getTable()]($join);
+                }
+            });
+
+            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
+                if ($alias2) {
+                    $join->as($alias2);
+                }
+
+                $join->on(
+                    "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
+                    '=',
+                    "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
+                );
+
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
                 if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
@@ -316,7 +375,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
+                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
                     continue;
                 }
 

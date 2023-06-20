@@ -91,6 +91,11 @@ class PowerJoinClause extends JoinClause
         }
 
         foreach ($this->model->getGlobalScopes() as $scope) {
+            if ($scope instanceof Closure) {
+                $scope->call($this, $this);
+                continue;
+            }
+
             (new $scope())->apply($this, $this->model);
         }
 

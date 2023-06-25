@@ -2,7 +2,6 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
-use ReflectionFunction;
 use Kirschbaum\PowerJoins\StaticCache;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -49,7 +48,7 @@ class RelationshipsExtraMethods
     {
         return function ($query, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $this->query->getModel()->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
             $query->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
                 if ($alias) {
@@ -86,7 +85,7 @@ class RelationshipsExtraMethods
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent) ?? $this->parent->getTable();
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1) {
                 if ($alias1) {
@@ -142,7 +141,7 @@ class RelationshipsExtraMethods
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent) ?? $this->parent->getTable();
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1, $disableExtraConditions) {
                 if ($alias1) {
@@ -226,7 +225,7 @@ class RelationshipsExtraMethods
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $alias ?: $this->query->getModel()->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
                 if ($alias) {
@@ -357,13 +356,6 @@ class RelationshipsExtraMethods
     {
         return function () {
             return $this->farParent;
-        };
-    }
-
-    public function getTableOrAliasForModel()
-    {
-        return function ($model, $default = null) {
-            return StaticCache::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
         };
     }
 

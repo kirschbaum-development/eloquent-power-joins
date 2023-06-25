@@ -62,7 +62,7 @@ class PowerJoinClause extends JoinClause
         $this->useTableAliasInConditions();
 
         if ($this->model) {
-            StaticCache::$powerJoinAliasesCache[spl_object_id($this->model)] = $alias;
+            StaticCache::setTableAliasForModel($this->model, $alias);
         }
 
         return $this;

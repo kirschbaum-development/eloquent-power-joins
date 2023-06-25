@@ -12,6 +12,7 @@ use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
 use Kirschbaum\PowerJoins\JoinsHelper;
 use Kirschbaum\PowerJoins\PowerJoinClause;
+use Kirschbaum\PowerJoins\StaticCache;
 
 /**
  * @mixin Builder
@@ -133,7 +134,7 @@ class JoinRelationship
 
 
             $joinHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
-            $joinHelper->clearPowerJoinCaches();
+            StaticCache::clear();
 
             $relation->performJoinForEloquentPowerJoins(
                 builder: $this,
@@ -275,7 +276,7 @@ class JoinRelationship
                 }
 
                 if ($useAlias) {
-                    $joinHelper->cachePowerJoinAlias($relation->getModel(), $alias);
+                    StaticCache::setTableAliasForModel($relation->getModel(), $alias);
                 }
 
 
@@ -297,7 +298,7 @@ class JoinRelationship
                 $joinHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
             }
 
-            $joinHelper->clearPowerJoinCaches();
+            StaticCache::clear();
             return $this;
         };
     }

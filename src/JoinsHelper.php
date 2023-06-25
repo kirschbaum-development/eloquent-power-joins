@@ -115,22 +115,4 @@ class JoinsHelper
     {
         $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
     }
-
-
-    /**
-     * Cache the power join table alias used for the power join.
-     */
-    public function cachePowerJoinAlias($model, $alias): void
-    {
-        StaticCache::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
-    }
-
-    /**
-     * Clear the power join caches.
-     */
-    public function clearPowerJoinCaches(): void
-    {
-        StaticCache::$powerJoinAliasesCache = [];
-    }
-
 }

@@ -4,6 +4,8 @@ namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
@@ -34,6 +36,20 @@ class Post extends Model
     public function comments(): HasMany
     {
         return $this->hasMany(Comment::class);
+    }
+
+    public function lastComment(): HasOne
+    {
+        return $this
+            ->hasOne(Comment::class)
+            ->ofMany();
+    }
+
+    public function bestComment(): HasOne
+    {
+        return $this
+            ->hasOne(Comment::class)
+            ->ofMany('votes', 'max');
     }
 
     public function images(): MorphMany

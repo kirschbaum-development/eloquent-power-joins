@@ -14,8 +14,33 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * @method getModel
+ * @method \Illuminate\Database\Eloquent\Model getModel()
+ * @method string getTable()
+ * @method string getForeignPivotKeyName()
+ * @method string getRelatedPivotKeyName()
+ * @method bool isOneOfMany()
+ * @method \Illuminate\Database\Eloquent\Builder|void getOneOfManySubQuery()
+ * @method \Illuminate\Database\Eloquent\Builder getQuery()
+ * @method \Illuminate\Database\Eloquent\Model getThroughParent()
+ * @method string getForeignKeyName()
+ * @method string getMorphType()
+ * @method string getMorphClass()
+ * @method string getFirstKeyName()
+ * @method string getQualifiedLocalKeyName()
+ * @method string getExistenceCompareKey()
  * @mixin \Illuminate\Database\Eloquent\Relations\Relation
+ * @mixin \Illuminate\Database\Eloquent\Relations\HasOneOrMany
+ * @mixin \Illuminate\Database\Eloquent\Relations\BelongsToMany
+ * @property \Illuminate\Database\Eloquent\Builder $query
+ * @property \Illuminate\Database\Eloquent\Model $parent
+ * @property \Illuminate\Database\Eloquent\Model $throughParent
+ * @property string $foreignKey
+ * @property string $parentKey
+ * @property string $ownerKey
+ * @property string $localKey
+ * @property string $secondKey
+ * @property string $secondLocalKey
+ * @property \Illuminate\Database\Eloquent\Model $farParent
  */
 class RelationshipsExtraMethods
 {
@@ -226,6 +251,15 @@ class RelationshipsExtraMethods
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $alias ?: $this->query->getModel()->getTable();
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+            $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
+
+            if ($isOneOfMany) {
+                foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {
+                    $builder->addSelect($column);
+                }
+
+                $builder->take(1);
+            }
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
                 if ($alias) {

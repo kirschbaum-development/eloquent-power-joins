@@ -144,4 +144,31 @@ class PowerJoinHasTest extends TestCase
         $this->assertCount(2, User::whereHas('commentsThroughPosts', $closure)->get());
         $this->assertCount(2, User::powerJoinWhereHas('commentsThroughPosts', ['comments' => $closure])->get());
     }
+
+    /** @test */
+    public function test_where_has_with_joins_on_belongs_to_many_relationship()
+    {
+        [$user1, $user2] = factory(User::class)->times(2)->create();
+        $group = factory(Group::class)->create();
+        $highAccessLevelGroup = factory(Group::class)->create([
+            'access_level' => 999,
+        ]);
+
+        $user1->groups()->attach($group);
+        $user1->groups()->attach($highAccessLevelGroup);
+        $user2->groups()->attach($group);
+
+        $closure = fn ($query) => $query->where('access_level', 999);
+
+        $powerJoinQuery = User::powerJoinWhereHas('groups', [
+            'groups' => $closure,
+        ]);
+
+        $this->assertCount(1, User::whereHas('groups', $closure)->get());
+        $this->assertStringContainsString(
+            'left join "groups" on "groups"."id" = "group_members"."group_id" and "access_level" = ?',
+            $powerJoinQuery->toSql()
+        );
+        $this->assertCount(1, $powerJoinQuery->get());
+    }
 }

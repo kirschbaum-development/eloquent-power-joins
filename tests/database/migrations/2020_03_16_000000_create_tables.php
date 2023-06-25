@@ -32,6 +32,7 @@ class CreateTables extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
+            $table->tinyInteger('access_level')->default(0);
             $table->timestamps();
         });
 
@@ -83,6 +84,17 @@ class CreateTables extends Migration
             $table->morphs('imageable');
             $table->boolean('cover')->default(false);
             $table->timestamps();
+        });
+
+        Schema::create('tags', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create('taggables', function (Blueprint $table) {
+            $table->foreignId('tag_id');
+            $table->morphs('taggable');
         });
     }
 

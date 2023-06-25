@@ -62,7 +62,7 @@ class PowerJoinClause extends JoinClause
         $this->useTableAliasInConditions();
 
         if ($this->model) {
-            StaticCache::$powerJoinAliasesCache[spl_object_id($this->model)] = $alias;
+            StaticCache::setTableAliasForModel($this->model, $alias);
         }
 
         return $this;
@@ -91,6 +91,11 @@ class PowerJoinClause extends JoinClause
         }
 
         foreach ($this->model->getGlobalScopes() as $scope) {
+            if ($scope instanceof Closure) {
+                $scope->call($this, $this);
+                continue;
+            }
+
             (new $scope())->apply($this, $this->model);
         }
 
@@ -107,30 +112,56 @@ class PowerJoinClause extends JoinClause
         }
 
         $this->wheres = collect($this->wheres)->filter(function ($where) {
-            return in_array($where['type'] ?? '', ['Column']);
+            return in_array($where['type'] ?? '', ['Column', 'Basic']);
         })->map(function ($where) {
-            // dd($where);
             $key = $this->model->getKeyName();
             $table = $this->tableName;
+            $replaceMethod = sprintf('useAliasInWhere%sType', ucfirst($where['type']));
 
-            // if it was already replaced, skip
-            if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.', $this->alias . '.')) {
-                return $where;
-            }
-
-            if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
-                // if joining the same table, only replace the correct table.key pair
-                $where['first'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['first']);
-                $where['second'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['second']);
-            } else {
-                $where['first'] = str_replace($table . '.', $this->alias . '.', $where['first']);
-                $where['second'] = str_replace($table . '.', $this->alias . '.', $where['second']);
-            }
-
-            return $where;
+            return $this->{$replaceMethod}($where);
         })->toArray();
 
         return $this;
+    }
+
+    protected function useAliasInWhereColumnType(array $where): array
+    {
+        $key = $this->model->getKeyName();
+        $table = $this->tableName;
+
+        // if it was already replaced, skip
+        if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.', $this->alias . '.')) {
+            return $where;
+        }
+
+        if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
+            // if joining the same table, only replace the correct table.key pair
+            $where['first'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['first']);
+            $where['second'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['second']);
+        } else {
+            $where['first'] = str_replace($table . '.', $this->alias . '.', $where['first']);
+            $where['second'] = str_replace($table . '.', $this->alias . '.', $where['second']);
+        }
+
+        return $where;
+    }
+
+    protected function useAliasInWhereBasicType(array $where): array
+    {
+        $table = $this->tableName;
+
+        if (Str::startsWith($where['column'] . '.', $this->alias . '.')) {
+            return $where;
+        }
+
+        if (Str::contains($where['column'], $table)) {
+            // if joining the same table, only replace the correct table.key pair
+            $where['column'] = str_replace($table . '.', $this->alias . '.', $where['column']);
+        } else {
+            $where['column'] = str_replace($table . '.', $this->alias . '.', $where['column']);
+        }
+
+        return $where;
     }
 
     public function whereNull($columns, $boolean = 'and', $not = false)

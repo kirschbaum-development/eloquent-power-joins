@@ -4,6 +4,7 @@ namespace Kirschbaum\PowerJoins\Tests;
 
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Tag;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Image;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
@@ -179,9 +180,55 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, $posts);
 
         $this->assertStringContainsString(
-            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ? and "cover" = ?',
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? and "cover" = ?',
             $query
         );
+    }
+
+    /** @test */
+    public function test_extra_conditions_in_morph_to_many()
+    {
+        $tag = factory(Tag::class)->create();
+        $post = factory(Post::class)->create();
+        $comment = factory(Comment::class)->create();
+
+        $tag->posts()->attach($post->id);
+        $tag->comments()->attach($comment->id);
+
+        $postsQuery = Post::joinRelationship('tags');
+        $commentsQuery = Comment::joinRelationship('tags');
+
+        $this->assertCount(1, $postsQuery->get());
+        $this->assertCount(1, $commentsQuery->get());
+
+        $this->assertStringContainsString(
+            'inner join "taggables" on "taggables"."taggable_id" = "posts"."id" and "taggables"."taggable_type" = ?',
+            $postsQuery->toSql()
+        );
+
+        $this->assertStringContainsString(
+            'inner join "taggables" on "taggables"."taggable_id" = "comments"."id" and "taggables"."taggable_type" = ?',
+            $commentsQuery->toSql()
+        );
+    }
+
+    /** @test */
+    public function test_count_in_morph_to_many_left_join()
+    {
+        $tag = factory(Tag::class)->create();
+        $post = factory(Post::class)->create();
+        $comment = factory(Comment::class)->create([
+            'post_id' => $post->id,
+        ]);
+
+        $tag->posts()->attach($post->id);
+        $tag->comments()->attach($comment->id);
+
+        $posts = Post::leftJoinRelationship('tags')->get();
+        $comments = Comment::leftJoinRelationship('tags')->get();
+
+        $this->assertCount(1, $posts);
+        $this->assertCount(1, $comments);
     }
 
     /** @test */

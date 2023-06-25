@@ -2,7 +2,6 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
-use ReflectionFunction;
 use Kirschbaum\PowerJoins\StaticCache;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -12,10 +11,36 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
 
 /**
- * @method getModel
+ * @method \Illuminate\Database\Eloquent\Model getModel()
+ * @method string getTable()
+ * @method string getForeignPivotKeyName()
+ * @method string getRelatedPivotKeyName()
+ * @method bool isOneOfMany()
+ * @method \Illuminate\Database\Eloquent\Builder|void getOneOfManySubQuery()
+ * @method \Illuminate\Database\Eloquent\Builder getQuery()
+ * @method \Illuminate\Database\Eloquent\Model getThroughParent()
+ * @method string getForeignKeyName()
+ * @method string getMorphType()
+ * @method string getMorphClass()
+ * @method string getFirstKeyName()
+ * @method string getQualifiedLocalKeyName()
+ * @method string getExistenceCompareKey()
  * @mixin \Illuminate\Database\Eloquent\Relations\Relation
+ * @mixin \Illuminate\Database\Eloquent\Relations\HasOneOrMany
+ * @mixin \Illuminate\Database\Eloquent\Relations\BelongsToMany
+ * @property \Illuminate\Database\Eloquent\Builder $query
+ * @property \Illuminate\Database\Eloquent\Model $parent
+ * @property \Illuminate\Database\Eloquent\Model $throughParent
+ * @property string $foreignKey
+ * @property string $parentKey
+ * @property string $ownerKey
+ * @property string $localKey
+ * @property string $secondKey
+ * @property string $secondLocalKey
+ * @property \Illuminate\Database\Eloquent\Model $farParent
  */
 class RelationshipsExtraMethods
 {
@@ -25,10 +50,12 @@ class RelationshipsExtraMethods
     public function performJoinForEloquentPowerJoins()
     {
         return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            if ($this instanceof BelongsToMany) {
+            if ($this instanceof MorphToMany) {
+                return $this->performJoinForEloquentPowerJoinsForMorphToMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
+            } elseif ($this instanceof BelongsToMany) {
                 return $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof MorphOneOrMany) {
-                $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $alias, $disableExtraConditions);
+                return $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof HasMany || $this instanceof HasOne) {
                 return $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $alias, $disableExtraConditions);
             } elseif ($this instanceof HasManyThrough) {
@@ -46,7 +73,7 @@ class RelationshipsExtraMethods
     {
         return function ($query, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $this->query->getModel()->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
             $query->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
                 if ($alias) {
@@ -83,7 +110,7 @@ class RelationshipsExtraMethods
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent) ?? $this->parent->getTable();
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
             $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1) {
                 if ($alias1) {
@@ -131,6 +158,62 @@ class RelationshipsExtraMethods
     }
 
     /**
+     * Perform the JOIN clause for the MorphToMany (or similar) relationships.
+     */
+    protected function performJoinForEloquentPowerJoinsForMorphToMany()
+    {
+        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            [$alias1, $alias2] = $alias;
+
+            $joinedTable = $alias1 ?: $this->getTable();
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+
+            $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1, $disableExtraConditions) {
+                if ($alias1) {
+                    $join->as($alias1);
+                }
+
+                $join->on(
+                    "{$joinedTable}.{$this->getForeignPivotKeyName()}",
+                    '=',
+                    "{$parentTable}.{$this->parentKey}"
+                );
+
+                // applying any extra conditions to the belongs to many relationship
+                if ($disableExtraConditions === false) {
+                    $this->applyExtraConditions($join);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getTable()])) {
+                    $callback[$this->getTable()]($join);
+                }
+            });
+
+            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
+                if ($alias2) {
+                    $join->as($alias2);
+                }
+
+                $join->on(
+                    "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
+                    '=',
+                    "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
+                );
+
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                }
+
+                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                    $callback[$this->getModel()->getTable()]($join);
+                }
+            }, $this->getModel());
+
+            return $this;
+        };
+    }
+
+    /**
      * Perform the JOIN clause for the Morph (or similar) relationships.
      */
     protected function performJoinForEloquentPowerJoinsForMorph()
@@ -141,7 +224,7 @@ class RelationshipsExtraMethods
                     "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
                     '=',
                     "{$this->parent->getTable()}.{$this->localKey}"
-                )->where($this->getMorphType(), '=', $this->getMorphClass());
+                )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
@@ -167,7 +250,7 @@ class RelationshipsExtraMethods
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             $joinedTable = $alias ?: $this->query->getModel()->getTable();
-            $parentTable = $this->getTableOrAliasForModel($this->parent, $this->parent->getTable());
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
             $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
             if ($isOneOfMany) {
@@ -310,13 +393,6 @@ class RelationshipsExtraMethods
         };
     }
 
-    public function getTableOrAliasForModel()
-    {
-        return function ($model, $default = null) {
-            return StaticCache::$powerJoinAliasesCache[spl_object_id($model)] ?? $default;
-        };
-    }
-
     public function applyExtraConditions()
     {
         return function (PowerJoinClause $join) {
@@ -325,7 +401,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
+                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
                     continue;
                 }
 

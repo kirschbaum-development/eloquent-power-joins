@@ -2,20 +2,21 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
-use Stringable;
-use Illuminate\Support\Str;
-use Kirschbaum\PowerJoins\StaticCache;
-use Kirschbaum\PowerJoins\PowerJoinClause;
-use Kirschbaum\PowerJoins\Tests\Models\Post;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use Kirschbaum\PowerJoins\PowerJoinClause;
+use Kirschbaum\PowerJoins\StaticCache;
 
 /**
  * @method \Illuminate\Database\Eloquent\Model getModel()
@@ -23,8 +24,8 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
  * @method string getForeignPivotKeyName()
  * @method string getRelatedPivotKeyName()
  * @method bool isOneOfMany()
- * @method \Illuminate\Database\Eloquent\Builder|void getOneOfManySubQuery()
- * @method \Illuminate\Database\Eloquent\Builder getQuery()
+ * @method EloquentBuilder|void getOneOfManySubQuery()
+ * @method EloquentBuilder getQuery()
  * @method \Illuminate\Database\Eloquent\Model getThroughParent()
  * @method string getForeignKeyName()
  * @method string getMorphType()
@@ -35,7 +36,7 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
  * @mixin \Illuminate\Database\Eloquent\Relations\Relation
  * @mixin \Illuminate\Database\Eloquent\Relations\HasOneOrMany
  * @mixin \Illuminate\Database\Eloquent\Relations\BelongsToMany
- * @property \Illuminate\Database\Eloquent\Builder $query
+ * @property EloquentBuilder $query
  * @property \Illuminate\Database\Eloquent\Model $parent
  * @property \Illuminate\Database\Eloquent\Model $throughParent
  * @property string $foreignKey
@@ -51,17 +52,31 @@ class RelationshipsExtraMethods
     /**
      * Perform the JOIN clause for eloquent power joins.
      */
-    public function performJoinForEloquentPowerJoins()
+    public function performJoinForEloquentPowerJoins(): \Closure
     {
-        return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null, bool $disableExtraConditions = false, string $morphable = null) {
+        return function (
+            Builder $builder,
+            string $joinType = 'leftJoin',
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false,
+            string $morphable = null
+        ) {
             return match (true) {
-                $this instanceof MorphToMany => $this->performJoinForEloquentPowerJoinsForMorphToMany($builder, $joinType, $callback, $alias, $disableExtraConditions),
-                $this instanceof BelongsToMany => $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $alias, $disableExtraConditions),
-                $this instanceof MorphOneOrMany => $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType, $callback, $alias, $disableExtraConditions),
-                $this instanceof HasMany || $this instanceof HasOne => $this->performJoinForEloquentPowerJoinsForHasMany($builder, $joinType, $callback, $alias, $disableExtraConditions),
-                $this instanceof HasManyThrough => $this->performJoinForEloquentPowerJoinsForHasManyThrough($builder, $joinType, $callback, $alias, $disableExtraConditions),
-                $this instanceof MorphTo => $this->performJoinForEloquentPowerJoinsForMorphTo($builder, $joinType, $callback, $alias, $disableExtraConditions, $morphable),
-                default => $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $alias, $disableExtraConditions),
+                $this instanceof MorphToMany => $this->performJoinForEloquentPowerJoinsForMorphToMany($builder,
+                    $joinType, $callback, $alias, $disableExtraConditions),
+                $this instanceof BelongsToMany => $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder,
+                    $joinType, $callback, $alias, $disableExtraConditions),
+                $this instanceof MorphOneOrMany => $this->performJoinForEloquentPowerJoinsForMorph($builder, $joinType,
+                    $callback, $alias, $disableExtraConditions),
+                $this instanceof HasMany || $this instanceof HasOne => $this->performJoinForEloquentPowerJoinsForHasMany($builder,
+                    $joinType, $callback, $alias, $disableExtraConditions),
+                $this instanceof HasManyThrough => $this->performJoinForEloquentPowerJoinsForHasManyThrough($builder,
+                    $joinType, $callback, $alias, $disableExtraConditions),
+                $this instanceof MorphTo => $this->performJoinForEloquentPowerJoinsForMorphTo($builder, $joinType,
+                    $callback, $alias, $disableExtraConditions, $morphable),
+                default => $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $alias,
+                    $disableExtraConditions),
             };
         };
     }
@@ -69,13 +84,25 @@ class RelationshipsExtraMethods
     /**
      * Perform the JOIN clause for the BelongsTo (or similar) relationships.
      */
-    protected function performJoinForEloquentPowerJoinsForBelongsTo()
+    protected function performJoinForEloquentPowerJoinsForBelongsTo(): \Closure
     {
-        return function ($query, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $joinedTable = $this->query->getModel()->getTable();
+        return function (
+            $query,
+            $joinType,
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false
+        ): void {
+            $joinedTable = $this->getQuery()->getModel()->getTable();
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
-            $query->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
+            $query->{$joinType}($joinedTable, function (PowerJoinClause $join) use (
+                $callback,
+                $joinedTable,
+                $parentTable,
+                $alias,
+                $disableExtraConditions
+            ) {
                 if ($alias) {
                     $join->as($alias);
                 }
@@ -86,8 +113,8 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->ownerKey}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getQuery()->getModel())) {
+                    $join->whereNull("{$joinedTable}.{$this->getQuery()->getModel()->getDeletedAtColumn()}");
                 }
 
                 if ($disableExtraConditions === false) {
@@ -97,61 +124,69 @@ class RelationshipsExtraMethods
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->query->getModel());
+            }, $this->getQuery()->getModel());
         };
     }
 
     /**
      * Perform the JOIN clause for the BelongsToMany (or similar) relationships.
      */
-    protected function performJoinForEloquentPowerJoinsForBelongsToMany()
+    protected function performJoinForEloquentPowerJoinsForBelongsToMany(): \Closure
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+        return function (
+            EloquentBuilder $builder,
+            string $joinType,
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false
+        ): static {
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
-            $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1) {
-                if ($alias1) {
-                    $join->as($alias1);
-                }
+            $builder->{$joinType}($this->getTable(),
+                function (PowerJoinClause $join) use ($callback, $joinedTable, $parentTable, $alias1) {
+                    if ($alias1) {
+                        $join->as($alias1);
+                    }
 
-                $join->on(
-                    "{$joinedTable}.{$this->getForeignPivotKeyName()}",
-                    '=',
-                    "{$parentTable}.{$this->parentKey}"
-                );
+                    $join->on(
+                        "{$joinedTable}.{$this->getForeignPivotKeyName()}",
+                        '=',
+                        "{$parentTable}.{$this->parentKey}"
+                    );
 
-                if (is_array($callback) && isset($callback[$this->getTable()])) {
-                    $callback[$this->getTable()]($join);
-                }
-            });
+                    if (is_array($callback) && isset($callback[$this->getTable()])) {
+                        $callback[$this->getTable()]($join);
+                    }
+                });
 
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
-                if ($alias2) {
-                    $join->as($alias2);
-                }
+            $builder->{$joinType}($this->getModel()->getTable(),
+                function (PowerJoinClause $join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
+                    if ($alias2) {
+                        $join->as($alias2);
+                    }
 
-                $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
-                    '=',
-                    "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
-                );
+                    $join->on(
+                        "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
+                        '=',
+                        "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
+                    );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
-                }
+                    if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getQuery()->getModel())) {
+                        $join->whereNull($this->getQuery()->getModel()->getQualifiedDeletedAtColumn());
+                    }
 
-                // applying any extra conditions to the belongs to many relationship
-                if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
-                }
+                    // applying any extra conditions to the belongs to many relationship
+                    if ($disableExtraConditions === false) {
+                        $this->applyExtraConditions($join);
+                    }
 
-                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
-                    $callback[$this->getModel()->getTable()]($join);
-                }
-            }, $this->getModel());
+                    if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                        $callback[$this->getModel()->getTable()]($join);
+                    }
+                }, $this->getModel());
 
             return $this;
         };
@@ -160,15 +195,27 @@ class RelationshipsExtraMethods
     /**
      * Perform the JOIN clause for the MorphToMany (or similar) relationships.
      */
-    protected function performJoinForEloquentPowerJoinsForMorphToMany()
+    protected function performJoinForEloquentPowerJoinsForMorphToMany(): \Closure
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+        return function (
+            EloquentBuilder $builder,
+            string $joinType,
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false
+        ): static {
             [$alias1, $alias2] = $alias;
 
             $joinedTable = $alias1 ?: $this->getTable();
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
 
-            $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1, $disableExtraConditions) {
+            $builder->{$joinType}($this->getTable(), function (PowerJoinClause $join) use (
+                $callback,
+                $joinedTable,
+                $parentTable,
+                $alias1,
+                $disableExtraConditions
+            ) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
@@ -189,25 +236,26 @@ class RelationshipsExtraMethods
                 }
             });
 
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
-                if ($alias2) {
-                    $join->as($alias2);
-                }
+            $builder->{$joinType}($this->getModel()->getTable(),
+                function (PowerJoinClause $join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
+                    if ($alias2) {
+                        $join->as($alias2);
+                    }
 
-                $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
-                    '=',
-                    "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
-                );
+                    $join->on(
+                        "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
+                        '=',
+                        "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
+                    );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
-                }
+                    if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getQuery()->getModel())) {
+                        $join->whereNull($this->getQuery()->getModel()->getQualifiedDeletedAtColumn());
+                    }
 
-                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
-                    $callback[$this->getModel()->getTable()]($join);
-                }
-            }, $this->getModel());
+                    if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                        $callback[$this->getModel()->getTable()]($join);
+                    }
+                }, $this->getModel());
 
             return $this;
         };
@@ -216,28 +264,35 @@ class RelationshipsExtraMethods
     /**
      * Perform the JOIN clause for the Morph (or similar) relationships.
      */
-    protected function performJoinForEloquentPowerJoinsForMorph()
+    protected function performJoinForEloquentPowerJoinsForMorph(): \Closure
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $disableExtraConditions) {
-                $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
-                    '=',
-                    "{$this->parent->getTable()}.{$this->localKey}"
-                )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
+        return function (
+            Builder $builder,
+            string $joinType,
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false
+        ) {
+            $builder->{$joinType}($this->getModel()->getTable(),
+                function (PowerJoinClause $join) use ($callback, $disableExtraConditions) {
+                    $join->on(
+                        "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
+                        '=',
+                        "{$this->parent->getTable()}.{$this->localKey}"
+                    )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
-                }
+                    if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getQuery()->getModel())) {
+                        $join->whereNull($this->getQuery()->getModel()->getQualifiedDeletedAtColumn());
+                    }
 
-                if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
-                }
+                    if ($disableExtraConditions === false) {
+                        $this->applyExtraConditions($join);
+                    }
 
-                if ($callback && is_callable($callback)) {
-                    $callback($join);
-                }
-            }, $this->getModel());
+                    if ($callback && is_callable($callback)) {
+                        $callback($join);
+                    }
+                }, $this->getModel());
 
             return $this;
         };
@@ -246,30 +301,39 @@ class RelationshipsExtraMethods
     /**
      * Perform the JOIN clause for when calling the morphTo method from the morphable class.
      */
-    protected function performJoinForEloquentPowerJoinsForMorphTo()
+    protected function performJoinForEloquentPowerJoinsForMorphTo(): \Closure
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false, string $morphable = null) {
+        return function (
+            Builder $builder,
+            string $joinType,
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false,
+            string $morphable = null
+        ) {
             $modelInstance = new $morphable;
 
-            $builder->{$joinType}($modelInstance->getTable(), function ($join) use ($modelInstance, $callback, $disableExtraConditions) {
-                $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
-                    '=',
-                    "{$modelInstance->getTable()}.{$modelInstance->getKeyName()}"
-                )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $modelInstance->getMorphClass());
+            $builder->{$joinType}($modelInstance->getTable(),
+                function ($join) use ($modelInstance, $callback, $disableExtraConditions) {
+                    $join->on(
+                        "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
+                        '=',
+                        "{$modelInstance->getTable()}.{$modelInstance->getKeyName()}"
+                    )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=',
+                        $modelInstance->getMorphClass());
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($modelInstance)) {
-                    $join->whereNull($modelInstance->getQualifiedDeletedAtColumn());
-                }
+                    if ($disableExtraConditions === false && $this->usesSoftDeletes($modelInstance)) {
+                        $join->whereNull($modelInstance->getQualifiedDeletedAtColumn());
+                    }
 
-                if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
-                }
+                    if ($disableExtraConditions === false) {
+                        $this->applyExtraConditions($join);
+                    }
 
-                if ($callback && is_callable($callback)) {
-                    $callback($join);
-                }
-            }, $modelInstance);
+                    if ($callback && is_callable($callback)) {
+                        $callback($join);
+                    }
+                }, $modelInstance);
 
             return $this;
         };
@@ -278,10 +342,16 @@ class RelationshipsExtraMethods
     /**
      * Perform the JOIN clause for the HasMany (or similar) relationships.
      */
-    protected function performJoinForEloquentPowerJoinsForHasMany()
+    protected function performJoinForEloquentPowerJoinsForHasMany(): \Closure
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $joinedTable = $alias ?: $this->query->getModel()->getTable();
+        return function (
+            EloquentBuilder $builder,
+            string $joinType,
+            callable $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false
+        ): void {
+            $joinedTable = $alias ?: $this->getQuery()->getModel()->getTable();
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
             $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
@@ -293,7 +363,13 @@ class RelationshipsExtraMethods
                 $builder->take(1);
             }
 
-            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
+            $builder->{$joinType}($this->getQuery()->getModel()->getTable(), function (PowerJoinClause $join) use (
+                $callback,
+                $joinedTable,
+                $parentTable,
+                $alias,
+                $disableExtraConditions
+            ) {
                 if ($alias) {
                     $join->as($alias);
                 }
@@ -304,9 +380,9 @@ class RelationshipsExtraMethods
                     "{$parentTable}.{$this->localKey}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getQuery()->getModel())) {
                     $join->whereNull(
-                        "{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}"
+                        "{$joinedTable}.{$this->getQuery()->getModel()->getDeletedAtColumn()}"
                     );
                 }
 
@@ -317,67 +393,75 @@ class RelationshipsExtraMethods
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->query->getModel());
+            }, $this->getQuery()->getModel());
         };
     }
 
     /**
      * Perform the JOIN clause for the HasManyThrough relationships.
      */
-    protected function performJoinForEloquentPowerJoinsForHasManyThrough()
+    protected function performJoinForEloquentPowerJoinsForHasManyThrough(): \Closure
     {
-        return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+        return function (
+            EloquentBuilder $builder,
+            string $joinType,
+            $callback = null,
+            $alias = null,
+            bool $disableExtraConditions = false
+        ): static {
             [$alias1, $alias2] = $alias;
             $throughTable = $alias1 ?: $this->getThroughParent()->getTable();
             $farTable = $alias2 ?: $this->getModel()->getTable();
 
-            $builder->{$joinType}($this->getThroughParent()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $alias1, $disableExtraConditions) {
-                if ($alias1) {
-                    $join->as($alias1);
-                }
+            $builder->{$joinType}($this->getThroughParent()->getTable(),
+                function (PowerJoinClause $join) use ($callback, $throughTable, $alias1, $disableExtraConditions) {
+                    if ($alias1) {
+                        $join->as($alias1);
+                    }
 
-                $join->on(
-                    "{$throughTable}.{$this->getFirstKeyName()}",
-                    '=',
-                    $this->getQualifiedLocalKeyName()
-                );
+                    $join->on(
+                        "{$throughTable}.{$this->getFirstKeyName()}",
+                        '=',
+                        $this->getQualifiedLocalKeyName()
+                    );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
-                    $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
-                }
+                    if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
+                        $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
+                    }
 
-                if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
-                }
+                    if ($disableExtraConditions === false) {
+                        $this->applyExtraConditions($join);
+                    }
 
-                if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
-                    $callback[$this->getThroughParent()->getTable()]($join);
-                }
+                    if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
+                        $callback[$this->getThroughParent()->getTable()]($join);
+                    }
 
-                if ($callback && is_callable($callback)) {
-                    $callback($join);
-                }
-            }, $this->getThroughParent());
+                    if ($callback && is_callable($callback)) {
+                        $callback($join);
+                    }
+                }, $this->getThroughParent());
 
-            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias1, $alias2) {
-                if ($alias2) {
-                    $join->as($alias2);
-                }
+            $builder->{$joinType}($this->getModel()->getTable(),
+                function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias1, $alias2) {
+                    if ($alias2) {
+                        $join->as($alias2);
+                    }
 
-                $join->on(
-                    "{$farTable}.{$this->secondKey}",
-                    '=',
-                    "{$throughTable}.{$this->secondLocalKey}"
-                );
+                    $join->on(
+                        "{$farTable}.{$this->secondKey}",
+                        '=',
+                        "{$throughTable}.{$this->secondLocalKey}"
+                    );
 
-                if ($this->usesSoftDeletes($this->getModel())) {
-                    $join->whereNull("{$farTable}.{$this->getModel()->getDeletedAtColumn()}");
-                }
+                    if ($this->usesSoftDeletes($this->getModel())) {
+                        $join->whereNull("{$farTable}.{$this->getModel()->getDeletedAtColumn()}");
+                    }
 
-                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
-                    $callback[$this->getModel()->getTable()]($join);
-                }
-            }, $this->getModel());
+                    if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                        $callback[$this->getModel()->getTable()]($join);
+                    }
+                }, $this->getModel());
 
             return $this;
         };
@@ -386,19 +470,22 @@ class RelationshipsExtraMethods
     /**
      * Perform the "HAVING" clause for eloquent power joins.
      */
-    public function performHavingForEloquentPowerJoins()
+    public function performHavingForEloquentPowerJoins(): \Closure
     {
-        return function ($builder, $operator, $count, string $morphable = null) {
+        return function (EloquentBuilder $builder, string $operator, int $count, string $morphable = null): void {
             if ($morphable) {
                 $modelInstance = new $morphable;
 
                 $builder
-                    ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(), $modelInstance->getTable()))
+                    ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(),
+                        $modelInstance->getTable()))
                     ->havingRaw(sprintf('count(%s) %s %d', $modelInstance->getQualifiedKeyName(), $operator, $count));
             } else {
                 $builder
-                    ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
-                    ->havingRaw(sprintf('count(%s) %s %d', $this->query->getModel()->getQualifiedKeyName(), $operator, $count));
+                    ->selectRaw(sprintf('count(%s) as %s_count', $this->getQuery()->getModel()->getQualifiedKeyName(),
+                        $this->getQuery()->getModel()->getTable()))
+                    ->havingRaw(sprintf('count(%s) %s %d', $this->getQuery()->getModel()->getQualifiedKeyName(),
+                        $operator, $count));
             }
         };
     }
@@ -406,9 +493,9 @@ class RelationshipsExtraMethods
     /**
      * Checks if the relationship model uses soft deletes.
      */
-    public function usesSoftDeletes()
+    public function usesSoftDeletes(): \Closure
     {
-        return function ($model) {
+        return function (Model $model): bool {
             return in_array(SoftDeletes::class, class_uses_recursive($model));
         };
     }
@@ -416,9 +503,9 @@ class RelationshipsExtraMethods
     /**
      * Get the throughParent for the HasManyThrough relationship.
      */
-    public function getThroughParent()
+    public function getThroughParent(): \Closure
     {
-        return function () {
+        return function (): Model {
             return $this->throughParent;
         };
     }
@@ -441,7 +528,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
+                if (! in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
                     continue;
                 }
 
@@ -451,30 +538,30 @@ class RelationshipsExtraMethods
         };
     }
 
-    public function applyBasicCondition()
+    public function applyBasicCondition(): \Closure
     {
-        return function ($join, $condition) {
+        return function (PowerJoinClause $join, array $condition) {
             $join->where($condition['column'], $condition['operator'], $condition['value'], $condition['boolean']);
         };
     }
 
-    public function applyNullCondition()
+    public function applyNullCondition(): \Closure
     {
-        return function ($join, $condition) {
+        return function (PowerJoinClause $join, array $condition) {
             $join->whereNull($condition['column'], $condition['boolean']);
         };
     }
 
-    public function applyNotNullCondition()
+    public function applyNotNullCondition(): \Closure
     {
-        return function ($join, $condition) {
+        return function (PowerJoinClause $join, array $condition) {
             $join->whereNotNull($condition['column'], $condition['boolean']);
         };
     }
 
-    public function applyNestedCondition()
+    public function applyNestedCondition(): \Closure
     {
-        return function ($join, $condition) {
+        return function (PowerJoinClause $join, array $condition) {
             $join->where(function ($q) use ($condition) {
                 foreach ($condition['query']->wheres as $condition) {
                     $method = "apply{$condition['type']}Condition";
@@ -484,9 +571,9 @@ class RelationshipsExtraMethods
         };
     }
 
-    public function shouldNotApplyExtraCondition()
+    public function shouldNotApplyExtraCondition(): \Closure
     {
-        return function ($condition) {
+        return function (array $condition) {
             if (isset($condition['column']) && Str::endsWith($condition['column'], '.')) {
                 return true;
             }
@@ -507,7 +594,7 @@ class RelationshipsExtraMethods
         };
     }
 
-    public function getPowerJoinExistenceCompareKey()
+    public function getPowerJoinExistenceCompareKey(): \Closure
     {
         return function () {
             if ($this instanceof MorphTo) {

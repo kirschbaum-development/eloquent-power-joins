@@ -15,9 +15,11 @@ class JoinsHelper
 
     }
 
-    public static function make($builder): static
+    public static function make(): static
     {
-        return static::$instances[spl_object_id($builder)] ??= new self();
+        $objects = array_map(fn ($object) => spl_object_id($object), func_get_args());
+
+        return static::$instances[implode('-', $objects)] ??= new self();
     }
 
     /**

@@ -16,11 +16,11 @@ use Kirschbaum\PowerJoins\StaticCache;
 
 /**
  * @mixin Builder
+ * @method \Illuminate\Database\Eloquent\Model getModel()
+ * @property \Illuminate\Database\Eloquent\Builder $query
  */
 class JoinRelationship
 {
-
-
     /**
      * New clause for making joins, where we pass the model to the joiner class.
      */
@@ -97,7 +97,7 @@ class JoinRelationship
         ) {
             $joinType = JoinsHelper::$joinMethodsMap[$joinType] ?? $joinType;
             $useAlias = is_string($callback) ? false : $useAlias;
-            $joinHelper = JoinsHelper::make($this);
+            $joinHelper = JoinsHelper::make($this->getModel());
             $callback = $joinHelper->formatJoinCallback($callback);
 
             if (is_null($this->getSelect())) {
@@ -233,7 +233,7 @@ class JoinRelationship
             bool $disableExtraConditions = false
         ) {
             $relations = explode('.', $relationships);
-            $joinHelper = JoinsHelper::make($this);
+            $joinHelper = JoinsHelper::make($this->getModel());
             /** @var Relation */
             $latestRelation = null;
 
@@ -515,5 +515,4 @@ class JoinRelationship
             return $this->powerJoinHas($relation, $operator, $count, 'and', $callback);
         };
     }
-
 }

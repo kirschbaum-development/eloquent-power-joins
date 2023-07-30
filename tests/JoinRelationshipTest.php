@@ -691,11 +691,11 @@ class JoinRelationshipTest extends TestCase
 
     public function test_scope_inside_nested_where()
     {
-        Comment::joinRelationship('post', function ($join) {
+        Comment::query()->joinRelationship('post', function ($join) {
             $join->where(fn ($query) => $query->published());
         })->get();
 
-        $sql = Comment::joinRelationship('post', function ($join) {
+        $sql = Comment::query()->joinRelationship('post', function ($join) {
             $join->where(fn ($query) => $query->published());
         })->toSql();
 
@@ -767,5 +767,16 @@ class JoinRelationshipTest extends TestCase
         );
 
         $this->assertEquals($lastComment->body, $lastCommentPost->body);
+    }
+
+    public function test_join_with_clone_does_not_duplicate()
+    {
+        $query = Post::query();
+
+        $query->leftJoinRelationship('user');
+        $clonedSql = $query->clone()->leftJoinRelationship('user')->toSql();
+        $sql = $query->toSql();
+
+        $this->assertEquals($clonedSql, $sql);
     }
 }

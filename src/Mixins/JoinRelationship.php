@@ -326,17 +326,23 @@ class JoinRelationship
             }, $this->getModel());
 
             if ($aggregation) {
+                $aliasName = sprintf('%s_%s_%s',
+                    $latestRelationshipModel->getTable(),
+                    $column,
+                    $aggregation
+                );
+
                 $this->selectRaw(
                     sprintf(
-                        '%s(%s.%s) as %s_aggregation',
+                        '%s(%s.%s) as %s',
                         $aggregation,
                         $latestRelationshipModel->getTable(),
                         $column,
-                        $latestRelationshipName
+                        $aliasName
                     )
                 )
                     ->groupBy(sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()))
-                    ->orderBy(sprintf('%s_aggregation', $latestRelationshipName), $direction);
+                    ->orderBy(sprintf('%s', $aliasName), $direction);
             } else {
                 if ($column instanceof Expression) {
                     $this->orderBy($column, $direction);

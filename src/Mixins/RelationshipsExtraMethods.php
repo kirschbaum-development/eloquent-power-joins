@@ -359,7 +359,7 @@ class RelationshipsExtraMethods
         return function ($builder, $operator, $count) {
             $builder
                 ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
-                ->havingRaw(sprintf('%s_count %s %d', $this->query->getModel()->getTable(), $operator, $count));
+                ->havingRaw(sprintf('count(%s) %s %d', $this->query->getModel()->getQualifiedKeyName(), $operator, $count));
         };
     }
 

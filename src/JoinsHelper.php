@@ -29,7 +29,6 @@ class JoinsHelper
      */
     private array $joinRelationshipCache = [];
 
-
     /**
      * Join method map.
      */
@@ -116,5 +115,10 @@ class JoinsHelper
     public function markRelationshipAsAlreadyJoined($model, string $relation): void
     {
         $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
+    }
+
+    public function clear(): void
+    {
+        $this->joinRelationshipCache = [];
     }
 }

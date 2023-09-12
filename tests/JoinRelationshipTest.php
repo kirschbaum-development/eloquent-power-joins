@@ -780,7 +780,7 @@ class JoinRelationshipTest extends TestCase
         $this->assertEquals($clonedSql, $sql);
     }
 
-    public function test_issue_148()
+    public function test_it_doesnt_fail_to_join_the_same_query_repeatedly()
     {
         for ($i = 0; $i < 12; $i++) {
             try {

@@ -17,7 +17,15 @@ class JoinsHelper
 
     public static function make(): static
     {
-        $objects = array_map(fn ($object) => spl_object_id($object), func_get_args());
+        $objects = array_map(
+            function ($object) {
+                if ( ! $object->powerJoinsInstanceId ?? null) {
+                    $object->powerJoinsInstanceId = uniqid();
+                }
+                return $object->powerJoinsInstanceId;
+            },
+            func_get_args()
+        );
 
         return static::$instances[implode('-', $objects)] ??= new self();
     }
@@ -107,7 +115,7 @@ class JoinsHelper
      */
     public function relationshipAlreadyJoined($model, string $relation): bool
     {
-        return isset($this->joinRelationshipCache[spl_object_id($model)][$relation]);
+        return isset($this->joinRelationshipCache[$model->powerJoinsInstanceId][$relation]);
     }
 
     /**
@@ -115,6 +123,6 @@ class JoinsHelper
      */
     public function markRelationshipAsAlreadyJoined($model, string $relation): void
     {
-        $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
+        $this->joinRelationshipCache[$model->powerJoinsInstanceId][$relation] = true;
     }
 }

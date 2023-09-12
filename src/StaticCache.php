@@ -14,12 +14,16 @@ class StaticCache
 
     public static function getTableOrAliasForModel(Model $model): string
     {
-        return static::$powerJoinAliasesCache[spl_object_id($model)] ?? $model->getTable();
+        if (property_exists($model, 'powerJoinsInstanceId') && isset(static::$powerJoinAliasesCache[$model->powerJoinsInstanceId])) {
+            return static::$powerJoinAliasesCache[$model->powerJoinsInstanceId];
+        } else {
+            return $model->getTable();
+        }
     }
 
     public static function setTableAliasForModel(Model $model, $alias): void
     {
-        static::$powerJoinAliasesCache[spl_object_id($model)] = $alias;
+        static::$powerJoinAliasesCache[$model->powerJoinsInstanceId] = $alias;
     }
 
     public static function clear(): void

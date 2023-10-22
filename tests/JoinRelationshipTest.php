@@ -795,4 +795,25 @@ class JoinRelationshipTest extends TestCase
             }
         }
     }
+
+    public function test_join_morph_to_morphable_class()
+    {
+        factory(Image::class, 5)->state('owner:post')->create();
+        factory(Image::class, 4)->state('owner:user')->create();
+
+        $postImages = Image::query()
+            ->joinRelationship('imageable', morphable: Post::class)
+            ->get();
+
+        $sql = Image::query()
+            ->joinRelationship('imageable', morphable: Post::class)
+            ->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
+            $sql
+        );
+
+        $this->assertCount(5, $postImages);
+    }
 }

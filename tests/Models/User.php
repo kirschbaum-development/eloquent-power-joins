@@ -2,11 +2,12 @@
 
 namespace Kirschbaum\PowerJoins\Tests\Models;
 
+use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 
@@ -62,6 +63,11 @@ class User extends Model
     public function commentsThroughPosts(): HasManyThrough
     {
         return $this->hasManyThrough(Comment::class, Post::class);
+    }
+
+    public function images(): MorphMany
+    {
+        return $this->morphMany(Image::class, 'imageable');
     }
 
     public function scopeHasPublishedPosts($query)

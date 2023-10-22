@@ -93,7 +93,8 @@ class JoinRelationship
             $callback = null,
             $joinType = 'join',
             $useAlias = false,
-            bool $disableExtraConditions = false
+            bool $disableExtraConditions = false,
+            string $morphable = null
         ) {
             $joinType = JoinsHelper::$joinMethodsMap[$joinType] ?? $joinType;
             $useAlias = is_string($callback) ? false : $useAlias;
@@ -145,7 +146,8 @@ class JoinRelationship
                 joinType: $joinType,
                 callback: $callback,
                 alias: $alias,
-                disableExtraConditions: $disableExtraConditions
+                disableExtraConditions: $disableExtraConditions,
+                morphable: $morphable,
             );
 
             return $this;

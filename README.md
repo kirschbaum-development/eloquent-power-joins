@@ -87,6 +87,14 @@ Turns out, if you join a polymorphic relationship, Eloquent Power Joins automati
 Post::joinRelationship('images');
 ```
 
+You can also join MorphTo relationships.
+
+```php
+Image::joinRelationship('imageable', morphable: Post::class);
+```
+
+Note: Querying morph to relationships only supports one morphable type at a time.
+
 **Applying conditions & callbacks to the joins**
 
 Now, let's say you want to apply a condition to the join you are making. You simply need to pass a callback as the second parameter to the `joinRelationship` method.

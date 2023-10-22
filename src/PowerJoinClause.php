@@ -76,6 +76,11 @@ class PowerJoinClause extends JoinClause
         return $this;
     }
 
+    public function morphableClass(string $modelClass)
+    {
+        dd($modelClass);
+    }
+
     public function getModel()
     {
         return $this->model;

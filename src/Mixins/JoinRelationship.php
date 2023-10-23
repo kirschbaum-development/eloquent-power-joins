@@ -117,13 +117,18 @@ class JoinRelationship
 
             $relation = $this->getModel()->{$relationName}();
             $relationQuery = $relation->getQuery();
-            $alias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
-                $relationQuery->getModel()->getTable(), $callback);
+            $alias = $joinHelper->getAliasName(
+                $useAlias,
+                $relation,
+                $relationName,
+                $relationQuery->getModel()->getTable(),
+                $callback
+            );
 
             if ($relation instanceof BelongsToMany && !is_array($alias)) {
                 $extraAlias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
-                    $relation->getTable(),
-                    $callback);
+                $relation->getTable(),
+                $callback);
                 $alias = [$extraAlias, $alias];
             }
 
@@ -136,7 +141,6 @@ class JoinRelationship
             if ($joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache)) {
                 return $this;
             }
-
 
             $joinHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
             StaticCache::clear();
@@ -151,7 +155,6 @@ class JoinRelationship
             );
 
             return $this;
-
         };
     }
 

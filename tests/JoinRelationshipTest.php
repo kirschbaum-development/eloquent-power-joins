@@ -816,4 +816,33 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertCount(5, $postImages);
     }
+
+    public function test_join_morph_to_morphable_class_using_alias()
+    {
+        factory(Image::class, 5)->state('owner:post')->create();
+        factory(Image::class, 4)->state('owner:user')->create();
+
+        $postImages = Image::query()
+            ->joinRelationship(
+                'imageable',
+                callback: fn ($join) => $join->as('posts_image'),
+                morphable: Post::class
+            )
+            ->get();
+
+        $sql = Image::query()
+            ->joinRelationship(
+                'imageable',
+                callback: fn ($join) => $join->as('posts_image'),
+                morphable: Post::class
+            )
+            ->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" as "posts_image" on "images"."imageable_id" = "posts_image"."id" and "images"."imageable_type" = ?',
+            $sql
+        );
+
+        $this->assertCount(5, $postImages);
+    }
 }

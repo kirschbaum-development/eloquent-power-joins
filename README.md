@@ -278,6 +278,8 @@ There's, though, a gotcha here. Your global scope **cannot** type-hint the `Eloq
 
 This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**. Below, you can see the methods this package implements and also the Laravel equivalent.
 
+Please note that although the methods are similar, you will not always get the same results when using joins, depending on the context of your query. You should be aware of the differences between querying the data with `where exists` vs `joins`.
+
 **Laravel Native Methods**
 
 ``` php

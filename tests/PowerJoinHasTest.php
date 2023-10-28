@@ -2,10 +2,11 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
-use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Group;
+use Kirschbaum\PowerJoins\Tests\Models\Image;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
 
 class PowerJoinHasTest extends TestCase
 {
@@ -170,5 +171,30 @@ class PowerJoinHasTest extends TestCase
             $powerJoinQuery->toSql()
         );
         $this->assertCount(1, $powerJoinQuery->get());
+    }
+
+    public function test_power_join_has_with_morph_to()
+    {
+        $post = factory(Post::class)->state('published')->create();
+        $postImage = factory(Image::class)->state('owner:post')->create(['imageable_id' => $post->id]);
+        $user = factory(Post::class)->create();
+        $userImage = factory(Image::class)->state('owner:user')->create(['imageable_id' => $user->id]);
+
+        $postImagesQueried = Image::query()
+            ->powerJoinHas('imageable', morphable: Post::class)
+            ->get();
+
+        $userImagesQueried = Image::query()
+            ->powerJoinHas('imageable', morphable: User::class)
+            ->get();
+
+        $this->assertCount(1, $postImagesQueried);
+        $this->assertCount(1, Image::powerJoinHas('imageable', morphable: Post::class, callback: fn ($query) => $query->where('posts.published', true))->get());
+        $this->assertCount(0, Image::powerJoinHas('imageable', morphable: Post::class, callback: fn ($query) => $query->where('posts.published', false))->get());
+        $this->assertCount(0, Image::powerJoinHas('imageable', count: 2, morphable: Post::class)->get());
+        $this->assertTrue($postImage->is($postImagesQueried->sole()));
+
+        $this->assertCount(1, $userImagesQueried);
+        $this->assertTrue($userImage->is($userImagesQueried->sole()));
     }
 }

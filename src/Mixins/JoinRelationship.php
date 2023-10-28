@@ -461,7 +461,7 @@ class JoinRelationship
      */
     public function powerJoinHas(): Closure
     {
-        return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', $callback = null): static {
+        return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', $callback = null, string $morphable = null): static {
             if (is_null($this->getSelect())) {
                 $this->select(sprintf('%s.*', $this->getModel()->getTable()));
             }
@@ -479,9 +479,8 @@ class JoinRelationship
 
                 $relation = $this->getRelationWithoutConstraintsProxy($relation);
             }
-
-            $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback);
-            $relation->performHavingForEloquentPowerJoins($this, $operator, $count);
+            $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback, morphable: $morphable);
+            $relation->performHavingForEloquentPowerJoins($this, $operator, $count, morphable: $morphable);
             return $this;
         };
     }

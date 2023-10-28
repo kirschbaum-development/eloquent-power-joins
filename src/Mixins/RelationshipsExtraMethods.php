@@ -494,6 +494,13 @@ class RelationshipsExtraMethods
     public function getPowerJoinExistenceCompareKey()
     {
         return function () {
+            if ($this instanceof MorphTo) {
+                return [
+                    $this->getModel()->qualifyColumn($this->getMorphType()),
+                    $this->getQualifiedForeignKeyName()
+                ];
+            }
+
             if ($this instanceof BelongsTo) {
                 return $this->getQualifiedOwnerKeyName();
             }

@@ -386,10 +386,18 @@ class RelationshipsExtraMethods
      */
     public function performHavingForEloquentPowerJoins()
     {
-        return function ($builder, $operator, $count) {
-            $builder
-                ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
-                ->havingRaw(sprintf('count(%s) %s %d', $this->query->getModel()->getQualifiedKeyName(), $operator, $count));
+        return function ($builder, $operator, $count, string $morphable = null) {
+            if ($morphable) {
+                $modelInstance = new $morphable;
+
+                $builder
+                    ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(), $modelInstance->getTable()))
+                    ->havingRaw(sprintf('count(%s) %s %d', $modelInstance->getQualifiedKeyName(), $operator, $count));
+            } else {
+                $builder
+                    ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
+                    ->havingRaw(sprintf('count(%s) %s %d', $this->query->getModel()->getQualifiedKeyName(), $operator, $count));
+            }
         };
     }
 

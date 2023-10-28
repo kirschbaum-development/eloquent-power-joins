@@ -100,21 +100,15 @@ Note: Querying morph to relationships only supports one morphable type at a time
 Now, let's say you want to apply a condition to the join you are making. You simply need to pass a callback as the second parameter to the `joinRelationship` method.
 
 ```php
-User::joinRelationship('posts', function ($join) {
-    $join->where('posts.approved', true);
-})->toSql();
+User::joinRelationship('posts', fn ($join) => $join->where('posts.approved', true))->toSql();
 ```
 
 For **nested calls**, you simply need to pass an array referencing the relationship names.
 
 ```php
 User::joinRelationship('posts.comments', [
-    'posts' => function ($join) {
-        $join->where('posts.published', true);
-    },
-    'comments' => function ($join) {
-        $join->where('comments.approved', true);
-    }
+    'posts' => fn ($join) => $join->where('posts.published', true),
+    'comments' => fn ($join) => $join->where('comments.approved', true),
 ]);
 ```
 
@@ -127,9 +121,7 @@ User::joinRelationship('groups', [
             // ...
         },
         // group_members is the intermediary table here
-        'group_members' => function ($join) {
-            $join->where('group_members.active', true);
-        },
+        'group_members' => fn ($join) => $join->where('group_members.active', true),
     ]
 ]);
 ```
@@ -176,12 +168,8 @@ Post::joinRelationshipUsingAlias('category', 'category_alias')->get();
 
 ```php
 Post::joinRelationship('category.parent', [
-    'category' => function ($join) {
-        $join->as('category_alias');
-    },
-    'parent' => function ($join) {
-        $join->as('category_parent');
-    },
+    'category' => fn ($join) => $join->as('category_alias'),
+    'parent' => fn ($join) => $join->as('category_parent'),
 ])->get()
 ```
 
@@ -190,12 +178,8 @@ For *belongs to many* or *has many through* calls, you need to pass an array wit
 ```php
 Group::joinRelationship('posts.user', [
     'posts' => [
-        'posts' => function ($join) {
-            $join->as('posts_alias');
-        },
-        'post_groups' => function($join) {
-            $join->as('post_groups_alias');
-        },
+        'posts' => fn ($join) => $join->as('posts_alias'),
+        'post_groups' => fn ($join) => $join->as('post_groups_alias'),
     ],
 ])->toSql();
 ```
@@ -227,17 +211,13 @@ and "users"."deleted_at" is null
 In case you want to include trashed models, you can call the `->withTrashed()` method in the join callback.
 
 ```php
-UserProfile::joinRelationship('users', function ($join) {
-    $join->withTrashed();
-});
+UserProfile::joinRelationship('users', fn ($join) => $join->withTrashed());
 ```
 
 You can also call the `onlyTrashed` model as well:
 
 ```php
-UserProfile::joinRelationship('users', function ($join) {
-    $join->onlyTrashed();
-});
+UserProfile::joinRelationship('users', ($join) => $join->onlyTrashed());
 ```
 
 #### Extra conditions defined in relationships
@@ -265,9 +245,7 @@ select users.* from users inner join posts on posts.user_id = posts.id and posts
 If your model have global scopes applied to it, you can enable the global scopes by calling the `withGlobalScopes` method in your join clause, like this:
 
 ```php
-UserProfile::joinRelationship('users', function ($join) {
-    $join->withGlobalScopes();
-});
+UserProfile::joinRelationship('users', fn ($join) => $join->withGlobalScopes());
 ```
 
 There's, though, a gotcha here. Your global scope **cannot** type-hint the `Eloquent\Builder` class in the first parameter of the `apply` method, otherwise you will get errors.
@@ -286,9 +264,8 @@ Please note that although the methods are similar, you will not always get the s
 User::has('posts');
 User::has('posts.comments');
 User::has('posts', '>', 3);
-User::whereHas('posts', function ($query) {
-    $query->where('posts.published', true);
-});
+User::whereHas('posts', fn ($query) => $query->where('posts.published', true));
+User::whereHas('posts.comments', ['posts' => fn ($query) => $query->where('posts.published', true));
 User::doesntHave('posts');
 ```
 

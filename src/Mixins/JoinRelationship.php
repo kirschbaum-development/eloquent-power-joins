@@ -117,6 +117,7 @@ class JoinRelationship
 
             $relation = $this->getModel()->{$relationName}();
             $relationQuery = $relation->getQuery();
+            $relationQuery->getQuery()->wheres = [];
             $alias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
                 $relationQuery->getModel()->getTable(), $callback);
 

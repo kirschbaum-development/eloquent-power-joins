@@ -461,7 +461,7 @@ class JoinRelationship
      */
     public function powerJoinHas(): Closure
     {
-        return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', $callback = null, string $morphable = null): static {
+        return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure|array $callback = null, string $morphable = null): static {
             if (is_null($this->getSelect())) {
                 $this->select(sprintf('%s.*', $this->getModel()->getTable()));
             }
@@ -487,20 +487,22 @@ class JoinRelationship
 
     public function hasNestedUsingJoins(): Closure
     {
-        return function ($relations, $operator = '>=', $count = 1, $boolean = 'and', Closure $callback = null): static {
+        return function ($relations, $operator = '>=', $count = 1, $boolean = 'and', Closure|array $callback = null): static {
             $relations = explode('.', $relations);
 
             /** @var Relation */
             $latestRelation = null;
 
             foreach ($relations as $index => $relation) {
-                if (!$latestRelation) {
+                $relationName = $relation;
+
+                if (! $latestRelation) {
                     $relation = $this->getRelationWithoutConstraintsProxy($relation);
                 } else {
                     $relation = $latestRelation->getModel()->query()->getRelationWithoutConstraintsProxy($relation);
                 }
 
-                $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback);
+                $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', is_callable($callback) ? $callback : $callback[$relationName] ?? null);
 
                 if (count($relations) === ($index + 1)) {
                     $relation->performHavingForEloquentPowerJoins($this, $operator, $count);

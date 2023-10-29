@@ -104,13 +104,16 @@ class PowerJoinHasTest extends TestCase
     public function test_has_with_joins_and_nested_relations()
     {
         [$user1, $user2] = factory(User::class)->times(2)->create();
-        $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
-        $post2 = factory(Post::class)->create(['user_id' => $user2->id]);
+        $post1 = factory(Post::class)->state('published')->create(['user_id' => $user1->id]);
+        $post2 = factory(Post::class)->state('unpublished')->create(['user_id' => $user2->id]);
         $commentsPost1 = factory(Comment::class)->times(2)->create(['post_id' => $post1->id]);
         $commentsPost2 = factory(Comment::class)->times(5)->create(['post_id' => $post2->id]);
 
         $this->assertCount(2, User::has('posts.comments')->get());
         $this->assertCount(2, User::powerJoinHas('posts.comments')->get());
+        $this->assertCount(1, User::powerJoinWhereHas('posts.comments', callback: [
+            'posts' => fn ($query) => $query->where('posts.published', true)
+        ])->get());
     }
 
     /** @test */

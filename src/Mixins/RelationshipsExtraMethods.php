@@ -266,7 +266,6 @@ class RelationshipsExtraMethods
                     $this->applyExtraConditions($join);
                 }
 
-                // dd($callback);
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }

@@ -700,7 +700,7 @@ class JoinRelationshipTest extends TestCase
         })->toSql();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "comments"."post_id" = "posts"."id" and ("posts"."published" = ?)',
+            'inner join "posts" on "comments"."post_id" = "posts"."id" and "posts"."deleted_at" is null and ("posts"."published" = ?)',
             $sql
         );
     }
@@ -798,11 +798,16 @@ class JoinRelationshipTest extends TestCase
 
     public function test_join_morph_to_morphable_class()
     {
-        factory(Image::class, 5)->state('owner:post')->create();
+        factory(Image::class, 3)->state('unpublished')->state('owner:post')->create();
+        factory(Image::class, 2)->state('published')->state('owner:post')->create();
         factory(Image::class, 4)->state('owner:user')->create();
 
         $postImages = Image::query()
             ->joinRelationship('imageable', morphable: Post::class)
+            ->get();
+
+        $publishedPostImages = Image::query()
+            ->joinRelationship('imageable', callback: fn ($query) => $query->published(), morphable: Post::class)
             ->get();
 
         $sql = Image::query()
@@ -810,7 +815,7 @@ class JoinRelationshipTest extends TestCase
             ->toSql();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
+            'inner join "posts" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? and "posts"."deleted_at" is null',
             $sql
         );
 

@@ -9,6 +9,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class PowerJoinClause extends JoinClause
 {
@@ -93,6 +94,10 @@ class PowerJoinClause extends JoinClause
         foreach ($this->model->getGlobalScopes() as $scope) {
             if ($scope instanceof Closure) {
                 $scope->call($this, $this);
+                continue;
+            }
+
+            if ($scope instanceof SoftDeletingScope) {
                 continue;
             }
 

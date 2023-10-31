@@ -798,16 +798,18 @@ class JoinRelationshipTest extends TestCase
 
     public function test_join_morph_to_morphable_class()
     {
-        factory(Image::class, 3)->state('unpublished')->state('owner:post')->create();
-        factory(Image::class, 2)->state('published')->state('owner:post')->create();
+        $publishedPost = factory(Post::class)->state('published')->create();
+        $unpublishedPost = factory(Post::class)->state('unpublished')->create();
+        factory(Image::class, 3)->state('owner:post')->create(['imageable_id' => $unpublishedPost->id]);
+        factory(Image::class, 2)->state('owner:post')->create(['imageable_id' => $publishedPost->id]);
         factory(Image::class, 4)->state('owner:user')->create();
+
+        $publishedPostImages = Image::query()
+            ->joinRelationship('imageable', callback: fn ($join) => $join->published(), morphable: Post::class)
+            ->get();
 
         $postImages = Image::query()
             ->joinRelationship('imageable', morphable: Post::class)
-            ->get();
-
-        $publishedPostImages = Image::query()
-            ->joinRelationship('imageable', callback: fn ($query) => $query->published(), morphable: Post::class)
             ->get();
 
         $sql = Image::query()
@@ -820,5 +822,6 @@ class JoinRelationshipTest extends TestCase
         );
 
         $this->assertCount(5, $postImages);
+        $this->assertCount(2, $publishedPostImages);
     }
 }

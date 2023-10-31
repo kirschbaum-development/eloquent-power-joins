@@ -266,10 +266,11 @@ class RelationshipsExtraMethods
                     $this->applyExtraConditions($join);
                 }
 
+                // dd($callback);
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->getModel());
+            }, $modelInstance);
 
             return $this;
         };

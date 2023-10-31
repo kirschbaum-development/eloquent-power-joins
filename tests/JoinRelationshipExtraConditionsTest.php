@@ -141,7 +141,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, Group::joinRelationship('publishedPosts')->get());
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."deleted_at" is null and "posts"."published" = ?',
             Group::joinRelationship('publishedPosts')->toSql()
         );
     }
@@ -163,7 +163,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(2, Group::joinRelationship('recentPosts')->get());
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "post_groups"."assigned_at" >= ?',
+            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."deleted_at" is null and "post_groups"."assigned_at" >= ?',
             Group::joinRelationship('recentPosts')->toSql()
         );
     }
@@ -238,7 +238,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         User::joinRelationship('publishedOrReviewedPosts')->get();
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and ("published" = ? or "reviewed" = ?)',
+            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."deleted_at" is null and ("published" = ? or "reviewed" = ?)',
             $query
         );
     }

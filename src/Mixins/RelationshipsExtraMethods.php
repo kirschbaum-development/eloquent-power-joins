@@ -2,6 +2,8 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
+use Stringable;
+use Illuminate\Support\Str;
 use Kirschbaum\PowerJoins\StaticCache;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
@@ -256,8 +258,8 @@ class RelationshipsExtraMethods
                     "{$modelInstance->getTable()}.{$modelInstance->getKeyName()}"
                 )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $modelInstance->getMorphClass());
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($modelInstance)) {
+                    $join->whereNull($modelInstance->getQualifiedDeletedAtColumn());
                 }
 
                 if ($disableExtraConditions === false) {
@@ -267,7 +269,7 @@ class RelationshipsExtraMethods
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->getModel());
+            }, $modelInstance);
 
             return $this;
         };
@@ -485,7 +487,13 @@ class RelationshipsExtraMethods
     public function shouldNotApplyExtraCondition()
     {
         return function ($condition) {
-            $key = $this->getPowerJoinExistenceCompareKey();
+            if (isset($condition['column']) && Str::endsWith($condition['column'], '.')) {
+                return true;
+            }
+
+            if (! $key = $this->getPowerJoinExistenceCompareKey()) {
+                return true;
+            }
 
             if (isset($condition['query'])) {
                 return false;
@@ -502,6 +510,10 @@ class RelationshipsExtraMethods
     public function getPowerJoinExistenceCompareKey()
     {
         return function () {
+            if ($this instanceof MorphTo) {
+                return [$this->getMorphType(), $this->getForeignKeyName()];
+            }
+
             if ($this instanceof BelongsTo) {
                 return $this->getQualifiedOwnerKeyName();
             }

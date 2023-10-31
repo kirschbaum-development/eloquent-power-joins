@@ -54,6 +54,7 @@ class CreateTables extends Migration
             $table->boolean('reviewed')->default(true);
             $table->boolean('published')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('post_groups', function (Blueprint $table) {
@@ -84,6 +85,7 @@ class CreateTables extends Migration
             $table->morphs('imageable');
             $table->boolean('cover')->default(false);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('tags', function (Blueprint $table) {

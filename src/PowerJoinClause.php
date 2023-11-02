@@ -40,9 +40,6 @@ class PowerJoinClause extends JoinClause
      *
      * @param string $type
      * @param string $table
-     * @param \Illuminate\Database\Eloquent\Model $model
-     *
-     * @return void
      */
     public function __construct(Builder $parentQuery, $type, $table, Model $model = null)
     {

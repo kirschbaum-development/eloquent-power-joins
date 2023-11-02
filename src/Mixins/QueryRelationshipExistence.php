@@ -2,30 +2,32 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
+/**
+ * @mixin Builder
+ */
 class QueryRelationshipExistence
 {
-    public function getGroupBy()
+    public function getGroupBy(): \Closure
     {
-        return function () {
+        return function (): ?array {
             return $this->getQuery()->getGroupBy();
         };
     }
 
-    public function getSelect()
+    public function getSelect(): \Closure
     {
-        return function () {
+        return function (): ?array {
             return $this->getQuery()->getSelect();
         };
     }
 
-    protected function getRelationWithoutConstraintsProxy()
+    protected function getRelationWithoutConstraintsProxy(): \Closure
     {
-        return function ($relation) {
-            return Relation::noConstraints(function () use ($relation) {
-                return $this->getModel()->{$relation}();
-            });
+        return function (string $relation): ?Relation {
+            return Relation::noConstraints(fn () => $this->getModel()->{$relation}());
         };
     }
 }

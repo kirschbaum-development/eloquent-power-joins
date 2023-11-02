@@ -15,7 +15,7 @@ class EloquentJoins
     /**
      * Register macros with Eloquent.
      */
-    public static function registerEloquentMacros()
+    public static function registerEloquentMacros(): void
     {
         EloquentQueryBuilder::mixin(new JoinRelationship);
         EloquentQueryBuilder::mixin(new QueryRelationshipExistence);

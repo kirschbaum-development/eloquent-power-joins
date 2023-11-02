@@ -8,6 +8,9 @@ use Illuminate\Database\Eloquent\Relations\Relation;
 
 class JoinsHelper
 {
+    /**
+     * @var array<int, static>
+     */
     static array $instances = [];
 
     protected function __construct()
@@ -25,7 +28,6 @@ class JoinsHelper
     /**
      * Cache to not join the same relationship twice.
      *
-     * @var array
      */
     private array $joinRelationshipCache = [];
 
@@ -71,7 +73,7 @@ class JoinsHelper
     /**
      * Get the join alias name from all the different options.
      *
-     * @return string|null
+     * @return array<string>|string|null
      */
     public function getAliasName(bool $useAlias, Relation $relation, string $relationName, string $tableName, $callback)
     {

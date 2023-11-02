@@ -3,27 +3,22 @@
 namespace Kirschbaum\PowerJoins;
 
 use Closure;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\JoinClause;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class PowerJoinClause extends JoinClause
 {
-    /**
-     * @var \Illuminate\Database\Eloquent\Model
-     */
-    public $model;
+    public ?Model $model;
 
     /**
      * Table name backup in case an alias is being used.
-     *
-     * @var string
      */
-    public $tableName;
+    public string $tableName;
 
     /**
      * Alias name.
@@ -37,14 +32,8 @@ class PowerJoinClause extends JoinClause
 
     /**
      * Create a new join clause instance.
-     *
-     * @param  \Illuminate\Database\Query\Builder  $parentQuery
-     * @param  string  $type
-     * @param  string  $table
-     * @param  \Illuminate\Database\Eloquent\Model  $model
-     * @return void
      */
-    public function __construct(Builder $parentQuery, $type, $table, Model $model = null)
+    public function __construct(Builder $parentQuery, string $type, string $table, ?Model $model)
     {
         parent::__construct($parentQuery, $type, $table);
 
@@ -77,7 +66,7 @@ class PowerJoinClause extends JoinClause
         return $this;
     }
 
-    public function getModel()
+    public function getModel(): ?Model
     {
         return $this->model;
     }
@@ -116,11 +105,9 @@ class PowerJoinClause extends JoinClause
             return $this;
         }
 
-        $this->wheres = collect($this->wheres)->filter(function ($where) {
+        $this->wheres = collect($this->wheres)->filter(function (array $where) {
             return in_array($where['type'] ?? '', ['Column', 'Basic']);
-        })->map(function ($where) {
-            $key = $this->model->getKeyName();
-            $table = $this->tableName;
+        })->map(function (array $where) {
             $replaceMethod = sprintf('useAliasInWhere%sType', ucfirst($where['type']));
 
             return $this->{$replaceMethod}($where);
@@ -135,7 +122,8 @@ class PowerJoinClause extends JoinClause
         $table = $this->tableName;
 
         // if it was already replaced, skip
-        if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.', $this->alias . '.')) {
+        if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.',
+                $this->alias . '.')) {
             return $where;
         }
 
@@ -169,7 +157,7 @@ class PowerJoinClause extends JoinClause
         return $where;
     }
 
-    public function whereNull($columns, $boolean = 'and', $not = false)
+    public function whereNull($columns, $boolean = 'and', $not = false): self
     {
         if ($this->alias && Str::contains($columns, $this->tableName)) {
             $columns = str_replace("{$this->tableName}.", "{$this->alias}.", $columns);
@@ -180,7 +168,8 @@ class PowerJoinClause extends JoinClause
 
     public function newQuery(): self
     {
-        return new static($this->newParentQuery(), $this->type, $this->table, $this->model); // <-- The model param is needed
+        return new static($this->newParentQuery(), $this->type, $this->table,
+            $this->model); // <-- The model param is needed
     }
 
     public function where($column, $operator = null, $value = null, $boolean = 'and'): self

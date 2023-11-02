@@ -28,7 +28,8 @@ class JoinRelationship
     {
         return function ($table, $first, $operator = null, $second = null, $type = 'inner', $where = false): static {
             $model = $operator instanceof Model ? $operator : null;
-            $join = $this->newPowerJoinClause($this->query, $type, $table, $model);
+            /** @var PowerJoinClause $join */
+            $join = $this->newPowerJoinClause($this->getQuery(), $type, $table, $model);
 
             // If the first "column" of the join is really a Closure instance the developer
             // is trying to build a join with a complex "on" clause containing more than
@@ -36,9 +37,9 @@ class JoinRelationship
             if ($first instanceof Closure) {
                 $first($join);
 
-                $this->query->joins[] = $join;
+                $this->getQuery()->joins[] = $join;
 
-                $this->query->addBinding($join->getBindings(), 'join');
+                $this->getQuery()->addBinding($join->getBindings(), 'join');
             }
 
             // If the column is simply a string, we can assume the join simply has a basic
@@ -47,9 +48,9 @@ class JoinRelationship
             else {
                 $method = $where ? 'where' : 'on';
 
-                $this->query->joins[] = $join->$method($first, $operator, $second);
+                $this->getQuery()->joins[] = $join->$method($first, $operator, $second);
 
-                $this->query->addBinding($join->getBindings(), 'join');
+                $this->getQuery()->addBinding($join->getBindings(), 'join');
             }
 
             return $this;
@@ -200,28 +201,28 @@ class JoinRelationship
 
     public function leftJoinRelationship(): Closure
     {
-        return function ($relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
+        return function (string $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
             return $this->joinRelationship($relation, $callback, 'leftJoin', $useAlias, $disableExtraConditions);
         };
     }
 
     public function leftJoinRelation(): Closure
     {
-        return function ($relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
+        return function (string $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {https://github.com/kirschbaum-development/eloquent-power-joins
             return $this->joinRelationship($relation, $callback, 'leftJoin', $useAlias, $disableExtraConditions);
         };
     }
 
     public function rightJoinRelationship(): Closure
     {
-        return function ($relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
+        return function (string $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
             return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias, $disableExtraConditions);
         };
     }
 
     public function rightJoinRelation(): Closure
     {
-        return function ($relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
+        return function (string $relation, $callback = null, $useAlias = false, bool $disableExtraConditions = false) {
             return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias, $disableExtraConditions);
         };
     }
@@ -314,7 +315,7 @@ class JoinRelationship
      */
     public function orderByPowerJoins(): Closure
     {
-        return function ($sort, $direction = 'asc', $aggregation = null, $joinType = 'join') {
+        return function ($sort, string $direction = 'asc', $aggregation = null, $joinType = 'join') {
             if (is_array($sort)) {
                 $relationships = explode('.', $sort[0]);
                 $column = $sort[1];
@@ -366,7 +367,7 @@ class JoinRelationship
 
     public function orderByLeftPowerJoins(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, null, 'leftJoin');
         };
     }
@@ -376,14 +377,14 @@ class JoinRelationship
      */
     public function orderByPowerJoinsCount(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'COUNT');
         };
     }
 
     public function orderByLeftPowerJoinsCount(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'COUNT', 'leftJoin');
         };
     }
@@ -393,14 +394,14 @@ class JoinRelationship
      */
     public function orderByPowerJoinsSum(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'SUM');
         };
     }
 
     public function orderByLeftPowerJoinsSum(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'SUM', 'leftJoin');
         };
     }
@@ -410,14 +411,14 @@ class JoinRelationship
      */
     public function orderByPowerJoinsAvg(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'AVG');
         };
     }
 
     public function orderByLeftPowerJoinsAvg(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'AVG', 'leftJoin');
         };
     }
@@ -427,14 +428,14 @@ class JoinRelationship
      */
     public function orderByPowerJoinsMin(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'MIN');
         };
     }
 
     public function orderByLeftPowerJoinsMin(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'MIN', 'leftJoin');
         };
     }
@@ -444,14 +445,14 @@ class JoinRelationship
      */
     public function orderByPowerJoinsMax(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'MAX');
         };
     }
 
     public function orderByLeftPowerJoinsMax(): Closure
     {
-        return function ($sort, $direction = 'asc') {
+        return function ($sort, string $direction = 'asc') {
             return $this->orderByPowerJoins($sort, $direction, 'MAX', 'leftJoin');
         };
     }
@@ -487,7 +488,7 @@ class JoinRelationship
 
     public function hasNestedUsingJoins(): Closure
     {
-        return function ($relations, $operator = '>=', $count = 1, $boolean = 'and', Closure|array $callback = null): static {
+        return function (string $relations, $operator = '>=', $count = 1, $boolean = 'and', Closure|array $callback = null): static {
             $relations = explode('.', $relations);
 
             /** @var Relation */
@@ -516,7 +517,7 @@ class JoinRelationship
 
     public function powerJoinDoesntHave(): Closure
     {
-        return function ($relation, $boolean = 'and', Closure $callback = null) {
+        return function (string $relation, $boolean = 'and', Closure $callback = null) {
             return $this->powerJoinHas($relation, '<', 1, $boolean, $callback);
         };
 
@@ -524,7 +525,7 @@ class JoinRelationship
 
     public function powerJoinWhereHas(): Closure
     {
-        return function ($relation, $callback = null, $operator = '>=', $count = 1) {
+        return function (string $relation, $callback = null, $operator = '>=', $count = 1) {
             return $this->powerJoinHas($relation, $operator, $count, 'and', $callback);
         };
     }

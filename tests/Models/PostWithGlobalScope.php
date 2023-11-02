@@ -8,6 +8,6 @@ class PostWithGlobalScope extends Post
 {
     protected static function booted()
     {
-        static::addGlobalScope(new PublishedScope);
+        static::addGlobalScope(new PublishedScope());
     }
 }

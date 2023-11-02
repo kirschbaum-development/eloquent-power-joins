@@ -12,7 +12,7 @@ class JoinWithGlobalScopeTest extends TestCase
     /** @test */
     public function test_join_with_global_scope_applied()
     {
-        $user = new class extends User {
+        $user = new class() extends User {
             public function posts(): HasMany
             {
                 return $this->hasMany(PostWithGlobalScope::class, 'user_id');
@@ -27,7 +27,7 @@ class JoinWithGlobalScopeTest extends TestCase
 
     public function test_join_with_closure_global_scope_applied()
     {
-        $user = new class extends User {
+        $user = new class() extends User {
             public function posts(): HasMany
             {
                 return $this->hasMany(PostWithClosureGlobalScope::class, 'user_id');

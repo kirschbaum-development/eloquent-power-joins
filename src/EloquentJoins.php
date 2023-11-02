@@ -17,10 +17,10 @@ class EloquentJoins
      */
     public static function registerEloquentMacros()
     {
-        EloquentQueryBuilder::mixin(new JoinRelationship);
-        EloquentQueryBuilder::mixin(new QueryRelationshipExistence);
-        QueryBuilder::mixin(new QueryBuilderExtraMethods);
+        EloquentQueryBuilder::mixin(new JoinRelationship());
+        EloquentQueryBuilder::mixin(new QueryRelationshipExistence());
+        QueryBuilder::mixin(new QueryBuilderExtraMethods());
 
-        Relation::mixin(new RelationshipsExtraMethods);
+        Relation::mixin(new RelationshipsExtraMethods());
     }
 }

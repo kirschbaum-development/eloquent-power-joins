@@ -16,7 +16,7 @@ class FakeJoinCallback
 
     public function __call($name, $arguments)
     {
-        if ($name === 'as') {
+        if ('as' === $name) {
             $this->alias = $arguments[0];
         }
 

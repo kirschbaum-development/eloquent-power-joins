@@ -2,10 +2,10 @@
 
 namespace Kirschbaum\PowerJoins\Tests\Models;
 
-use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Kirschbaum\PowerJoins\PowerJoins;
 
 class Image extends Model
 {

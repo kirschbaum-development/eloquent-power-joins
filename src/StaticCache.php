@@ -8,6 +8,7 @@ class StaticCache
 {
     /**
      * Cache to not join the same relationship twice.
+     *
      * @var array<int, string>
      */
     public static array $powerJoinAliasesCache = [];

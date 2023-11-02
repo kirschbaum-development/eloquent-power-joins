@@ -3,8 +3,8 @@
 namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Kirschbaum\PowerJoins\PowerJoins;
 
 class Group extends Model
 {
@@ -19,7 +19,7 @@ class Group extends Model
     }
 
     /**
-     * Some relationships just don't make a lot of sense, but is just for testing anyway :)
+     * Some relationships just don't make a lot of sense, but is just for testing anyway :).
      */
     public function recentPosts(): BelongsToMany
     {

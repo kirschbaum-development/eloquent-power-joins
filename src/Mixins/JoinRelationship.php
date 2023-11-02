@@ -16,7 +16,9 @@ use Kirschbaum\PowerJoins\StaticCache;
 
 /**
  * @mixin Builder
+ *
  * @method \Illuminate\Database\Eloquent\Model getModel()
+ *
  * @property \Illuminate\Database\Eloquent\Builder $query
  */
 class JoinRelationship
@@ -137,7 +139,6 @@ class JoinRelationship
                 return $this;
             }
 
-
             $joinHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
             StaticCache::clear();
 
@@ -151,7 +152,6 @@ class JoinRelationship
             );
 
             return $this;
-
         };
     }
 
@@ -246,7 +246,7 @@ class JoinRelationship
             $part = [];
             foreach ($relations as $relationName) {
                 $part[] = $relationName;
-                $fullRelationName = join(".", $part);
+                $fullRelationName = join('.', $part);
 
                 $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
                 $relation = $currentModel->{$relationName}();
@@ -285,7 +285,6 @@ class JoinRelationship
                     StaticCache::setTableAliasForModel($relation->getModel(), $alias);
                 }
 
-
                 if ($joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache)) {
                     $latestRelation = $relation;
 
@@ -305,6 +304,7 @@ class JoinRelationship
             }
 
             StaticCache::clear();
+
             return $this;
         };
     }
@@ -359,9 +359,9 @@ class JoinRelationship
                     );
                 }
             }
+
             return $this;
         };
-
     }
 
     public function orderByLeftPowerJoins(): Closure
@@ -481,6 +481,7 @@ class JoinRelationship
             }
             $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback, morphable: $morphable);
             $relation->performHavingForEloquentPowerJoins($this, $operator, $count, morphable: $morphable);
+
             return $this;
         };
     }
@@ -496,7 +497,7 @@ class JoinRelationship
             foreach ($relations as $index => $relation) {
                 $relationName = $relation;
 
-                if (! $latestRelation) {
+                if (!$latestRelation) {
                     $relation = $this->getRelationWithoutConstraintsProxy($relation);
                 } else {
                     $relation = $latestRelation->getModel()->query()->getRelationWithoutConstraintsProxy($relation);
@@ -510,6 +511,7 @@ class JoinRelationship
 
                 $latestRelation = $relation;
             }
+
             return $this;
         };
     }
@@ -519,7 +521,6 @@ class JoinRelationship
         return function ($relation, $boolean = 'and', Closure $callback = null) {
             return $this->powerJoinHas($relation, '<', 1, $boolean, $callback);
         };
-
     }
 
     public function powerJoinWhereHas(): Closure

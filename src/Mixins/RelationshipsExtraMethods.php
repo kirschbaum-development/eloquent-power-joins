@@ -2,20 +2,18 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
-use Stringable;
-use Illuminate\Support\Str;
-use Kirschbaum\PowerJoins\StaticCache;
-use Kirschbaum\PowerJoins\PowerJoinClause;
-use Kirschbaum\PowerJoins\Tests\Models\Post;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Database\Eloquent\Relations\HasOne;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
+use Kirschbaum\PowerJoins\PowerJoinClause;
+use Kirschbaum\PowerJoins\StaticCache;
 
 /**
  * @method \Illuminate\Database\Eloquent\Model getModel()
@@ -32,9 +30,11 @@ use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
  * @method string getFirstKeyName()
  * @method string getQualifiedLocalKeyName()
  * @method string getExistenceCompareKey()
+ *
  * @mixin \Illuminate\Database\Eloquent\Relations\Relation
  * @mixin \Illuminate\Database\Eloquent\Relations\HasOneOrMany
  * @mixin \Illuminate\Database\Eloquent\Relations\BelongsToMany
+ *
  * @property \Illuminate\Database\Eloquent\Builder $query
  * @property \Illuminate\Database\Eloquent\Model $parent
  * @property \Illuminate\Database\Eloquent\Model $throughParent
@@ -86,11 +86,11 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->ownerKey}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
                 }
 
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -139,12 +139,12 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
                 // applying any extra conditions to the belongs to many relationship
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -180,7 +180,7 @@ class RelationshipsExtraMethods
                 );
 
                 // applying any extra conditions to the belongs to many relationship
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -200,7 +200,7 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
@@ -226,11 +226,11 @@ class RelationshipsExtraMethods
                     "{$this->parent->getTable()}.{$this->localKey}"
                 )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -249,7 +249,7 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForMorphTo()
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false, string $morphable = null) {
-            $modelInstance = new $morphable;
+            $modelInstance = new $morphable();
 
             $builder->{$joinType}($modelInstance->getTable(), function ($join) use ($modelInstance, $callback, $disableExtraConditions) {
                 $join->on(
@@ -258,11 +258,11 @@ class RelationshipsExtraMethods
                     "{$modelInstance->getTable()}.{$modelInstance->getKeyName()}"
                 )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $modelInstance->getMorphClass());
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($modelInstance)) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($modelInstance)) {
                     $join->whereNull($modelInstance->getQualifiedDeletedAtColumn());
                 }
 
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -304,13 +304,13 @@ class RelationshipsExtraMethods
                     "{$parentTable}.{$this->localKey}"
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull(
                         "{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}"
                     );
                 }
 
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -342,11 +342,11 @@ class RelationshipsExtraMethods
                     $this->getQualifiedLocalKeyName()
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
+                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->getThroughParent())) {
                     $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
                 }
 
-                if ($disableExtraConditions === false) {
+                if (false === $disableExtraConditions) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -359,7 +359,7 @@ class RelationshipsExtraMethods
                 }
             }, $this->getThroughParent());
 
-            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias1, $alias2) {
+            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias2) {
                 if ($alias2) {
                     $join->as($alias2);
                 }
@@ -390,7 +390,7 @@ class RelationshipsExtraMethods
     {
         return function ($builder, $operator, $count, string $morphable = null) {
             if ($morphable) {
-                $modelInstance = new $morphable;
+                $modelInstance = new $morphable();
 
                 $builder
                     ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(), $modelInstance->getTable()))
@@ -409,7 +409,7 @@ class RelationshipsExtraMethods
     public function usesSoftDeletes()
     {
         return function ($model) {
-            return in_array(SoftDeletes::class, class_uses_recursive($model));
+            return in_array(SoftDeletes::class, class_uses_recursive($model), true);
         };
     }
 
@@ -441,7 +441,7 @@ class RelationshipsExtraMethods
                     continue;
                 }
 
-                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'])) {
+                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull', 'Nested'], true)) {
                     continue;
                 }
 
@@ -491,7 +491,7 @@ class RelationshipsExtraMethods
                 return true;
             }
 
-            if (! $key = $this->getPowerJoinExistenceCompareKey()) {
+            if (!$key = $this->getPowerJoinExistenceCompareKey()) {
                 return true;
             }
 
@@ -500,7 +500,7 @@ class RelationshipsExtraMethods
             }
 
             if (is_array($key)) {
-                return in_array($condition['column'], $key);
+                return in_array($condition['column'], $key, true);
             }
 
             return $condition['column'] === $key;

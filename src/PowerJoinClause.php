@@ -3,13 +3,13 @@
 namespace Kirschbaum\PowerJoins;
 
 use Closure;
-use Illuminate\Support\Str;
-use InvalidArgumentException;
-use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Query\JoinClause;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Query\Builder;
+use Illuminate\Database\Query\JoinClause;
+use Illuminate\Support\Str;
+use InvalidArgumentException;
 
 class PowerJoinClause extends JoinClause
 {
@@ -38,10 +38,10 @@ class PowerJoinClause extends JoinClause
     /**
      * Create a new join clause instance.
      *
-     * @param  \Illuminate\Database\Query\Builder  $parentQuery
-     * @param  string  $type
-     * @param  string  $table
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param string $type
+     * @param string $table
+     * @param \Illuminate\Database\Eloquent\Model $model
+     *
      * @return void
      */
     public function __construct(Builder $parentQuery, $type, $table, Model $model = null)
@@ -55,7 +55,7 @@ class PowerJoinClause extends JoinClause
     /**
      * Add an alias to the table being joined.
      */
-    public function as(string $alias, ?string $joinedTableAlias = null): self
+    public function as(string $alias, string $joinedTableAlias = null): self
     {
         $this->alias = $alias;
         $this->joinedTableAlias = $joinedTableAlias;
@@ -87,7 +87,7 @@ class PowerJoinClause extends JoinClause
      */
     public function withGlobalScopes(): self
     {
-        if (! $this->model) {
+        if (!$this->model) {
             return $this;
         }
 
@@ -112,12 +112,12 @@ class PowerJoinClause extends JoinClause
      */
     protected function useTableAliasInConditions(): self
     {
-        if (! $this->alias || ! $this->model) {
+        if (!$this->alias || !$this->model) {
             return $this;
         }
 
         $this->wheres = collect($this->wheres)->filter(function ($where) {
-            return in_array($where['type'] ?? '', ['Column', 'Basic']);
+            return in_array($where['type'] ?? '', ['Column', 'Basic'], true);
         })->map(function ($where) {
             $key = $this->model->getKeyName();
             $table = $this->tableName;
@@ -135,17 +135,17 @@ class PowerJoinClause extends JoinClause
         $table = $this->tableName;
 
         // if it was already replaced, skip
-        if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.', $this->alias . '.')) {
+        if (Str::startsWith($where['first'].'.', $this->alias.'.') || Str::startsWith($where['second'].'.', $this->alias.'.')) {
             return $where;
         }
 
         if (Str::contains($where['first'], $table) && Str::contains($where['second'], $table)) {
             // if joining the same table, only replace the correct table.key pair
-            $where['first'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['first']);
-            $where['second'] = str_replace($table . '.' . $key, $this->alias . '.' . $key, $where['second']);
+            $where['first'] = str_replace($table.'.'.$key, $this->alias.'.'.$key, $where['first']);
+            $where['second'] = str_replace($table.'.'.$key, $this->alias.'.'.$key, $where['second']);
         } else {
-            $where['first'] = str_replace($table . '.', $this->alias . '.', $where['first']);
-            $where['second'] = str_replace($table . '.', $this->alias . '.', $where['second']);
+            $where['first'] = str_replace($table.'.', $this->alias.'.', $where['first']);
+            $where['second'] = str_replace($table.'.', $this->alias.'.', $where['second']);
         }
 
         return $where;
@@ -155,15 +155,15 @@ class PowerJoinClause extends JoinClause
     {
         $table = $this->tableName;
 
-        if (Str::startsWith($where['column'] . '.', $this->alias . '.')) {
+        if (Str::startsWith($where['column'].'.', $this->alias.'.')) {
             return $where;
         }
 
         if (Str::contains($where['column'], $table)) {
             // if joining the same table, only replace the correct table.key pair
-            $where['column'] = str_replace($table . '.', $this->alias . '.', $where['column']);
+            $where['column'] = str_replace($table.'.', $this->alias.'.', $where['column']);
         } else {
-            $where['column'] = str_replace($table . '.', $this->alias . '.', $where['column']);
+            $where['column'] = str_replace($table.'.', $this->alias.'.', $where['column']);
         }
 
         return $where;
@@ -187,13 +187,14 @@ class PowerJoinClause extends JoinClause
     {
         if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
-        } elseif ($this->alias && ! is_callable($column)) {
-            $column = $this->alias . '.' . $column;
+        } elseif ($this->alias && !is_callable($column)) {
+            $column = $this->alias.'.'.$column;
         }
 
         if (is_callable($column)) {
             $query = new self($this, $this->type, $this->table, $this->model);
             $column($query);
+
             return $this->addNestedWhereQuery($query);
         } else {
             return parent::where($column, $operator, $value, $boolean);
@@ -205,12 +206,12 @@ class PowerJoinClause extends JoinClause
      */
     public function withTrashed(): self
     {
-        if (! in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
+        if (!in_array(SoftDeletes::class, class_uses_recursive($this->getModel()), true)) {
             return $this;
         }
 
         $this->wheres = array_filter($this->wheres, function ($where) {
-            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            if ('Null' === $where['type'] && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
                 return false;
             }
 
@@ -225,12 +226,12 @@ class PowerJoinClause extends JoinClause
      */
     public function onlyTrashed(): self
     {
-        if (! in_array(SoftDeletes::class, class_uses_recursive($this->getModel()))) {
+        if (!in_array(SoftDeletes::class, class_uses_recursive($this->getModel()), true)) {
             return $this;
         }
 
         $this->wheres = array_map(function ($where) {
-            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            if ('Null' === $where['type'] && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
                 $where['type'] = 'NotNull';
             }
 
@@ -242,7 +243,7 @@ class PowerJoinClause extends JoinClause
 
     public function __call($name, $arguments)
     {
-        $scope = 'scope' . ucfirst($name);
+        $scope = 'scope'.ucfirst($name);
 
         if (method_exists($this->getModel(), $scope)) {
             return $this->getModel()->{$scope}($this, ...$arguments);

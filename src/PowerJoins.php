@@ -2,8 +2,6 @@
 
 namespace Kirschbaum\PowerJoins;
 
-
 trait PowerJoins
 {
-    //
 }

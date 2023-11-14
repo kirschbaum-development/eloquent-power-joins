@@ -2,12 +2,12 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\PowerJoins\PowerJoins;
+use Exception;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
+use Kirschbaum\PowerJoins\Tests\Models\Image;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
-use Kirschbaum\PowerJoins\Tests\Models\Image;
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 class JoinRelationshipTest extends TestCase
@@ -376,7 +376,7 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('posts.comments', [
                 'comments' => function ($join) {
                     $join->as('post_comments');
-                }
+                },
             ])
             ->toSql();
 
@@ -385,7 +385,7 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('posts.comments', [
                 'comments' => function ($join) {
                     $join->as('post_comments');
-                }
+                },
             ])
             ->get();
 
@@ -536,8 +536,8 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::joinRelationship('commentsThroughPosts.user', [
             'commentsThroughPosts' => [
-                'posts' => fn($join) => $join->as('posts_alias'),
-                'comments' => fn($join) => $join->as('comments_alias'),
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'comments' => fn ($join) => $join->as('comments_alias'),
             ],
         ])->toSql();
 
@@ -557,8 +557,8 @@ class JoinRelationshipTest extends TestCase
     {
         $query = Group::joinRelationship('posts.user', [
             'posts' => [
-                'posts' => fn($join) => $join->as('posts_alias'),
-                'post_groups' => fn($join) => $join->as('post_groups_alias'),
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'post_groups' => fn ($join) => $join->as('post_groups_alias'),
             ],
         ])->toSql();
 
@@ -782,15 +782,15 @@ class JoinRelationshipTest extends TestCase
 
     public function test_it_doesnt_fail_to_join_the_same_query_repeatedly()
     {
-        for ($i = 0; $i < 12; $i++) {
+        for ($i = 0; $i < 12; ++$i) {
             try {
-                (new Post)->query()
+                (new Post())->query()
                     ->selectRaw('users.id as user_id')
                     ->joinRelationship('user')
                     ->get();
 
                 $this->assertTrue(true);
-            } catch (\Exception $e) {
+            } catch (Exception $e) {
                 $this->assertTrue(false, 'If it throws an exceptions, means the already joined checks are failing');
             }
         }

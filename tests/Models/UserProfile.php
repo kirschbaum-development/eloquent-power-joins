@@ -3,8 +3,8 @@
 namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Kirschbaum\PowerJoins\PowerJoins;
 
 class UserProfile extends Model
 {

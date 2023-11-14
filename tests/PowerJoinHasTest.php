@@ -2,11 +2,11 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\PowerJoins\Tests\Models\Post;
-use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Image;
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
+use Kirschbaum\PowerJoins\Tests\Models\Post;
+use Kirschbaum\PowerJoins\Tests\Models\User;
 
 class PowerJoinHasTest extends TestCase
 {
@@ -112,7 +112,7 @@ class PowerJoinHasTest extends TestCase
         $this->assertCount(2, User::has('posts.comments')->get());
         $this->assertCount(2, User::powerJoinHas('posts.comments')->get());
         $this->assertCount(1, User::powerJoinWhereHas('posts.comments', callback: [
-            'posts' => fn ($query) => $query->where('posts.published', true)
+            'posts' => fn ($query) => $query->where('posts.published', true),
         ])->get());
     }
 

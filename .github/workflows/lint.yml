@@ -1,0 +1,16 @@
+name: Linting
+
+on:
+    push:
+    pull_request:
+
+jobs:
+    php-cs-fixer:
+        name: PHP-CS-Fixer
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@v3
+            - name: PHP-CS-Fixer
+              uses: docker://oskarstark/php-cs-fixer-ga
+              with:
+                args: --config=.php-cs-fixer.php --diff --dry-run

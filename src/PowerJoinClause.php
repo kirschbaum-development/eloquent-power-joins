@@ -208,7 +208,7 @@ class PowerJoinClause extends JoinClause
         }
 
         $this->wheres = array_filter($this->wheres, function ($where) {
-            if ('Null' === $where['type'] && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
                 return false;
             }
 
@@ -228,7 +228,7 @@ class PowerJoinClause extends JoinClause
         }
 
         $this->wheres = array_map(function ($where) {
-            if ('Null' === $where['type'] && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
                 $where['type'] = 'NotNull';
             }
 

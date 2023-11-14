@@ -86,11 +86,11 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->ownerKey}"
                 );
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
                 }
 
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -139,12 +139,12 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
                 );
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
                 // applying any extra conditions to the belongs to many relationship
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -180,7 +180,7 @@ class RelationshipsExtraMethods
                 );
 
                 // applying any extra conditions to the belongs to many relationship
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -200,7 +200,7 @@ class RelationshipsExtraMethods
                     "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
                 );
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
@@ -226,11 +226,11 @@ class RelationshipsExtraMethods
                     "{$this->parent->getTable()}.{$this->localKey}"
                 )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
                 }
 
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -258,11 +258,11 @@ class RelationshipsExtraMethods
                     "{$modelInstance->getTable()}.{$modelInstance->getKeyName()}"
                 )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $modelInstance->getMorphClass());
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($modelInstance)) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($modelInstance)) {
                     $join->whereNull($modelInstance->getQualifiedDeletedAtColumn());
                 }
 
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -304,13 +304,13 @@ class RelationshipsExtraMethods
                     "{$parentTable}.{$this->localKey}"
                 );
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->query->getModel())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getModel())) {
                     $join->whereNull(
                         "{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}"
                     );
                 }
 
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 
@@ -342,11 +342,11 @@ class RelationshipsExtraMethods
                     $this->getQualifiedLocalKeyName()
                 );
 
-                if (false === $disableExtraConditions && $this->usesSoftDeletes($this->getThroughParent())) {
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
                     $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
                 }
 
-                if (false === $disableExtraConditions) {
+                if ($disableExtraConditions === false) {
                     $this->applyExtraConditions($join);
                 }
 

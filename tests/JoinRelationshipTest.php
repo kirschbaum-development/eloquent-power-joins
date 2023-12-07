@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
@@ -697,6 +698,22 @@ class JoinRelationshipTest extends TestCase
 
         $sql = Comment::query()->joinRelationship('post', function ($join) {
             $join->where(fn ($query) => $query->published());
+        })->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "comments"."post_id" = "posts"."id" and "posts"."deleted_at" is null and ("posts"."published" = ?)',
+            $sql
+        );
+    }
+
+    public function test_it_can_type_hint_power_join_clause()
+    {
+        Comment::query()->joinRelationship('post', function ($join) {
+            $join->where(fn (PowerJoinClause $query) => $query->published());
+        })->get();
+
+        $sql = Comment::query()->joinRelationship('post', function ($join) {
+            $join->where(fn (PowerJoinClause $query) => $query->published());
         })->toSql();
 
         $this->assertStringContainsString(

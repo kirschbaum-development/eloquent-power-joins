@@ -117,13 +117,22 @@ class JoinRelationship
 
             $relation = $this->getModel()->{$relationName}();
             $relationQuery = $relation->getQuery();
-            $alias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
-                $relationQuery->getModel()->getTable(), $callback);
+            $alias = $joinHelper->getAliasName(
+                $useAlias,
+                $relation,
+                $relationName,
+                $relationQuery->getModel()->getTable(),
+                $callback
+            );
 
             if ($relation instanceof BelongsToMany && !is_array($alias)) {
-                $extraAlias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
+                $extraAlias = $joinHelper->getAliasName(
+                    $useAlias,
+                    $relation,
+                    $relationName,
                     $relation->getTable(),
-                    $callback);
+                    $callback
+                );
                 $alias = [$extraAlias, $alias];
             }
 
@@ -260,11 +269,23 @@ class JoinRelationship
                     $relationCallback = $callback[$fullRelationName];
                 }
 
-                $alias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
-                    $relation->getQuery()->getModel()->getTable(), $relationCallback);
+                $alias = $joinHelper->getAliasName(
+                    $useAlias,
+                    $relation,
+                    $relationName,
+                    $relation->getQuery()->getModel()->getTable(),
+                    $relationCallback
+                );
+
                 if ($alias && $relation instanceof BelongsToMany && !is_array($alias)) {
-                    $extraAlias = $joinHelper->getAliasName($useAlias, $relation, $relationName, $relation->getTable(),
-                        $relationCallback);
+                    $extraAlias = $joinHelper->getAliasName(
+                        $useAlias,
+                        $relation,
+                        $relationName,
+                        $relation->getTable(),
+                        $relationCallback
+                    );
+
                     $alias = [$extraAlias, $alias];
                 }
 

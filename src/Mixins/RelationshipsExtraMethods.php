@@ -2,11 +2,9 @@
 
 namespace Kirschbaum\PowerJoins\Mixins;
 
-use Stringable;
 use Illuminate\Support\Str;
 use Kirschbaum\PowerJoins\StaticCache;
 use Kirschbaum\PowerJoins\PowerJoinClause;
-use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -293,7 +291,9 @@ class RelationshipsExtraMethods
                 $builder->take(1);
             }
 
-            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
+            $model = $this->query->getModel();
+
+            $builder->{$joinType}($model->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
                 if ($alias) {
                     $join->as($alias);
                 }

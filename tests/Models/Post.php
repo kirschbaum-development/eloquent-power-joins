@@ -83,4 +83,9 @@ class Post extends Model
     {
         return $this->hasMany(PostTranslation::class);
     }
+
+    public function stats(): HasMany
+    {
+        return $this->hasMany(PostStat::class);
+    }
 }

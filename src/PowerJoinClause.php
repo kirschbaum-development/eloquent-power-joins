@@ -151,6 +151,30 @@ class PowerJoinClause extends JoinClause
         return $where;
     }
 
+    protected function includeDatabaseName(): self
+    {
+        $key = $this->model->getKeyName();
+        $table = $this->tableName;
+
+        // if it was already replaced, skip
+        // TODO
+        // if (Str::startsWith($where['first'] . '.', $this->alias . '.') || Str::startsWith($where['second'] . '.', $this->alias . '.')) {
+        //     return $where;
+        // }
+
+        $this->wheres = collect($this->wheres)->filter(function ($where) {
+            return in_array($where['type'] ?? '', ['Column', 'Basic']);
+        })->map(function ($where) {
+            $key = $this->model->getKeyName();
+            $table = $this->tableName;
+            $replaceMethod = sprintf('useAliasInWhere%sType', ucfirst($where['type']));
+
+            return $this->{$replaceMethod}($where);
+        })->toArray();
+
+        return $this;
+    }
+
     protected function useAliasInWhereBasicType(array $where): array
     {
         $table = $this->tableName;

@@ -57,6 +57,13 @@ class CreateTables extends Migration
             $table->softDeletes();
         });
 
+        Schema::connection('testbench-2')->create('post_stats', function (Blueprint $table) {
+            $table->increments('id');
+            $table->unsignedInteger('post_id');
+            $table->json('data');
+            $table->timestamps();
+        });
+
         Schema::create('post_groups', function (Blueprint $table) {
             $table->unsignedInteger('group_id');
             $table->unsignedInteger('post_id');

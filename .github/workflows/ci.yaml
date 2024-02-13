@@ -13,6 +13,7 @@ jobs:
             matrix:
                 php: [8.0, 8.1, 8.2, 8.3]
                 laravel: [8.*, 9.*, 10.*, 11.*]
+                dependency-version: [--prefer-lowest, '']
                 include:
                     -   laravel: 11.*
                         testbench: 9.*-dev
@@ -41,7 +42,7 @@ jobs:
                         php: 8.3
 
 
-        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}${{ matrix.dependency-version }}
 
         steps:
             -   name: Checkout code
@@ -56,7 +57,7 @@ jobs:
                 uses: actions/cache@v1
                 with:
                     path: ~/.composer/cache/files
-                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}${{matrix.dependency-version}}-composer-${{ hashFiles('composer.json') }}
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -71,7 +72,7 @@ jobs:
                     composer --version
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
+                    composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
             -   name: Execute tests

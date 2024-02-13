@@ -13,7 +13,7 @@ jobs:
             matrix:
                 php: [8.0, 8.1, 8.2, 8.3]
                 laravel: [8.*, 9.*, 10.*, 11.*]
-                dependency-version: [--prefer-lowest, '']
+                dependency-version: [--prefer-lowest --prefer-stable, '']
                 include:
                     -   laravel: 11.*
                         testbench: 9.*-dev
@@ -70,8 +70,8 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
                     composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 

@@ -24,7 +24,7 @@
     },
     "require-dev": {
         "laravel/legacy-factories": "^1.0@dev",
-        "orchestra/testbench": "^6.23|^7.0|^8.0|^9.0",
+        "orchestra/testbench": "^6.24|^7.0|^8.0|^9.0",
         "phpunit/phpunit": "^9.5|^10.0"
     },
     "autoload": {

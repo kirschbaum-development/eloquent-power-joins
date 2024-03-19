@@ -537,8 +537,8 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::joinRelationship('commentsThroughPosts.user', [
             'commentsThroughPosts' => [
-                'posts' => fn($join) => $join->as('posts_alias'),
-                'comments' => fn($join) => $join->as('comments_alias'),
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'comments' => fn ($join) => $join->as('comments_alias'),
             ],
         ])->toSql();
 
@@ -558,8 +558,8 @@ class JoinRelationshipTest extends TestCase
     {
         $query = Group::joinRelationship('posts.user', [
             'posts' => [
-                'posts' => fn($join) => $join->as('posts_alias'),
-                'post_groups' => fn($join) => $join->as('post_groups_alias'),
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'post_groups' => fn ($join) => $join->as('post_groups_alias'),
             ],
         ])->toSql();
 
@@ -570,6 +570,27 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertStringContainsString(
             'inner join "post_groups" as "post_groups_alias"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_belongs_to_many_with_alias()
+    {
+        $query = Group::joinRelationship('posts', [
+            'posts' => [
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'post_groups' => fn ($join) => $join->as('post_groups_not_nested'),
+            ],
+        ])->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" as "posts_alias"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "post_groups" as "post_groups_not_nested"',
             $query
         );
     }

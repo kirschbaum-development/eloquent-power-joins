@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use Illuminate\Database\Query\Builder as QueryBuilder;
 use Illuminate\Database\Query\Expression;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Kirschbaum\PowerJoins\JoinsHelper;
 use Kirschbaum\PowerJoins\PowerJoinClause;
@@ -378,7 +379,7 @@ class JoinRelationship
                     )
                 )
                     ->groupBy(sprintf('%s.%s', $this->getModel()->getTable(), $this->getModel()->getKeyName()))
-                    ->orderBy(sprintf('%s', $aliasName), $direction);
+                    ->orderBy(DB::raw(sprintf('%s', $aliasName)), $direction);
             } else {
                 if ($column instanceof Expression) {
                     $this->orderBy($column, $direction);

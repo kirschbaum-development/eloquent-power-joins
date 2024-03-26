@@ -174,6 +174,30 @@ class JoinRelationshipTest extends TestCase
     }
 
     /** @test */
+    public function test_apply_condition_to_join_using_custom_eloquent_builder_model_method()
+    {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
+            // whereReviewed() is an method of the custom in the PostBuilder builder in the Post model
+            $join->whereReviewed();
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'and "reviewed" = ?',
+            $query
+        );
+    }
+
+    /** @test */
     public function test_apply_condition_to_nested_joins()
     {
         $queryBuilder = User::query()->joinRelationship('posts.comments', [

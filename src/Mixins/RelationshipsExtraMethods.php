@@ -393,11 +393,11 @@ class RelationshipsExtraMethods
                 $modelInstance = new $morphable;
 
                 $builder
-                    ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(), $modelInstance->getTable()))
+                    ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(), Str::replace('.', '_', $modelInstance->getTable())))
                     ->havingRaw(sprintf('count(%s) %s %d', $modelInstance->getQualifiedKeyName(), $operator, $count));
             } else {
                 $builder
-                    ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), $this->query->getModel()->getTable()))
+                    ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), Str::replace('.', '_', $this->query->getModel()->getTable())))
                     ->havingRaw(sprintf('count(%s) %s %d', $this->query->getModel()->getQualifiedKeyName(), $operator, $count));
             }
         };

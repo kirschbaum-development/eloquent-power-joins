@@ -251,6 +251,7 @@ class PowerJoinClause extends JoinClause
 
             $eloquentBuilder = $this->getModel()->newEloquentBuilder($this);
             if (method_exists($eloquentBuilder, $name)) {
+                $eloquentBuilder->setModel($this->getModel());
                 return $eloquentBuilder->{$name}(...$arguments);
             }
 

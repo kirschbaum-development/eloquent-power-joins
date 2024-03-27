@@ -12,36 +12,37 @@ jobs:
             fail-fast: true
             matrix:
                 php: [8.0, 8.1, 8.2, 8.3]
-                laravel: [8.*, 9.*, 10.*, 11.*]
+                laravel: [^8.75, ^9.0, ^10.0, ^11.0]
+                dependency-version: [--prefer-lowest --prefer-stable, '']
                 include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
-                    -   laravel: 9.*
-                        testbench: 7.*
-                    -   laravel: 8.*
-                        testbench: 6.*
+                    -   laravel: ^11.0
+                        testbench: ^9.0
+                    -   laravel: ^10.0
+                        testbench: ^8.0
+                    -   laravel: ^9.0
+                        testbench: ^7.0
+                    -   laravel: ^8.75
+                        testbench: ^6.24
                 exclude:
-                    -   laravel: 11.*
+                    -   laravel: ^11.0
                         php: 8.0
-                    -   laravel: 11.*
+                    -   laravel: ^11.0
                         php: 8.1
-                    -   laravel: 10.*
+                    -   laravel: ^10.0
                         php: 8.0
-                    -   laravel: 8.*
+                    -   laravel: ^8.75
                         php: 8.1
-                    -   laravel: 8.*
+                    -   laravel: ^8.75
                         php: 8.2
-                    -   laravel: 9.*
+                    -   laravel: ^9.0
                         php: 8.2
-                    -   laravel: 8.*
+                    -   laravel: ^8.75
                         php: 8.3
-                    -   laravel: 9.*
+                    -   laravel: ^9.0
                         php: 8.3
 
 
-        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+        name: PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}${{ matrix.dependency-version }}
 
         steps:
             -   name: Checkout code
@@ -56,7 +57,7 @@ jobs:
                 uses: actions/cache@v1
                 with:
                     path: ~/.composer/cache/files
-                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}${{matrix.dependency-version}}-composer-${{ hashFiles('composer.json') }}
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -69,9 +70,9 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
+                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
             -   name: Execute tests

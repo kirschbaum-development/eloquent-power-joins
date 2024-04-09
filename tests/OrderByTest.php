@@ -193,6 +193,8 @@ class OrderByTest extends TestCase
             $query->toSql()
         );
 
+        $query->get();
+
         $this->assertTrue(true, 'No exceptions, we are good :)');
     }
 
@@ -205,6 +207,8 @@ class OrderByTest extends TestCase
             'select "users".*, sum(comments_alias.votes) as comments_alias_votes_sum from "users" left join "comments" as "comments_alias" on "comments_alias"."user_id" = "users"."id" where "users"."deleted_at" is null group by "users"."id" order by comments_alias_votes_sum desc',
             $query->toSql()
         );
+
+        $query->get();
 
         $this->assertTrue(true, 'No exceptions, we are good :)');
     }

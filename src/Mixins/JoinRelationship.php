@@ -344,7 +344,7 @@ class JoinRelationship
      */
     public function orderByPowerJoins(): Closure
     {
-        return function ($sort, $direction = 'asc', $aggregation = null, $joinType = 'join') {
+        return function ($sort, $direction = 'asc', $aggregation = null, $joinType = 'join', $aliases = null) {
             if (is_array($sort)) {
                 $relationships = explode('.', $sort[0]);
                 $column = $sort[1];
@@ -355,16 +355,36 @@ class JoinRelationship
                 $latestRelationshipName = $relationships[count($relationships) - 1];
             }
 
-            $this->joinRelationship(implode('.', $relationships), null, $joinType);
+            $this->joinRelationship(implode('.', $relationships), $aliases, $joinType);
 
             $latestRelationshipModel = array_reduce($relationships, function ($model, $relationshipName) {
                 return $model->$relationshipName()->getModel();
             }, $this->getModel());
 
+            $table = $latestRelationshipModel->getTable();
+
+            if ($aliases) {
+                if (is_string($aliases)) {
+                    $table = $aliases;
+                }
+
+                if (is_array($aliases) && array_key_exists($latestRelationshipName, $aliases)) {
+                    $alias = $aliases[$latestRelationshipName];
+
+                    if (is_callable($alias)) {
+                        $join = collect($this->query->joins)
+                            ->whereInstanceOf(PowerJoinClause::class)
+                            ->firstWhere('tableName', $table);
+
+                        $table = $join->alias;
+                    }
+                }
+            }
+
             if ($aggregation) {
                 $aliasName = sprintf(
                     '%s_%s_%s',
-                    $latestRelationshipModel->getTable(),
+                    $table,
                     $column,
                     $aggregation
                 );
@@ -373,7 +393,7 @@ class JoinRelationship
                     sprintf(
                         '%s(%s.%s) as %s',
                         $aggregation,
-                        $latestRelationshipModel->getTable(),
+                        $table,
                         $column,
                         $aliasName
                     )
@@ -385,7 +405,7 @@ class JoinRelationship
                     $this->orderBy($column, $direction);
                 } else {
                     $this->orderBy(
-                        sprintf('%s.%s', $latestRelationshipModel->getTable(), $column),
+                        sprintf('%s.%s', $table, $column),
                         $direction
                     );
                 }

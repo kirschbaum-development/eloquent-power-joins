@@ -111,7 +111,7 @@ class JoinRelationship
             }
 
             if (Str::contains($relationName, '.')) {
-                $this->joinNestedRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions);
+                $this->joinNestedRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions, $morphable);
 
                 return $this;
             }
@@ -254,7 +254,8 @@ class JoinRelationship
             $callback = null,
             $joinType = 'join',
             $useAlias = false,
-            bool $disableExtraConditions = false
+            bool $disableExtraConditions = false,
+            ?string $morphable = null
         ) {
             $relations = explode('.', $relationships);
             $joinHelper = JoinsHelper::make($this->getModel());
@@ -327,7 +328,8 @@ class JoinRelationship
                     $joinType,
                     $relationCallback,
                     $alias,
-                    $disableExtraConditions
+                    $disableExtraConditions,
+                    $morphable
                 );
 
                 $latestRelation = $relation;

@@ -89,4 +89,20 @@ class SoftDeletesTest extends TestCase
             $query
         );
     }
+
+    public function test_it_respects_with_trashed()
+    {
+        User::query()->joinRelationship('postsWithTrashed')->get();
+        $sql = User::query()->joinRelationship('postsWithTrashed')->toSql();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $sql
+        );
+
+        $this->assertStringNotContainsString(
+            '"posts"."deleted_at" is null',
+            $sql
+        );
+    }
 }

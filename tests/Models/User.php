@@ -39,6 +39,11 @@ class User extends Model
         return $this->hasMany(Post::class);
     }
 
+    public function postsWithTrashed(): HasMany
+    {
+        return $this->hasMany(Post::class)->withTrashed();
+    }
+
     public function publishedPosts(): HasMany
     {
         return $this->hasMany(Post::class)->where(function ($query) {

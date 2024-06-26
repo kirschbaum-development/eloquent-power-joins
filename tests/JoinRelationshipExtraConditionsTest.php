@@ -24,12 +24,13 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $query = Post::query()->joinRelationship('userWithTrashed')->toSql();
         $posts = Post::query()->joinRelationship('userWithTrashed')->get();
 
-        $this->assertCount(1, $posts);
 
         $this->assertStringContainsString(
-            'inner join "users" on "posts"."user_id" = "users"."id" and "users"."deleted_at" is null',
+            'inner join "users" on "posts"."user_id" = "users"."id"',
             $query
         );
+
+        $this->assertCount(2, $posts);
     }
 
     /** @test */

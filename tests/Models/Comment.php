@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
+use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Comment extends Model
 {
@@ -27,5 +28,17 @@ class Comment extends Model
     public function tags(): MorphToMany
     {
         return $this->morphToMany(Tag::class, 'taggable');
+    }
+
+    public function postCategory(): HasOneThrough
+    {
+        return $this->hasOneThrough(
+            Category::class,
+            Post::class,
+            'id',
+            'id',
+            'post_id',
+            'category_id'
+        );
     }
 }

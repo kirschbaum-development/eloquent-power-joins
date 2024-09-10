@@ -4,6 +4,7 @@ namespace Kirschbaum\PowerJoins\Tests;
 
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
+use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
@@ -885,5 +886,30 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertCount(5, $postImages);
         $this->assertCount(2, $publishedPostImages);
+    }
+
+    /** @test */
+    public function test_has_one_through()
+    {
+        $category = factory(Category::class)->create();
+        $post = factory(Post::class)->create(['category_id' => $category->id]);
+        $comment = factory(Comment::class)->create(['post_id' => $post->id]);
+
+        $query = Comment::query()->joinRelationship('postCategory')->toSql();
+
+        $comments = Comment::query()->joinRelationship('postCategory')->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."id" = "comments"."post_id"',
+            $query
+        );
+
+        $this->assertStringContainsString(
+            'inner join "categories" on "categories"."id" = "posts"."category_id"',
+            $query
+        );
+
+        $this->assertCount(1, $comments);
+        $this->assertEquals($comments->get(0)->postCategory->id, $category->id);
     }
 }

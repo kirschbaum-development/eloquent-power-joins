@@ -2,10 +2,13 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Kirschbaum\PowerJoins\PowerJoinsServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
+    use RefreshDatabase;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -28,11 +31,22 @@ class TestCase extends \Orchestra\Testbench\TestCase
     protected function getEnvironmentSetUp($app)
     {
         // Setup default database to use sqlite :memory:
-        $app['config']->set('database.default', 'testbench');
+        // $app['config']->set('database.default', 'testbench');
+        $app['config']->set('database.default', 'postgres');
+
         $app['config']->set('database.connections.testbench', [
             'driver'   => 'sqlite',
             'database' => ':memory:',
             'prefix'   => '',
+        ]);
+
+        $app['config']->set('database.connections.postgres', [
+            'driver'   => 'pgsql',
+            'host' => env('DB_HOST', '127.0.0.1'),
+            'port' => env('DB_PORT', '5432'),
+            'database' => env('DB_DATABASE', 'power-joins'),
+            'username' => env('DB_USERNAME', 'root'),
+            'password' => env('DB_PASSWORD', ''),
         ]);
     }
 }

@@ -324,6 +324,16 @@ Post::orderByLeftPowerJoinsMin('comments.votes');
 Post::orderByLeftPowerJoinsMax('comments.votes');
 ```
 
+### IDE Auto-Completion
+
+To ensure IDEs can recognize the methods provided by this package, you will need to add the following docblock to your models:
+
+```php
+
+```
+
+```php
+
 ***
 
 ## Contributing
@@ -345,7 +355,3 @@ Development of this package is sponsored by Kirschbaum Development Group, a deve
 ## License
 
 The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
-
-## Laravel Package Boilerplate
-
-This package was generated using the [Laravel Package Boilerplate](https://laravelpackageboilerplate.com).

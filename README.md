@@ -324,16 +324,6 @@ Post::orderByLeftPowerJoinsMin('comments.votes');
 Post::orderByLeftPowerJoinsMax('comments.votes');
 ```
 
-### IDE Auto-Completion
-
-To ensure IDEs can recognize the methods provided by this package, you will need to add the following docblock to your models:
-
-```php
-
-```
-
-```php
-
 ***
 
 ## Contributing

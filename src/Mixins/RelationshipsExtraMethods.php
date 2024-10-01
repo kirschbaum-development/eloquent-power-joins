@@ -285,16 +285,30 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForHasMany()
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $joinedTable = $alias ?: $this->query->getModel()->getTable();
+            $joinedModel = $this->query->getModel();
+            $joinedTable = $alias ?: $joinedModel->getTable();
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
             $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
             if ($isOneOfMany) {
-                foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {
-                    $builder->addSelect($column);
-                }
+                $column = $this->getOneOfManySubQuery()->getQuery()->columns[0];
+                $fkColumn = $this->getOneOfManySubQuery()->getQuery()->columns[1];
 
-                $builder->take(1);
+                $builder->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn) {
+                    $columnValue = $column->getValue($builder->getGrammar());
+                    $direction = Str::contains($columnValue, 'min(') ? 'asc' : 'desc';
+
+                    $columnName = Str::of($columnValue)->after('(')->before(')')->__toString();
+                    $columnName = Str::replace(['"', "'"], '', $columnName);
+
+                    $query
+                        ->select($joinedModel->getQualifiedKeyName())
+                        ->distinct($columnName)
+                        ->from($joinedModel->getTable())
+                        ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
+                        ->orderBy($columnName, $direction)
+                        ->take(1);
+                });
             }
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {

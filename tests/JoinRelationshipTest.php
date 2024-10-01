@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Support\Facades\DB;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
 use Kirschbaum\PowerJoins\Tests\Models\Category;
@@ -794,8 +795,10 @@ class JoinRelationshipTest extends TestCase
     public function test_has_one_of_many()
     {
         $post = factory(Post::class)->create();
-        $bestComment = factory(Comment::class)->state('approved')->create(['body' => 'best comment', 'votes' => 2]);
-        $lastComment = factory(Comment::class)->state('approved')->create(['body' => 'worst comment', 'votes' => 0]);
+        $bestComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'best comment', 'votes' => 2]);
+        $lastComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'worst comment', 'votes' => 0]);
+        $bestComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 best comment 2', 'votes' => 3]);
+        $lastComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 worst comment 2', 'votes' => 0]);
 
         $bestCommentSql = Post::query()
             ->select('posts.*', 'comments.body')
@@ -808,7 +811,7 @@ class JoinRelationshipTest extends TestCase
             ->first();
 
         $this->assertStringContainsString(
-            'max("comments"."votes") as "votes_aggregate"',
+            'order by "comments"."votes" desc limit 1',
             $bestCommentSql
         );
 
@@ -825,8 +828,8 @@ class JoinRelationshipTest extends TestCase
             ->first();
 
         $this->assertStringContainsString(
-            'max("comments"."id") as "id_aggregate"',
-            strtolower($lastCommentSql)
+            'order by "comments"."id" desc limit 1',
+            $lastCommentSql
         );
 
         $this->assertEquals($lastComment->body, $lastCommentPost->body);

@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
 use Kirschbaum\PowerJoins\FakeJoinCallback;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
@@ -38,6 +39,21 @@ class OrderByTest extends TestCase
     /** @test */
     public function test_order_by_relationship_with_concat()
     {
+        if (DB::connection() instanceof PostgresConnection) {
+            User::with('profile')
+                ->select('user_profiles.*', DB::raw('CONCAT(user_profiles.city, \', \', user_profiles.state) as locale'))
+                ->orderByPowerJoins(['profile', DB::raw('locale')])
+                ->get();
+
+            User::with('profile')
+                ->orderByPowerJoins(['profile', DB::raw('CONCAT(user_profiles.city, \', \', user_profiles.state)')])
+                ->get();
+
+            $this->expectNotToPerformAssertions();
+
+            return;
+        }
+
         User::with('profile')
             ->select('user_profiles.*', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state) as locale'))
             ->orderByPowerJoins(['profile', DB::raw('locale')])

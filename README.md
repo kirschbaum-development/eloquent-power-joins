@@ -92,6 +92,12 @@ Now, let's say you want to apply a condition to the join you are making. You sim
 User::joinRelationship('posts', fn ($join) => $join->where('posts.approved', true))->toSql();
 ```
 
+You can also specify the type of join you want to make in the callback:
+
+```php
+User::joinRelationship('posts', fn ($join) => $join->left());
+```
+
 For **nested calls**, you simply need to pass an array referencing the relationship names.
 
 ```php

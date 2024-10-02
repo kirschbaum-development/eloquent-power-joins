@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\MorphOneOrMany;
 use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\MySqlConnection;
 
 /**
  * @method \Illuminate\Database\Eloquent\Model getModel()
@@ -301,15 +302,26 @@ class RelationshipsExtraMethods
                         $direction = Str::contains($columnValue, 'min(') ? 'asc' : 'desc';
 
                         $columnName = Str::of($columnValue)->after('(')->before(')')->__toString();
-                        $columnName = Str::replace(['"', "'"], '', $columnName);
+                        $columnName = Str::replace(['"', "'", '`'], '', $columnName);
 
-                        $query
-                            ->select($joinedModel->getQualifiedKeyName())
-                            ->distinct($columnName)
-                            ->from($joinedModel->getTable())
-                            ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
-                            ->orderBy($columnName, $direction)
-                            ->take(1);
+                        if ($builder->getConnection() instanceof MySqlConnection)  {
+                            $query->select('*')->from(function ($query) use ($joinedModel, $columnName, $fkColumn, $direction, $builder) {
+                                $query
+                                    ->select($joinedModel->getQualifiedKeyName())
+                                    ->from($joinedModel->getTable())
+                                    ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
+                                    ->orderBy($columnName, $direction)
+                                    ->take(1);
+                            });
+                        } else {
+                            $query
+                                ->select($joinedModel->getQualifiedKeyName())
+                                ->distinct($columnName)
+                                ->from($joinedModel->getTable())
+                                ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
+                                ->orderBy($columnName, $direction)
+                                ->take(1);
+                        }
                     });
 
                     if ($joinType === 'leftPowerJoin') {

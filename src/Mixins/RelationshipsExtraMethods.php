@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins\Mixins;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\PostgresConnection;
 use Stringable;
 use Illuminate\Support\Str;
 use Kirschbaum\PowerJoins\StaticCache;
@@ -290,7 +291,7 @@ class RelationshipsExtraMethods
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
             $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
-            if ($isOneOfMany && ! $hasCheck) {
+            if ($isOneOfMany && (! $hasCheck) && ($builder->getConnection() instanceof PostgresConnection)) {
                 $column = $this->getOneOfManySubQuery()->getQuery()->columns[0];
                 $fkColumn = $this->getOneOfManySubQuery()->getQuery()->columns[1];
 
@@ -315,6 +316,12 @@ class RelationshipsExtraMethods
                         $query->orWhereRaw('1 = 1');
                     }
                 });
+            } elseif ($isOneOfMany) {
+                foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {
+                    $builder->addSelect($column);
+                }
+
+                $builder->take(1);
             }
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {

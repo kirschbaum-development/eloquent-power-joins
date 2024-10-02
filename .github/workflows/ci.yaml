@@ -57,8 +57,8 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer require "laravel/framework:${{ matrix.laravel }}" ${{ matrix.dependency-version }} --no-interaction --no-update
+                    composer require "orchestra/testbench:${{ matrix.testbench }}" ${{ matrix.dependency-version }} --no-interaction --no-update --dev
                     composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
@@ -120,8 +120,8 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer require "laravel/framework:${{ matrix.laravel }}" ${{ matrix.dependency-version }} --no-interaction --no-update
+                    composer require "orchestra/testbench:${{ matrix.testbench }}" ${{ matrix.dependency-version }} --no-interaction --no-update --dev
                     composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
@@ -175,8 +175,8 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer require "laravel/framework:${{ matrix.laravel }}" ${{ matrix.dependency-version }} --no-interaction --no-update
+                    composer require "orchestra/testbench:${{ matrix.testbench }}" ${{ matrix.dependency-version }} --no-interaction --no-update --dev
                     composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 

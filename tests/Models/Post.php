@@ -45,7 +45,7 @@ class Post extends Model
     {
         return $this
             ->hasOne(Comment::class)
-            ->ofMany();
+            ->latestOfMany();
     }
 
     public function bestComment(): HasOne

@@ -11,6 +11,11 @@ $rules = [
         'import_constants' => true,
         'import_functions' => true
     ],
+    'yoda_style' => [
+        'equal' => false,
+        'identical' => false,
+        'less_and_greater' => false,
+    ],
 ];
 
 $finder = PhpCsFixer\Finder::create()

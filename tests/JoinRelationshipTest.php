@@ -288,11 +288,12 @@ class JoinRelationshipTest extends TestCase
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
-
-        $this->assertEquals(
-            1,
-            substr_count($query, 'inner join "posts" on "posts"."user_id" = "users"."id"'),
-            'It should only make 1 join with the posts table'
+        
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query,
+            message: 'It should only make 1 join with the posts table',
+            times: 1,
         );
     }
 
@@ -318,10 +319,11 @@ class JoinRelationshipTest extends TestCase
             $query
         );
 
-        $this->assertEquals(
-            1,
-            substr_count($query, 'inner join "posts" on "posts"."user_id" = "users"."id"'),
-            'It should only make 1 join with the posts table'
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query,
+            message: 'It should only make 1 join with the posts table',
+            times: 1,
         );
 
         $this->assertQueryContains(
@@ -368,10 +370,11 @@ class JoinRelationshipTest extends TestCase
             $query
         );
 
-        $this->assertEquals(
-            1,
-            substr_count($query, 'left join "posts" on "posts"."user_id" = "users"."id"'),
-            'It should only make 1 join with the posts table'
+        $this->assertQueryContains(
+            'left join "posts" on "posts"."user_id" = "users"."id"',
+            $query,
+            message: 'It should only make 1 join with the posts table',
+            times: 1,
         );
 
         $this->assertQueryContains(

@@ -947,7 +947,6 @@ class JoinRelationshipTest extends TestCase
         $this->assertCount(2, $publishedPostImages);
     }
 
-    /** @test */
     public function test_has_one_through()
     {
         $category = factory(Category::class)->create();
@@ -970,5 +969,27 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertCount(1, $comments);
         $this->assertEquals($comments->get(0)->postCategory->id, $category->id);
+    }
+
+    /** @test */
+    public function test_join_morph_to_nested_morphable_class()
+    {
+        $post = factory(Post::class)->create();
+        factory(Image::class)->state('owner:user')->create(['imageable_id' => $post->id]);
+
+        $nestedUserImages = Post::query()
+            ->joinRelationship('images.imageable', joinType: 'leftJoin', morphable: User::class)
+            ->get();
+
+        $sql = Post::query()
+            ->joinRelationship('images.imageable', joinType: 'leftJoin', morphable: User::class)
+            ->toSql();
+
+        $this->assertQueryContains(
+            'left join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? left join "users" on "images"."imageable_id" = "users"."id" and "images"."imageable_type" = ? and "users"."deleted_at" is null ',
+            $sql
+        );
+
+        $this->assertCount(1, $nestedUserImages);
     }
 }

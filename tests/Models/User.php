@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class User extends Model
 {
     use SoftDeletes;
-    use PowerJoins;
 
     /** @var string */
     protected $table = 'users';

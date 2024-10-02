@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
 use Kirschbaum\PowerJoins\FakeJoinCallback;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
@@ -38,13 +39,28 @@ class OrderByTest extends TestCase
     /** @test */
     public function test_order_by_relationship_with_concat()
     {
+        if (DB::connection() instanceof PostgresConnection) {
+            User::with('profile')
+                ->select('user_profiles.*', DB::raw('CONCAT(user_profiles.city, \', \', user_profiles.state) as locale'))
+                ->orderByPowerJoins(['profile', DB::raw('locale')])
+                ->get();
+
+            User::with('profile')
+                ->orderByPowerJoins(['profile', DB::raw('CONCAT(user_profiles.city, \', \', user_profiles.state)')])
+                ->get();
+
+            $this->expectNotToPerformAssertions();
+
+            return;
+        }
+
         User::with('profile')
-            ->select('user_profiles.*', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state) as locale'))
+            ->select('user_profiles.*', DB::raw('CONCAT("%s, %s", user_profiles.city, user_profiles.state) as locale'))
             ->orderByPowerJoins(['profile', DB::raw('locale')])
             ->get();
 
         User::with('profile')
-            ->orderByPowerJoins(['profile', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state)')])
+            ->orderByPowerJoins(['profile', DB::raw('CONCAT("%s, %s", user_profiles.city, user_profiles.state)')])
             ->get();
 
         $this->expectNotToPerformAssertions();
@@ -72,12 +88,12 @@ class OrderByTest extends TestCase
         // making sure left join do not throw exceptions
         User::orderByLeftPowerJoins('posts.category.title', 'desc')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".* from "users"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'order by "categories"."title" desc',
             $query
         );
@@ -161,10 +177,11 @@ class OrderByTest extends TestCase
         factory(Comment::class)->create(['post_id' => $post2->id, 'votes' => 1]);
         factory(Comment::class)->create(['post_id' => $post2->id, 'votes' => 2]);
         factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 10]);
-        factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 1]);
+        factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 0]);
 
         $posts = Post::orderByPowerJoinsMin('comments.votes')->get();
         $this->assertCount(3, $posts);
+
         $this->assertEquals($post1->id, $posts->get(0)->id);
         $this->assertEquals($post2->id, $posts->get(1)->id);
         $this->assertEquals($post3->id, $posts->get(2)->id);
@@ -188,7 +205,7 @@ class OrderByTest extends TestCase
             'category' => fn ($join) => $join->as('category_alias'),
         ]);
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".* from "users" inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users"."id" inner join "categories" as "category_alias" on "posts_alias"."category_id" = "category_alias"."id" where "users"."deleted_at" is null order by "category_alias"."title" desc',
             $query->toSql()
         );
@@ -203,7 +220,7 @@ class OrderByTest extends TestCase
     {
         $query = User::orderByPowerJoins('comments.votes', 'desc', 'sum', 'leftJoin', aliases: 'comments_alias');
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".*, sum(comments_alias.votes) as comments_alias_votes_sum from "users" left join "comments" as "comments_alias" on "comments_alias"."user_id" = "users"."id" where "users"."deleted_at" is null group by "users"."id" order by comments_alias_votes_sum desc',
             $query->toSql()
         );

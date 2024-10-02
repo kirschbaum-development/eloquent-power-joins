@@ -32,7 +32,7 @@ class CreateTables extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
-            $table->tinyInteger('access_level')->default(0);
+            $table->integer('access_level')->default(0);
             $table->timestamps();
         });
 

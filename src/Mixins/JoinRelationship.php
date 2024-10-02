@@ -529,8 +529,10 @@ class JoinRelationship
 
                 $relation = $this->getRelationWithoutConstraintsProxy($relation);
             }
-            $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback, morphable: $morphable);
+
+            $relation->performJoinForEloquentPowerJoins($this, 'leftPowerJoin', $callback, morphable: $morphable, hasCheck: true);
             $relation->performHavingForEloquentPowerJoins($this, $operator, $count, morphable: $morphable);
+
             return $this;
         };
     }

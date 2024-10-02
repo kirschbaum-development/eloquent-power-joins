@@ -211,12 +211,12 @@ class PowerJoinHasTest extends TestCase
         $post3 = factory(Post::class)->create();
 
         $posts = Post::query()
-            ->select('posts.*', 'comments.body')
+            ->select('posts.*')
             ->powerJoinHas('bestComment')
             ->get();
 
         $postsLatest = Post::query()
-            ->select('posts.*', 'comments.body')
+            ->select('posts.*')
             ->powerJoinHas('lastComment')
             ->get();
 

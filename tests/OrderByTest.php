@@ -177,10 +177,11 @@ class OrderByTest extends TestCase
         factory(Comment::class)->create(['post_id' => $post2->id, 'votes' => 1]);
         factory(Comment::class)->create(['post_id' => $post2->id, 'votes' => 2]);
         factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 10]);
-        factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 1]);
+        factory(Comment::class)->create(['post_id' => $post1->id, 'votes' => 0]);
 
         $posts = Post::orderByPowerJoinsMin('comments.votes')->get();
         $this->assertCount(3, $posts);
+
         $this->assertEquals($post1->id, $posts->get(0)->id);
         $this->assertEquals($post2->id, $posts->get(1)->id);
         $this->assertEquals($post3->id, $posts->get(2)->id);

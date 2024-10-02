@@ -5,7 +5,8 @@ namespace Kirschbaum\PowerJoins;
 class FakeJoinCallback
 {
     protected $alias = null;
-    protected $joinType = null;
+
+    protected ?string $joinType = null;
 
     public function getAlias(): ?string
     {
@@ -21,13 +22,13 @@ class FakeJoinCallback
     {
         if ($name === 'as') {
             $this->alias = $arguments[0];
-        }elseif ($name === 'joinType') {
+        } elseif ($name === 'joinType') {
             $this->joinType = $arguments[0];
-        }elseif ($name === 'left') {
+        } elseif ($name === 'left') {
             $this->joinType = 'leftPowerJoin';
-        }elseif ($name === 'right') {
+        } elseif ($name === 'right') {
             $this->joinType = 'rightPowerJoin';
-        }elseif ($name === 'inner') {
+        } elseif ($name === 'inner') {
             $this->joinType = 'powerJoin';
         }
 

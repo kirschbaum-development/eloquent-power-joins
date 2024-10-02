@@ -846,10 +846,8 @@ class JoinRelationshipTest extends TestCase
     public function test_has_one_of_many_with_left_joins()
     {
         $post = factory(Post::class)->create();
-        // $bestComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'best comment', 'votes' => 2]);
-        // $lastComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'worst comment', 'votes' => 0]);
-        $bestComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 best comment 2', 'votes' => 3]);
-        $lastComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 worst comment 2', 'votes' => 0]);
+        factory(Comment::class)->state('approved')->create(['body' => '2 best comment 2', 'votes' => 3]);
+        factory(Comment::class)->state('approved')->create(['body' => '2 worst comment 2', 'votes' => 0]);
 
         $bestCommentSql = Post::query()
             ->select('posts.*', 'comments.body')

@@ -132,7 +132,7 @@ jobs:
                 image: postgres:15
                 env:
                     POSTGRES_DB: laravel
-                    POSTGRES_USER: kirschbaum
+                    POSTGRES_USER: forge
                     POSTGRES_PASSWORD: password
                 ports:
                     - 5432:5432
@@ -184,7 +184,7 @@ jobs:
                 run: vendor/bin/phpunit
                 env:
                     DB_CONNECTION: pgsql
-                    DB_USERNAME: kirschbaum
+                    DB_USERNAME: forge
                     DB_PASSWORD: password
 
     sqlite:

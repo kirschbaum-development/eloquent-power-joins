@@ -320,8 +320,6 @@ class RelationshipsExtraMethods
                 foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {
                     $builder->addSelect($column);
                 }
-
-                $builder->take(1);
             }
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {

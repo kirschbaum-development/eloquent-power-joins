@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
@@ -288,7 +289,7 @@ class JoinRelationshipTest extends TestCase
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
-        
+
         $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query,
@@ -814,10 +815,17 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('bestComment')
             ->first();
 
-        $this->assertQueryContains(
-            'order by "comments"."votes" desc limit 1',
-            $bestCommentSql
-        );
+        if (Post::query()->getConnection() instanceof PostgresConnection) {
+            $this->assertQueryContains(
+                'order by "comments"."votes" desc limit 1',
+                $bestCommentSql
+            );
+        } else {
+            $this->assertQueryContains(
+                'max("comments"."votes") as "votes_aggregate"',
+                $bestCommentSql
+            );
+        }
 
         $this->assertEquals($bestComment->body, $bestCommentPost->body);
 
@@ -826,10 +834,17 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('lastComment')
             ->toSql();
 
-        $this->assertQueryContains(
-            'order by "comments"."id" desc limit 1',
-            $lastCommentSql
-        );
+        if (Post::query()->getConnection() instanceof PostgresConnection) {
+            $this->assertQueryContains(
+                'order by "comments"."id" desc limit 1',
+                $lastCommentSql
+            );
+        } else {
+            $this->assertQueryContains(
+                'max("comments"."id") as "votes_aggregate"',
+                $lastCommentSql
+            );
+        }
 
         Post::query()
             ->select('posts.*', 'comments.body')
@@ -862,10 +877,17 @@ class JoinRelationshipTest extends TestCase
             ->leftJoinRelationship('bestComment')
             ->first();
 
-        $this->assertQueryContains(
-            'order by "comments"."votes" desc limit 1',
-            $bestCommentSql
-        );
+        if (Post::query()->getConnection() instanceof PostgresConnection) {
+            $this->assertQueryContains(
+                'order by "comments"."votes" desc limit 1',
+                $bestCommentSql
+            );
+        } else {
+            $this->assertQueryContains(
+                'max("comments"."votes") as "votes_aggregate"',
+                $bestCommentSql
+            );
+        }
 
         $this->assertNotNull($bestCommentPost);
         $this->assertEquals($bestCommentPost->id, $post->id);

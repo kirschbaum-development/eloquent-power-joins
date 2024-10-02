@@ -294,20 +294,26 @@ class RelationshipsExtraMethods
                 $column = $this->getOneOfManySubQuery()->getQuery()->columns[0];
                 $fkColumn = $this->getOneOfManySubQuery()->getQuery()->columns[1];
 
-                $builder->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn) {
-                    $columnValue = $column->getValue($builder->getGrammar());
-                    $direction = Str::contains($columnValue, 'min(') ? 'asc' : 'desc';
+                $builder->where(function ($query) use ($column, $joinType, $joinedModel, $builder, $fkColumn) {
+                    $query->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn) {
+                        $columnValue = $column->getValue($builder->getGrammar());
+                        $direction = Str::contains($columnValue, 'min(') ? 'asc' : 'desc';
 
-                    $columnName = Str::of($columnValue)->after('(')->before(')')->__toString();
-                    $columnName = Str::replace(['"', "'"], '', $columnName);
+                        $columnName = Str::of($columnValue)->after('(')->before(')')->__toString();
+                        $columnName = Str::replace(['"', "'"], '', $columnName);
 
-                    $query
-                        ->select($joinedModel->getQualifiedKeyName())
-                        ->distinct($columnName)
-                        ->from($joinedModel->getTable())
-                        ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
-                        ->orderBy($columnName, $direction)
-                        ->take(1);
+                        $query
+                            ->select($joinedModel->getQualifiedKeyName())
+                            ->distinct($columnName)
+                            ->from($joinedModel->getTable())
+                            ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
+                            ->orderBy($columnName, $direction)
+                            ->take(1);
+                    });
+
+                    if ($joinType === 'leftPowerJoin') {
+                        $query->orWhereRaw('1 = 1');
+                    }
                 });
             }
 

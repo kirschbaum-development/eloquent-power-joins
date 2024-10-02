@@ -835,6 +835,53 @@ class JoinRelationshipTest extends TestCase
         $this->assertEquals($lastComment->body, $lastCommentPost->body);
     }
 
+    public function test_has_one_of_many_with_left_joins()
+    {
+        $post = factory(Post::class)->create();
+        // $bestComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'best comment', 'votes' => 2]);
+        // $lastComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'worst comment', 'votes' => 0]);
+        $bestComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 best comment 2', 'votes' => 3]);
+        $lastComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 worst comment 2', 'votes' => 0]);
+
+        $bestCommentSql = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('bestComment')
+            ->toSql();
+
+        $bestCommentPost = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('bestComment')
+            ->first();
+
+        $this->assertStringContainsString(
+            'order by "comments"."votes" desc limit 1',
+            $bestCommentSql
+        );
+
+        $this->assertNotNull($bestCommentPost);
+        $this->assertEquals($bestCommentPost->id, $post->id);
+        $this->assertNull($bestCommentPost->body);
+
+        $lastCommentSql = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('lastComment')
+            ->toSql();
+
+        $lastCommentPost = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('lastComment')
+            ->first();
+
+        $this->assertStringContainsString(
+            'order by "comments"."id" desc limit 1',
+            $lastCommentSql
+        );
+
+        $this->assertNotNull($lastCommentPost);
+        $this->assertEquals($lastCommentPost->id, $post->id);
+        $this->assertNull($lastCommentPost->body);
+    }
+
     public function test_join_with_clone_does_not_duplicate()
     {
         $query = Post::query();

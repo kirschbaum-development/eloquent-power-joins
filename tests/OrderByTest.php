@@ -55,12 +55,12 @@ class OrderByTest extends TestCase
         }
 
         User::with('profile')
-            ->select('user_profiles.*', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state) as locale'))
+            ->select('user_profiles.*', DB::raw('CONCAT("%s, %s", user_profiles.city, user_profiles.state) as locale'))
             ->orderByPowerJoins(['profile', DB::raw('locale')])
             ->get();
 
         User::with('profile')
-            ->orderByPowerJoins(['profile', DB::raw('printf("%s, %s", user_profiles.city, user_profiles.state)')])
+            ->orderByPowerJoins(['profile', DB::raw('CONCAT("%s, %s", user_profiles.city, user_profiles.state)')])
             ->get();
 
         $this->expectNotToPerformAssertions();

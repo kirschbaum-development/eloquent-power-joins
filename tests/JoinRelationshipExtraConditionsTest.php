@@ -50,7 +50,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
             $query
         );
 
-        $this->assertQueryContains(
+        $this->assertQueryNotContains(
             'and "users"."rockstar" = ?',
             $query
         );

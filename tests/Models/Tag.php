@@ -8,8 +8,6 @@ use Kirschbaum\PowerJoins\PowerJoins;
 
 class Tag extends Model
 {
-    use PowerJoins;
-
     /** @var string */
     protected $table = 'tags';
 

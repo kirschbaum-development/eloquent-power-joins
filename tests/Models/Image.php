@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\MorphTo;
 
 class Image extends Model
 {
-    use PowerJoins;
-
     /** @var string */
     protected $table = 'images';
 

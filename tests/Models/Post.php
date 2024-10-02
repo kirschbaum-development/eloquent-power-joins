@@ -15,7 +15,6 @@ use Kirschbaum\PowerJoins\Tests\Models\Builder\PostBuilder;
 
 class Post extends Model
 {
-    use PowerJoins;
     use SoftDeletes;
 
     /** @var string */

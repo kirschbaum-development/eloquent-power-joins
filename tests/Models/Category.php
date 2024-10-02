@@ -9,8 +9,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Category extends Model
 {
-    use PowerJoins;
-
     /** @var string */
     protected $table = 'categories';
 

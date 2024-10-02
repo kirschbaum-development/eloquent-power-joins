@@ -10,8 +10,6 @@ use Illuminate\Database\Eloquent\Relations\HasOneThrough;
 
 class Comment extends Model
 {
-    use PowerJoins;
-
     /** @var string */
     protected $table = 'comments';
 

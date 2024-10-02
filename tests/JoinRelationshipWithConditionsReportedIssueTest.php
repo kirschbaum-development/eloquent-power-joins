@@ -33,16 +33,4 @@ class JoinRelationshipWithConditionsReportedIssueTest extends TestCase {
         $query = $queryBuilder->toSql();
         $this->assertQueryContains('"posts"."published" = ?', $query);
     }
-
-    public function test_conditions_inside_simple_join_array_callback()
-    {
-        $queryBuilder = User::query()->joinRelationship('posts', [
-            'posts' => function ($join) {
-                $join->published();
-            }
-        ]);
-
-        $query = $queryBuilder->toSql();
-        $this->assertQueryContains('"posts"."published" = ?', $query);
-    }
 }

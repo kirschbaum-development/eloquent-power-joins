@@ -292,7 +292,7 @@ class RelationshipsExtraMethods
             $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
             $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
-            if ($isOneOfMany && (! $hasCheck) && ($builder->getConnection() instanceof PostgresConnection)) {
+            if ($isOneOfMany && ! $hasCheck) {
                 $column = $this->getOneOfManySubQuery()->getQuery()->columns[0];
                 $fkColumn = $this->getOneOfManySubQuery()->getQuery()->columns[1];
 
@@ -328,10 +328,6 @@ class RelationshipsExtraMethods
                         $query->orWhereRaw('1 = 1');
                     }
                 });
-            } elseif ($isOneOfMany) {
-                foreach ($this->getOneOfManySubQuery()->getQuery()->columns as $column) {
-                    $builder->addSelect($column);
-                }
             }
 
             $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {

@@ -70,14 +70,12 @@ class JoinsHelper
 
     /**
      * Get the join alias name from all the different options.
-     *
-     * @return string|null
      */
-    public function getAliasName(bool $useAlias, Relation $relation, string $relationName, string $tableName, $callback)
+    public function getAliasName(bool $useAlias, Relation $relation, string $relationName, string $tableName, $callback): null|string|array
     {
         if ($callback) {
             if (is_callable($callback)) {
-                $fakeJoinCallback = new FakeJoinCallback();
+                $fakeJoinCallback = new FakeJoinCallback($relation->getBaseQuery(), 'inner', $tableName);
                 $callback($fakeJoinCallback);
 
                 if ($fakeJoinCallback->getAlias()) {
@@ -86,7 +84,7 @@ class JoinsHelper
             }
 
             if (is_array($callback) && isset($callback[$tableName])) {
-                $fakeJoinCallback = new FakeJoinCallback();
+                $fakeJoinCallback = new FakeJoinCallback($relation->getBaseQuery(), 'inner', $tableName);
                 $callback[$tableName]($fakeJoinCallback);
 
                 if ($fakeJoinCallback->getAlias()) {

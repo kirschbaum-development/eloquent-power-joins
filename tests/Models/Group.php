@@ -8,8 +8,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Group extends Model
 {
-    use PowerJoins;
-
     /** @var string */
     protected $table = 'groups';
 

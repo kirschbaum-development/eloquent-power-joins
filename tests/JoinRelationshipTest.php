@@ -2,7 +2,10 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Support\Facades\DB;
+use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\PowerJoins;
+use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
@@ -17,7 +20,7 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->joinRelationship('posts')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
@@ -28,7 +31,7 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->leftJoinRelationship('posts')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
@@ -39,7 +42,7 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->rightJoinRelationship('posts')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'right join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
@@ -50,12 +53,12 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->joinRelationship('posts.comments')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
@@ -66,12 +69,12 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->leftJoinRelationship('posts.comments')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
@@ -82,12 +85,12 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->rightJoinRelationship('posts.comments')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'right join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'right join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
@@ -102,7 +105,7 @@ class JoinRelationshipTest extends TestCase
         $posts = Post::query()->joinRelationship('images')->get();
 
         $this->assertCount(5, $posts);
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
@@ -113,12 +116,12 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->joinRelationship('posts.images')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
@@ -136,12 +139,12 @@ class JoinRelationshipTest extends TestCase
         // running to make sure it doesn't throw any exceptions
         $queryBuilder->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'and "posts"."published" = ?',
             $query
         );
@@ -161,13 +164,37 @@ class JoinRelationshipTest extends TestCase
         // running to make sure it doesn't throw any exceptions
         $queryBuilder->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'and "posts"."published" = ?',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_apply_condition_to_join_using_custom_eloquent_builder_model_method()
+    {
+        $queryBuilder = User::query()->joinRelationship('posts', function ($join) {
+            // whereReviewed() is an method of the custom in the PostBuilder builder in the Post model
+            $join->whereReviewed();
+        });
+
+        $query = $queryBuilder->toSql();
+
+        // running to make sure it doesn't throw any exceptions
+        $queryBuilder->get();
+
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            'and "reviewed" = ?',
             $query
         );
     }
@@ -188,22 +215,22 @@ class JoinRelationshipTest extends TestCase
         // running to make sure it doesn't throw any exceptions
         $queryBuilder->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'and "posts"."published" = ?',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'and "comments"."approved" = ?',
             $query
         );
@@ -214,12 +241,12 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::query()->joinRelationship('groups')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "group_members" on "group_members"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "groups" on "groups"."id" = "group_members"."group_id"',
             $query
         );
@@ -234,12 +261,12 @@ class JoinRelationshipTest extends TestCase
             },
         ])->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "group_members" on "group_members"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "groups" on "groups"."id" = "group_members"."group_id" and "groups"."name" = ?',
             $query
         );
@@ -257,15 +284,16 @@ class JoinRelationshipTest extends TestCase
         // making sure it doesn't throw any errors
         User::query()->select('users.*')->joinRelationship('posts')->joinRelationship('posts')->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertEquals(
-            1,
-            substr_count($query, 'inner join "posts" on "posts"."user_id" = "users"."id"'),
-            'It should only make 1 join with the posts table'
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query,
+            message: 'It should only make 1 join with the posts table',
+            times: 1,
         );
     }
 
@@ -286,23 +314,24 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('posts.images')
             ->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertEquals(
-            1,
-            substr_count($query, 'inner join "posts" on "posts"."user_id" = "users"."id"'),
-            'It should only make 1 join with the posts table'
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query,
+            message: 'It should only make 1 join with the posts table',
+            times: 1,
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
@@ -336,33 +365,34 @@ class JoinRelationshipTest extends TestCase
                 },
             ])->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertEquals(
-            1,
-            substr_count($query, 'left join "posts" on "posts"."user_id" = "users"."id"'),
-            'It should only make 1 join with the posts table'
+        $this->assertQueryContains(
+            'left join "posts" on "posts"."user_id" = "users"."id"',
+            $query,
+            message: 'It should only make 1 join with the posts table',
+            times: 1,
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'right join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ?',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "categories" on "posts"."category_id" = "categories"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "categories" as "category_parent" on "categories"."parent_id" = "category_parent"."id"',
             $query
         );
@@ -389,17 +419,17 @@ class JoinRelationshipTest extends TestCase
             ])
             ->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" on "comments"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" as "post_comments" on "post_comments"."post_id" = "posts"."id"',
             $query
         );
@@ -444,7 +474,7 @@ class JoinRelationshipTest extends TestCase
     {
         $query = UserProfile::query()->joinRelationship('user')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "users" on "user_profiles"."user_id" = "users"."id" and "users"."deleted_at" is null',
             $query
         );
@@ -471,8 +501,8 @@ class JoinRelationshipTest extends TestCase
         $innerJoinQuery = User::query()->select('profile.city')->joinRelationship('profile', 'p')->toSql();
         $leftJoinQuery = User::query()->select('profile.city')->leftJoinRelationship('profile', 'p')->toSql();
 
-        $this->assertStringContainsString('inner join "user_profiles" as "p"', $innerJoinQuery);
-        $this->assertStringContainsString('left join "user_profiles" as "p"', $leftJoinQuery);
+        $this->assertQueryContains('inner join "user_profiles" as "p"', $innerJoinQuery);
+        $this->assertQueryContains('left join "user_profiles" as "p"', $leftJoinQuery);
     }
 
     /** @test */
@@ -480,12 +510,12 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::joinRelationship('posts')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".* from "users"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
@@ -501,12 +531,12 @@ class JoinRelationshipTest extends TestCase
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users"."id" from "users"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
@@ -520,12 +550,12 @@ class JoinRelationshipTest extends TestCase
 
         $query = User::joinRelationship('commentsThroughPosts')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
             $query
         );
@@ -536,17 +566,17 @@ class JoinRelationshipTest extends TestCase
     {
         $query = User::joinRelationship('commentsThroughPosts.user', [
             'commentsThroughPosts' => [
-                'posts' => fn($join) => $join->as('posts_alias'),
-                'comments' => fn($join) => $join->as('comments_alias'),
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'comments' => fn ($join) => $join->as('comments_alias'),
             ],
         ])->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" as "posts_alias"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" as "comments_alias"',
             $query
         );
@@ -557,18 +587,39 @@ class JoinRelationshipTest extends TestCase
     {
         $query = Group::joinRelationship('posts.user', [
             'posts' => [
-                'posts' => fn($join) => $join->as('posts_alias'),
-                'post_groups' => fn($join) => $join->as('post_groups_alias'),
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'post_groups' => fn ($join) => $join->as('post_groups_alias'),
             ],
         ])->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" as "posts_alias"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "post_groups" as "post_groups_alias"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_belongs_to_many_with_alias()
+    {
+        $query = Group::joinRelationship('posts', [
+            'posts' => [
+                'posts' => fn ($join) => $join->as('posts_alias'),
+                'post_groups' => fn ($join) => $join->as('post_groups_not_nested'),
+            ],
+        ])->toSql();
+
+        $this->assertQueryContains(
+            'inner join "posts" as "posts_alias"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            'inner join "post_groups" as "post_groups_not_nested"',
             $query
         );
     }
@@ -581,12 +632,12 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('images.translations')
             ->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "post_translations" on "post_translations"."post_id" = "posts"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "image_translations" on "image_translations"."image_id" = "images"."id"',
             $query
         );
@@ -609,7 +660,7 @@ class JoinRelationshipTest extends TestCase
         // executing to make sure it does not throw exceptions
         $query->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "categories" as "category_alias" on "posts"."category_id" = "category_alias"."id" and ("category_alias"."parent_id" is null or "category_alias"."parent_id" = ?)',
             $sql
         );
@@ -643,8 +694,8 @@ class JoinRelationshipTest extends TestCase
             })
             ->toSql();
 
-        $this->assertStringContainsString('inner join "categories" as "category_1" on "posts"."category_id" = "category_1"."id"', $query);
-        $this->assertStringContainsString('inner join "categories" as "category_2" on "posts"."category_id" = "category_2"."id"', $query);
+        $this->assertQueryContains('inner join "categories" as "category_1" on "posts"."category_id" = "category_1"."id"', $query);
+        $this->assertQueryContains('inner join "categories" as "category_2" on "posts"."category_id" = "category_2"."id"', $query);
     }
 
     /** @test */
@@ -664,8 +715,8 @@ class JoinRelationshipTest extends TestCase
             ])
             ->toSql();
 
-        $this->assertStringContainsString('inner join "categories" as "category_alias_1" on "posts"."category_id" = "category_alias_1"."id"', $query);
-        $this->assertStringContainsString('inner join "categories" as "category_alias_2" on "posts"."category_id" = "category_alias_2"."id"', $query);
+        $this->assertQueryContains('inner join "categories" as "category_alias_1" on "posts"."category_id" = "category_alias_1"."id"', $query);
+        $this->assertQueryContains('inner join "categories" as "category_alias_2" on "posts"."category_id" = "category_alias_2"."id"', $query);
     }
 
     public function test_union_query()
@@ -678,12 +729,12 @@ class JoinRelationshipTest extends TestCase
         // making sure it doesn't trigger any exceptions
         $query1->union($query2)->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
             $sql
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "comments" on "comments"."post_id" = "posts"."id"',
             $sql
         );
@@ -699,7 +750,23 @@ class JoinRelationshipTest extends TestCase
             $join->where(fn ($query) => $query->published());
         })->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
+            'inner join "posts" on "comments"."post_id" = "posts"."id" and "posts"."deleted_at" is null and ("posts"."published" = ?)',
+            $sql
+        );
+    }
+
+    public function test_it_can_type_hint_power_join_clause()
+    {
+        Comment::query()->joinRelationship('post', function ($join) {
+            $join->where(fn (PowerJoinClause $query) => $query->published());
+        })->get();
+
+        $sql = Comment::query()->joinRelationship('post', function ($join) {
+            $join->where(fn (PowerJoinClause $query) => $query->published());
+        })->toSql();
+
+        $this->assertQueryContains(
             'inner join "posts" on "comments"."post_id" = "posts"."id" and "posts"."deleted_at" is null and ("posts"."published" = ?)',
             $sql
         );
@@ -717,12 +784,12 @@ class JoinRelationshipTest extends TestCase
             'post_groups' => fn ($join) => $join->as('pivot_posts_1'),
         ])->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "post_groups" as "pivot_posts_1" on "pivot_posts_1"."group_id" = "groups"."id"',
             $sql
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" as "posts_1" on "posts_1"."id" = "pivot_posts_1"."post_id" and "posts_1"."id" = ?',
             $sql
         );
@@ -731,8 +798,11 @@ class JoinRelationshipTest extends TestCase
     public function test_has_one_of_many()
     {
         $post = factory(Post::class)->create();
-        $bestComment = factory(Comment::class)->state('approved')->create(['body' => 'best comment', 'votes' => 2]);
-        $lastComment = factory(Comment::class)->state('approved')->create(['body' => 'worst comment', 'votes' => 0]);
+        $bestComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'best comment', 'votes' => 2]);
+        $lastComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'worst comment', 'votes' => 0]);
+        $post2 = factory(Post::class)->create();
+        $bestComment2 = factory(Comment::class)->state('approved')->create(['post_id' => $post2->id, 'body' => 'best comment 2', 'votes' => 3]);
+        $lastComment2 = factory(Comment::class)->state('approved')->create(['post_id' => $post2->id, 'body' => 'worst comment 2', 'votes' => 0]);
 
         $bestCommentSql = Post::query()
             ->select('posts.*', 'comments.body')
@@ -744,8 +814,8 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('bestComment')
             ->first();
 
-        $this->assertStringContainsString(
-            'max("comments"."votes") as "votes_aggregate"',
+        $this->assertQueryContains(
+            'order by "comments"."votes" desc limit 1',
             $bestCommentSql
         );
 
@@ -756,17 +826,69 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('lastComment')
             ->toSql();
 
-        $lastCommentPost = Post::query()
-            ->select('posts.*', 'comments.body')
-            ->joinRelationship('lastComment')
-            ->first();
-
-        $this->assertStringContainsString(
-            'max("comments"."id") as "id_aggregate"',
-            strtolower($lastCommentSql)
+        $this->assertQueryContains(
+            'order by "comments"."id" desc limit 1',
+            $lastCommentSql
         );
 
-        $this->assertEquals($lastComment->body, $lastCommentPost->body);
+        Post::query()
+            ->select('posts.*', 'comments.body')
+            ->joinRelationship('lastComment')
+            ->inRandomOrder()
+            ->get()
+            ->each(function (Post $lastCommentPost) use ($post, $post2, $lastComment, $lastComment2) {
+                $this->assertEquals(match (true) {
+                    $lastCommentPost->is($post) => $lastComment->body,
+                    $lastCommentPost->is($post2) => $lastComment2->body,
+                }, $lastCommentPost->body);
+
+                $this->assertNotEquals($lastComment->body, $lastComment2->body);
+            });
+    }
+
+    public function test_has_one_of_many_with_left_joins()
+    {
+        $post = factory(Post::class)->create();
+        factory(Comment::class)->state('approved')->create(['body' => '2 best comment 2', 'votes' => 3]);
+        factory(Comment::class)->state('approved')->create(['body' => '2 worst comment 2', 'votes' => 0]);
+
+        $bestCommentSql = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('bestComment')
+            ->toSql();
+
+        $bestCommentPost = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('bestComment')
+            ->first();
+
+        $this->assertQueryContains(
+            'order by "comments"."votes" desc limit 1',
+            $bestCommentSql
+        );
+
+        $this->assertNotNull($bestCommentPost);
+        $this->assertEquals($bestCommentPost->id, $post->id);
+        $this->assertNull($bestCommentPost->body);
+
+        $lastCommentSql = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('lastComment')
+            ->toSql();
+
+        $lastCommentPost = Post::query()
+            ->select('posts.*', 'comments.body')
+            ->leftJoinRelationship('lastComment')
+            ->first();
+
+        $this->assertQueryContains(
+            'order by "comments"."id" desc limit 1',
+            $lastCommentSql
+        );
+
+        $this->assertNotNull($lastCommentPost);
+        $this->assertEquals($lastCommentPost->id, $post->id);
+        $this->assertNull($lastCommentPost->body);
     }
 
     public function test_join_with_clone_does_not_duplicate()
@@ -816,12 +938,58 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('imageable', morphable: Post::class)
             ->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? and "posts"."deleted_at" is null',
             $sql
         );
 
         $this->assertCount(5, $postImages);
         $this->assertCount(2, $publishedPostImages);
+    }
+
+    public function test_has_one_through()
+    {
+        $category = factory(Category::class)->create();
+        $post = factory(Post::class)->create(['category_id' => $category->id]);
+        $comment = factory(Comment::class)->create(['post_id' => $post->id]);
+
+        $query = Comment::query()->joinRelationship('postCategory')->toSql();
+
+        $comments = Comment::query()->joinRelationship('postCategory')->get();
+
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."id" = "comments"."post_id"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            'inner join "categories" on "categories"."id" = "posts"."category_id"',
+            $query
+        );
+
+        $this->assertCount(1, $comments);
+        $this->assertEquals($comments->get(0)->postCategory->id, $category->id);
+    }
+
+    /** @test */
+    public function test_join_morph_to_nested_morphable_class()
+    {
+        $post = factory(Post::class)->create();
+        factory(Image::class)->state('owner:user')->create(['imageable_id' => $post->id]);
+
+        $nestedUserImages = Post::query()
+            ->joinRelationship('images.imageable', joinType: 'leftJoin', morphable: User::class)
+            ->get();
+
+        $sql = Post::query()
+            ->joinRelationship('images.imageable', joinType: 'leftJoin', morphable: User::class)
+            ->toSql();
+
+        $this->assertQueryContains(
+            'left join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? left join "users" on "images"."imageable_id" = "users"."id" and "images"."imageable_type" = ? and "users"."deleted_at" is null ',
+            $sql
+        );
+
+        $this->assertCount(1, $nestedUserImages);
     }
 }

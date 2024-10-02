@@ -24,12 +24,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $query = Post::query()->joinRelationship('userWithTrashed')->toSql();
         $posts = Post::query()->joinRelationship('userWithTrashed')->get();
 
-        $this->assertCount(1, $posts);
-
-        $this->assertStringContainsString(
-            'inner join "users" on "posts"."user_id" = "users"."id" and "users"."deleted_at" is null',
+        $this->assertQueryContains(
+            'inner join "users" on "posts"."user_id" = "users"."id"',
             $query
         );
+
+        $this->assertCount(2, $posts);
     }
 
     /** @test */
@@ -45,12 +45,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
 
         $this->assertCount(1, $posts);
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             '."rockstar" = ?',
             $query
         );
 
-        $this->assertStringNotContainsString(
+        $this->assertQueryNotContains(
             'and "users"."rockstar" = ?',
             $query
         );
@@ -68,12 +68,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, $categories);
         $this->assertEquals($category1->id, $categories->first()->id);
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."category_id" = "categories"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'and "posts"."published" = ?',
             $query
         );
@@ -96,7 +96,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             '."published" = ?',
             $query
         );
@@ -115,12 +115,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "user_profiles" on "user_profiles"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'and "city" is not null',
             $query
         );
@@ -140,7 +140,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(2, Group::joinRelationship('posts')->get());
         $this->assertCount(1, Group::joinRelationship('publishedPosts')->get());
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."deleted_at" is null and "posts"."published" = ?',
             Group::joinRelationship('publishedPosts')->toSql()
         );
@@ -162,7 +162,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(3, Group::joinRelationship('posts')->get());
         $this->assertCount(2, Group::joinRelationship('recentPosts')->get());
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."deleted_at" is null and "post_groups"."assigned_at" >= ?',
             Group::joinRelationship('recentPosts')->toSql()
         );
@@ -179,7 +179,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
 
         $this->assertCount(1, $posts);
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? and "cover" = ?',
             $query
         );
@@ -201,12 +201,12 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, $postsQuery->get());
         $this->assertCount(1, $commentsQuery->get());
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "taggables" on "taggables"."taggable_id" = "posts"."id" and "taggables"."taggable_type" = ?',
             $postsQuery->toSql()
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "taggables" on "taggables"."taggable_id" = "comments"."id" and "taggables"."taggable_type" = ?',
             $commentsQuery->toSql()
         );
@@ -237,7 +237,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $query = User::joinRelationship('publishedOrReviewedPosts')->toSql();
         User::joinRelationship('publishedOrReviewedPosts')->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."deleted_at" is null and ("published" = ? or "reviewed" = ?)',
             $query
         );

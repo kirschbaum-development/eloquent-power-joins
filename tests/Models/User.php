@@ -14,7 +14,6 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 class User extends Model
 {
     use SoftDeletes;
-    use PowerJoins;
 
     /** @var string */
     protected $table = 'users';
@@ -37,6 +36,11 @@ class User extends Model
     public function posts(): HasMany
     {
         return $this->hasMany(Post::class);
+    }
+
+    public function postsWithTrashed(): HasMany
+    {
+        return $this->hasMany(Post::class)->withTrashed();
     }
 
     public function publishedPosts(): HasMany

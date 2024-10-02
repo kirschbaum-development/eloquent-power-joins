@@ -2,10 +2,13 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Kirschbaum\PowerJoins\PowerJoinsServiceProvider;
 
 class TestCase extends \Orchestra\Testbench\TestCase
 {
+    use RefreshDatabase;
+
     public function setUp(): void
     {
         parent::setUp();
@@ -19,20 +22,39 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [PowerJoinsServiceProvider::class];
     }
 
-    /**
-     * Define environment setup.
-     *
-     * @param  \Illuminate\Foundation\Application  $app
-     * @return void
-     */
-    protected function getEnvironmentSetUp($app)
+    public function assertQueryContains(string $expected, string $actual, string $message = '', ?int $times = null): void
     {
-        // Setup default database to use sqlite :memory:
-        $app['config']->set('database.default', 'testbench');
-        $app['config']->set('database.connections.testbench', [
-            'driver'   => 'sqlite',
-            'database' => ':memory:',
-            'prefix'   => '',
-        ]);
+        $actual = str_replace(['`', '"'], '', $actual);
+        $expected = str_replace(['`', '"'], '', $expected);
+
+        if (is_int($times)) {
+            $this->assertEquals(
+                $times,
+                substr_count($actual, $expected),
+                $message
+            );
+
+            return;
+        }
+
+        $this->assertStringContainsString($expected, $actual, $message);
+    }
+
+    public function assertQueryNotContains(string $expected, string $actual, string $message = '', ?int $times = null): void
+    {
+        $actual = str_replace(['`', '"'], '', $actual);
+        $expected = str_replace(['`', '"'], '', $expected);
+
+        if (is_int($times)) {
+            $this->assertNotEquals(
+                $times,
+                substr_count($actual, $expected),
+                $message
+            );
+
+            return;
+        }
+
+        $this->assertStringNotContainsString($expected, $actual, $message);
     }
 }

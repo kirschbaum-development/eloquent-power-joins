@@ -26,7 +26,7 @@ class SoftDeletesTest extends TestCase
             })
             ->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "users" on "user_profiles"."user_id" = "users"."id"',
             $query
         );
@@ -52,12 +52,12 @@ class SoftDeletesTest extends TestCase
             })
             ->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "users" on "user_profiles"."user_id" = "users"."id"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             '"users"."deleted_at" is not null',
             $query
         );
@@ -79,7 +79,7 @@ class SoftDeletesTest extends TestCase
             })
             ->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "users" as "myAlias" on "user_profiles"."user_id" = "myAlias"."id"',
             $query
         );
@@ -87,6 +87,22 @@ class SoftDeletesTest extends TestCase
         $this->assertStringNotContainsString(
             '"users"."deleted_at" is null',
             $query
+        );
+    }
+
+    public function test_it_respects_with_trashed()
+    {
+        User::query()->joinRelationship('postsWithTrashed')->get();
+        $sql = User::query()->joinRelationship('postsWithTrashed')->toSql();
+
+        $this->assertQueryContains(
+            'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $sql
+        );
+
+        $this->assertStringNotContainsString(
+            '"posts"."deleted_at" is null',
+            $sql
         );
     }
 }

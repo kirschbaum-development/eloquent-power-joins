@@ -7,8 +7,6 @@ use Kirschbaum\PowerJoins\PowerJoins;
 
 class PostTranslation extends Model
 {
-    use PowerJoins;
-
     /** @var string */
     protected $table = 'post_translations';
 }

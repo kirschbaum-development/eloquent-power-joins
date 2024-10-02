@@ -5,16 +5,16 @@ namespace Kirschbaum\PowerJoins\Tests\Models;
 use Kirschbaum\PowerJoins\PowerJoins;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Kirschbaum\PowerJoins\Tests\Models\Builder\PostBuilder;
 
 class Post extends Model
 {
-    use PowerJoins;
     use SoftDeletes;
 
     /** @var string */
@@ -44,7 +44,7 @@ class Post extends Model
     {
         return $this
             ->hasOne(Comment::class)
-            ->ofMany();
+            ->latestOfMany();
     }
 
     public function bestComment(): HasOne
@@ -82,5 +82,10 @@ class Post extends Model
     public function translations(): HasMany
     {
         return $this->hasMany(PostTranslation::class);
+    }
+
+    public function newEloquentBuilder($query): PostBuilder
+    {
+        return new PostBuilder($query);
     }
 }

@@ -13,6 +13,13 @@ class QueryRelationshipExistence
         };
     }
 
+    public function getScopes()
+    {
+        return function () {
+            return $this->scopes;
+        };
+    }
+
     public function getSelect()
     {
         return function () {

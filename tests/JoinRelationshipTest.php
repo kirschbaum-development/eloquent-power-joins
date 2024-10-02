@@ -797,8 +797,9 @@ class JoinRelationshipTest extends TestCase
         $post = factory(Post::class)->create();
         $bestComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'best comment', 'votes' => 2]);
         $lastComment = factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'worst comment', 'votes' => 0]);
-        $bestComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 best comment 2', 'votes' => 3]);
-        $lastComment2 = factory(Comment::class)->state('approved')->create(['body' => '2 worst comment 2', 'votes' => 0]);
+        $post2 = factory(Post::class)->create();
+        $bestComment2 = factory(Comment::class)->state('approved')->create(['post_id' => $post2->id, 'body' => 'best comment 2', 'votes' => 3]);
+        $lastComment2 = factory(Comment::class)->state('approved')->create(['post_id' => $post2->id, 'body' => 'worst comment 2', 'votes' => 0]);
 
         $bestCommentSql = Post::query()
             ->select('posts.*', 'comments.body')
@@ -822,17 +823,24 @@ class JoinRelationshipTest extends TestCase
             ->joinRelationship('lastComment')
             ->toSql();
 
-        $lastCommentPost = Post::query()
-            ->select('posts.*', 'comments.body')
-            ->joinRelationship('lastComment')
-            ->first();
-
         $this->assertStringContainsString(
             'order by "comments"."id" desc limit 1',
             $lastCommentSql
         );
 
-        $this->assertEquals($lastComment->body, $lastCommentPost->body);
+        Post::query()
+            ->select('posts.*', 'comments.body')
+            ->joinRelationship('lastComment')
+            ->inRandomOrder()
+            ->get()
+            ->each(function (Post $lastCommentPost) use ($post, $post2, $lastComment, $lastComment2) {
+                $this->assertEquals(match (true) {
+                    $lastCommentPost->is($post) => $lastComment->body,
+                    $lastCommentPost->is($post2) => $lastComment2->body,
+                }, $lastCommentPost->body);
+
+                $this->assertNotEquals($lastComment->body, $lastComment2->body);
+            });
     }
 
     public function test_has_one_of_many_with_left_joins()

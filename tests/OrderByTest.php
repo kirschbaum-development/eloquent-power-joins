@@ -4,10 +4,9 @@ namespace Kirschbaum\PowerJoins\Tests;
 
 use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
-use Kirschbaum\PowerJoins\FakeJoinCallback;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
 class OrderByTest extends TestCase
@@ -69,7 +68,7 @@ class OrderByTest extends TestCase
     /** @test */
     public function test_can_call_twice_in_a_row()
     {
-        $user = new User;
+        $user = new User();
 
         $user->posts()->orderByPowerJoins('comments.created_at', 'desc')->get();
         $user->posts()->orderByPowerJoins('comments.created_at', 'desc')->get();
@@ -101,6 +100,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
+     *
      * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsCount
      */
     public function test_order_by_relationship_count()
@@ -122,6 +122,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
+     *
      * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsSum
      */
     public function test_order_by_relationship_sum()
@@ -144,6 +145,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
+     *
      * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsAvg
      */
     public function test_order_by_relationship_avg()
@@ -166,6 +168,7 @@ class OrderByTest extends TestCase
 
     /**
      * @test
+     *
      * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsMin
      * @covers \Kirschbaum\PowerJoins\PowerJoins::scopeOrderByPowerJoinsMax
      */

@@ -242,7 +242,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
                 'posts' => function ($join) {
                     $join->as('post_alias');
                 },
-            ]
+            ],
         ];
         $query = User::joinRelationship('groups', $alias)->joinRelationship('groups.posts', $alias);
         $sql = $query->toSql();

@@ -17,8 +17,10 @@ use Kirschbaum\PowerJoins\StaticCache;
 
 /**
  * @mixin Builder
+ *
  * @method \Illuminate\Database\Eloquent\Model getModel()
- * @property \Illuminate\Database\Eloquent\Builder $query
+ *
+ * @property Builder $query
  */
 class JoinRelationship
 {
@@ -79,7 +81,7 @@ class JoinRelationship
 
     public function newPowerJoinClause(): Closure
     {
-        return function (QueryBuilder $parentQuery, $type, $table, Model $model = null) {
+        return function (QueryBuilder $parentQuery, $type, $table, ?Model $model = null) {
             return new PowerJoinClause($parentQuery, $type, $table, $model);
         };
     }
@@ -95,7 +97,7 @@ class JoinRelationship
             $joinType = 'join',
             $useAlias = false,
             bool $disableExtraConditions = false,
-            string $morphable = null
+            ?string $morphable = null,
         ) {
             $joinType = JoinsHelper::$joinMethodsMap[$joinType] ?? $joinType;
             $useAlias = is_string($callback) ? false : $useAlias;
@@ -210,7 +212,7 @@ class JoinRelationship
             $callback = null,
             $joinType = 'join',
             $useAlias = false,
-            bool $disableExtraConditions = false
+            bool $disableExtraConditions = false,
         ) {
             return $this->joinRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions);
         };
@@ -255,7 +257,7 @@ class JoinRelationship
             $joinType = 'join',
             $useAlias = false,
             bool $disableExtraConditions = false,
-            ?string $morphable = null
+            ?string $morphable = null,
         ) {
             $relations = explode('.', $relationships);
             $joinHelper = JoinsHelper::make($this->getModel());
@@ -265,7 +267,7 @@ class JoinRelationship
             $part = [];
             foreach ($relations as $relationName) {
                 $part[] = $relationName;
-                $fullRelationName = join(".", $part);
+                $fullRelationName = join('.', $part);
 
                 $currentModel = $latestRelation ? $latestRelation->getModel() : $this->getModel();
                 $relation = $currentModel->{$relationName}();
@@ -316,7 +318,6 @@ class JoinRelationship
                     StaticCache::setTableAliasForModel($relation->getModel(), $alias);
                 }
 
-
                 if ($joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache)) {
                     $latestRelation = $relation;
 
@@ -337,6 +338,7 @@ class JoinRelationship
             }
 
             StaticCache::clear();
+
             return $this;
         };
     }
@@ -412,6 +414,7 @@ class JoinRelationship
                     );
                 }
             }
+
             return $this;
         };
     }
@@ -513,7 +516,7 @@ class JoinRelationship
      */
     public function powerJoinHas(): Closure
     {
-        return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure|array $callback = null, string $morphable = null): static {
+        return function ($relation, $operator = '>=', $count = 1, $boolean = 'and', Closure|array|null $callback = null, ?string $morphable = null): static {
             if (is_null($this->getSelect())) {
                 $this->select(sprintf('%s.*', $this->getModel()->getTable()));
             }
@@ -541,7 +544,7 @@ class JoinRelationship
 
     public function hasNestedUsingJoins(): Closure
     {
-        return function ($relations, $operator = '>=', $count = 1, $boolean = 'and', Closure|array $callback = null): static {
+        return function ($relations, $operator = '>=', $count = 1, $boolean = 'and', Closure|array|null $callback = null): static {
             $relations = explode('.', $relations);
 
             /** @var Relation */
@@ -564,13 +567,14 @@ class JoinRelationship
 
                 $latestRelation = $relation;
             }
+
             return $this;
         };
     }
 
     public function powerJoinDoesntHave(): Closure
     {
-        return function ($relation, $boolean = 'and', Closure $callback = null) {
+        return function ($relation, $boolean = 'and', ?Closure $callback = null) {
             return $this->powerJoinHas($relation, '<', 1, $boolean, $callback);
         };
     }

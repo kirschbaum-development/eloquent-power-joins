@@ -4,7 +4,6 @@ namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\MorphToMany;
-use Kirschbaum\PowerJoins\PowerJoins;
 
 class Tag extends Model
 {

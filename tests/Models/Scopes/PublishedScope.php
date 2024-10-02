@@ -11,8 +11,8 @@ class PublishedScope implements Scope
     /**
      * Apply the scope to a given Eloquent query builder.
      *
-     * @param  \Illuminate\Database\Eloquent\Builder  $builder
-     * @param  \Illuminate\Database\Eloquent\Model  $model
+     * @param Builder $builder
+     *
      * @return void
      */
     public function apply($builder, Model $model)

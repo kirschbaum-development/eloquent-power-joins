@@ -1,4 +1,5 @@
 <?php
+
 $rules = [
     '@Symfony' => true,
     'strict_param' => true,
@@ -25,8 +26,7 @@ $finder = PhpCsFixer\Finder::create()
     ->ignoreDotFiles(true)
     ->ignoreVCS(true);
 
-
-return (new  PhpCsFixer\Config())
+return (new PhpCsFixer\Config())
     ->setRules($rules)
     ->setFinder($finder)
     ->setRiskyAllowed(true)

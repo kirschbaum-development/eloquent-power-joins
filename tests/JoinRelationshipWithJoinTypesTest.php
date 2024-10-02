@@ -3,23 +3,20 @@
 namespace Kirschbaum\PowerJoins\Tests;
 
 use Kirschbaum\PowerJoins\Tests\Models\Category;
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
-use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
-use Kirschbaum\PowerJoins\Tests\Models\User;
-use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
-class JoinRelationshipWithJoinTypesTest extends TestCase {
-
+class JoinRelationshipWithJoinTypesTest extends TestCase
+{
     /**
      * $category_1
      *      |- $post_1_1 (published)
-     *      |- $post_1_2 (published)
+     *      |- $post_1_2 (published).
      *
      * $category_2
      *      |- $post_2_1 (unpublished)
      */
-    protected function prepare_test_case_1(){
+    protected function prepare_test_case_1()
+    {
         $category_1 = factory(Category::class)->create();
         $category_2 = factory(Category::class)->create(); // with no posts assigned
 
@@ -36,15 +33,16 @@ class JoinRelationshipWithJoinTypesTest extends TestCase {
     /**
      * @test
      */
-    public function test_categories_inner_join_published_posts() {
+    public function test_categories_inner_join_published_posts()
+    {
         $this->prepare_test_case_1();
 
-        $categories_with_published_posts = Category::query()->joinRelationship('posts', function($join){
+        $categories_with_published_posts = Category::query()->joinRelationship('posts', function ($join) {
             $join->as('post');
             $join->published();
         });
 
-        $categories_with_UNpublished_posts = Category::query()->joinRelationship('posts', function($join){
+        $categories_with_UNpublished_posts = Category::query()->joinRelationship('posts', function ($join) {
             $join->where('published', false);
         });
 
@@ -56,10 +54,11 @@ class JoinRelationshipWithJoinTypesTest extends TestCase {
     /**
      * @test
      */
-    public function test_categories_left_join_posts_num() {
+    public function test_categories_left_join_posts_num()
+    {
         $this->prepare_test_case_1();
 
-        $categories_with_posts_num = Category::query()->joinRelationship('posts', function($join){
+        $categories_with_posts_num = Category::query()->joinRelationship('posts', function ($join) {
             $join->as('post');
             $join->left();
             $join->published();
@@ -80,14 +79,16 @@ class JoinRelationshipWithJoinTypesTest extends TestCase {
     /**
      * @test
      */
-    public function test_categories_right_join_posts_inexistent_category() {
+    public function test_categories_right_join_posts_inexistent_category()
+    {
         $this->markTestSkipped('[SKIPPED] Right joins are not supported by SQLite, so unable to test in this environment');
+
         return;
 
         $this->prepare_test_case_1();
 
         // just to test right joins, we'll obtain posts through Category model
-        $posts_inexistent_category = Category::query()->joinRelationship('posts', function($join){
+        $posts_inexistent_category = Category::query()->joinRelationship('posts', function ($join) {
             $join->as('post');
             $join->right();
             // $join->published();
@@ -100,7 +101,5 @@ class JoinRelationshipWithJoinTypesTest extends TestCase {
         $this->assertCount(1, (clone $posts_inexistent_category)->where('post.published', true)->get()->toArray());
         // now only unpublished
         $this->assertCount(2, (clone $posts_inexistent_category)->where('post.published', false)->get()->toArray());
-
     }
-
 }

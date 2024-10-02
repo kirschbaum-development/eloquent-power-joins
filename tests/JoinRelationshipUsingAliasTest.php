@@ -34,7 +34,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $sql = Post::joinRelationshipUsingAlias('category', 'my_alias')->toSql();
 
-        $this->assertStringContainsString('my_alias', $sql);
+        $this->assertQueryContains('my_alias', $sql);
     }
 
     /**
@@ -70,7 +70,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
         ])->toSql();
 
         $this->assertCount(1, $posts);
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "categories" as "category_parent" on "categories"."parent_id" = "category_parent"."id"',
             $query
         );
@@ -89,7 +89,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
-        $this->assertStringContainsString('"posts" as', $query);
+        $this->assertQueryContains('"posts" as', $query);
         $this->assertStringNotContainsString('"posts"."user_id"', $query);
     }
 
@@ -107,8 +107,8 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
-        $this->assertStringContainsString('"posts" as', $query);
-        $this->assertStringContainsString('"comments" as', $query);
+        $this->assertQueryContains('"posts" as', $query);
+        $this->assertQueryContains('"comments" as', $query);
         $this->assertStringNotContainsString('"posts"."user_id"', $query);
         $this->assertStringNotContainsString('"posts"."id"', $query);
         $this->assertStringNotContainsString('"comments"."post_id"', $query);
@@ -128,8 +128,8 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
-        $this->assertStringContainsString('"group_members" as', $query);
-        $this->assertStringContainsString('"groups" as', $query);
+        $this->assertQueryContains('"group_members" as', $query);
+        $this->assertQueryContains('"groups" as', $query);
     }
 
     /**
@@ -148,10 +148,10 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
-        $this->assertStringContainsString('"group_members" as', $query);
-        $this->assertStringContainsString('"groups" as', $query);
-        $this->assertStringContainsString('"post_groups" as', $query);
-        $this->assertStringContainsString('"posts" as', $query);
+        $this->assertQueryContains('"group_members" as', $query);
+        $this->assertQueryContains('"groups" as', $query);
+        $this->assertQueryContains('"post_groups" as', $query);
+        $this->assertQueryContains('"posts" as', $query);
     }
 
     /**
@@ -167,7 +167,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
-        $this->assertStringContainsString('"user_profiles" as', $query);
+        $this->assertQueryContains('"user_profiles" as', $query);
         $this->assertStringNotContainsString('"user_profiles"."user_id"', $query);
     }
 
@@ -185,9 +185,9 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertCount(1, $users);
         $this->assertEquals($user1->id, $users->first()->id);
-        $this->assertStringContainsString('"posts" as', $query);
+        $this->assertQueryContains('"posts" as', $query);
         $this->assertStringNotContainsString('"posts"."user_id"', $query);
-        $this->assertStringContainsString('"comments" as', $query);
+        $this->assertQueryContains('"comments" as', $query);
         $this->assertStringNotContainsString('"comments"."post_id"', $query);
     }
 
@@ -204,7 +204,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
             ],
         ])->toSql();
 
-        $this->assertStringContainsString('inner join "groups" as "groups_2" on "groups_2"."id" = "group_parent"."group_id"', $query);
+        $this->assertQueryContains('inner join "groups" as "groups_2" on "groups_2"."id" = "group_parent"."group_id"', $query);
     }
 
     /** @test */
@@ -225,7 +225,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
         $sql = $query->toSql();
         $query->get();
 
-        $this->assertStringContainsString('inner join "categories" as "categories_alias" on "post_alias"."category_id" = "categories_alias"."id"', $sql);
+        $this->assertQueryContains('inner join "categories" as "categories_alias" on "post_alias"."category_id" = "categories_alias"."id"', $sql);
     }
 
     /** @test */
@@ -246,7 +246,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
         ];
         $query = User::joinRelationship('groups', $alias)->joinRelationship('groups.posts', $alias);
         $sql = $query->toSql();
-        $this->assertStringContainsString('inner join "posts" as "post_alias" on "post_alias"."id" = "post_groups_alias"."post_id"', $sql);
+        $this->assertQueryContains('inner join "posts" as "post_alias" on "post_alias"."id" = "post_groups_alias"."post_id"', $sql);
     }
 
     /** @test */
@@ -262,7 +262,7 @@ class JoinRelationshipUsingAliasTest extends TestCase
             ->joinRelationshipUsingAlias('images', 'foo')
             ->get();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'inner join "images" as "foo" on "foo"."imageable_id" = "posts"."id" and "foo"."imageable_type" = ?',
             $query
         );

@@ -169,7 +169,7 @@ class PowerJoinHasTest extends TestCase
         ]);
 
         $this->assertCount(1, User::whereHas('groups', $closure)->get());
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "groups" on "groups"."id" = "group_members"."group_id" and "access_level" = ?',
             $powerJoinQuery->toSql()
         );

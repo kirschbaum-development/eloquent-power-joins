@@ -88,12 +88,12 @@ class OrderByTest extends TestCase
         // making sure left join do not throw exceptions
         User::orderByLeftPowerJoins('posts.category.title', 'desc')->toSql();
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".* from "users"',
             $query
         );
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'order by "categories"."title" desc',
             $query
         );
@@ -204,7 +204,7 @@ class OrderByTest extends TestCase
             'category' => fn ($join) => $join->as('category_alias'),
         ]);
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".* from "users" inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users"."id" inner join "categories" as "category_alias" on "posts_alias"."category_id" = "category_alias"."id" where "users"."deleted_at" is null order by "category_alias"."title" desc',
             $query->toSql()
         );
@@ -219,7 +219,7 @@ class OrderByTest extends TestCase
     {
         $query = User::orderByPowerJoins('comments.votes', 'desc', 'sum', 'leftJoin', aliases: 'comments_alias');
 
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'select "users".*, sum(comments_alias.votes) as comments_alias_votes_sum from "users" left join "comments" as "comments_alias" on "comments_alias"."user_id" = "users"."id" where "users"."deleted_at" is null group by "users"."id" order by comments_alias_votes_sum desc',
             $query->toSql()
         );

@@ -169,7 +169,7 @@ class PowerJoinHasTest extends TestCase
         ]);
 
         $this->assertCount(1, User::whereHas('groups', $closure)->get());
-        $this->assertStringContainsString(
+        $this->assertQueryContains(
             'left join "groups" on "groups"."id" = "group_members"."group_id" and "access_level" = ?',
             $powerJoinQuery->toSql()
         );
@@ -199,5 +199,28 @@ class PowerJoinHasTest extends TestCase
 
         $this->assertCount(1, $userImagesQueried);
         $this->assertTrue($userImage->is($userImagesQueried->sole()));
+    }
+
+    public function test_power_join_has_one_of_many()
+    {
+        $post = factory(Post::class)->create();
+        factory(Comment::class)->state('approved')->create(['post_id' => $post->id, 'body' => 'best comment', 'votes' => 2]);
+
+        $post2 = factory(Post::class)->create();
+        factory(Comment::class)->state('approved')->create(['post_id' => $post2->id, 'body' => '2 best comment 2', 'votes' => 3]);
+        $post3 = factory(Post::class)->create();
+
+        $posts = Post::query()
+            ->select('posts.*')
+            ->powerJoinHas('bestComment')
+            ->get();
+
+        $postsLatest = Post::query()
+            ->select('posts.*')
+            ->powerJoinHas('lastComment')
+            ->get();
+
+        $this->assertCount(2, $posts);
+        $this->assertCount(2, $postsLatest);
     }
 }

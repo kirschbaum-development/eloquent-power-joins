@@ -22,7 +22,7 @@ class JoinWithGlobalScopeTest extends TestCase
         $this->assertCount(0, $user->query()->joinRelationship('posts', fn ($join) => $join->withGlobalScopes())->get());
 
         $query = $user->query()->joinRelationship('posts', fn ($join) => $join->withGlobalScopes())->toSql();
-        $this->assertStringContainsString('"posts"."published" = ?', $query);
+        $this->assertQueryContains('"posts"."published" = ?', $query);
     }
 
     public function test_join_with_closure_global_scope_applied()
@@ -37,6 +37,6 @@ class JoinWithGlobalScopeTest extends TestCase
         $this->assertCount(0, $user->query()->joinRelationship('posts', fn ($join) => $join->withGlobalScopes())->get());
 
         $query = $user->query()->joinRelationship('posts', fn ($join) => $join->withGlobalScopes())->toSql();
-        $this->assertStringContainsString('"posts"."published" = ?', $query);
+        $this->assertQueryContains('"posts"."published" = ?', $query);
     }
 }

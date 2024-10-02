@@ -24,13 +24,14 @@ jobs:
             matrix:
                 php: [ 8.1, 8.2, 8.3 ]
                 laravel: [ 10.*, 11.* ]
+                dependency-version: [ --prefer-lowest --prefer-stable, '' ]
                 include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
+                    -   laravel: ^11.0
+                        testbench: ^9.0
+                    -   laravel: ^10.0
+                        testbench: ^8.0
                 exclude:
-                    -   laravel: 11.*
+                    -   laravel: ^11.0
                         php: 8.1
 
         name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
@@ -39,23 +40,27 @@ jobs:
             -   name: Checkout code
                 uses: actions/checkout@v4
 
+            -   name: Cache dependencies
+                uses: actions/cache@v1
+                with:
+                    path: ~/.composer/cache/files
+                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}${{matrix.dependency-version}}-composer-${{ hashFiles('composer.json') }}
+
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: 8.2
-                    extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, :php-psr
-                    tools: composer:v2
+                    php-version: ${{ matrix.php }}
+                    extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
                     coverage: none
-
-            -   name: Set Framework version
-                run: composer config version "11.x-dev"
+                    tools: composer:v2
 
             -   name: Install dependencies
-                uses: nick-fields/retry@v3
-                with:
-                    timeout_minutes: 5
-                    max_attempts: 5
-                    command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+                run: |
+                    composer --version
+                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
+                    composer dump
 
             -   name: Execute tests
                 run: vendor/bin/phpunit
@@ -82,13 +87,14 @@ jobs:
             matrix:
                 php: [ 8.1, 8.2, 8.3 ]
                 laravel: [ 10.*, 11.* ]
+                dependency-version: [ --prefer-lowest --prefer-stable, '' ]
                 include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
+                    -   laravel: ^11.0
+                        testbench: ^9.0
+                    -   laravel: ^10.0
+                        testbench: ^8.0
                 exclude:
-                    -   laravel: 11.*
+                    -   laravel: ^11.0
                         php: 8.1
 
         name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
@@ -101,7 +107,7 @@ jobs:
                 uses: actions/cache@v1
                 with:
                     path: ~/.composer/cache/files
-                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}${{matrix.dependency-version}}-composer-${{ hashFiles('composer.json') }}
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -114,9 +120,9 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
+                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
             -   name: Execute tests
@@ -136,13 +142,14 @@ jobs:
             matrix:
                 php: [ 8.1, 8.2, 8.3 ]
                 laravel: [ 10.*, 11.* ]
+                dependency-version: [ --prefer-lowest --prefer-stable, '' ]
                 include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
+                    -   laravel: ^11.0
+                        testbench: ^9.0
+                    -   laravel: ^10.0
+                        testbench: ^8.0
                 exclude:
-                    -   laravel: 11.*
+                    -   laravel: ^11.0
                         php: 8.1
 
         name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
@@ -155,7 +162,7 @@ jobs:
                 uses: actions/cache@v1
                 with:
                     path: ~/.composer/cache/files
-                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}${{matrix.dependency-version}}-composer-${{ hashFiles('composer.json') }}
 
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
@@ -168,9 +175,9 @@ jobs:
             -   name: Install dependencies
                 run: |
                     composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
+                    composer require ${{ matrix.dependency-version }} "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+                    composer require ${{ matrix.dependency-version }} "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                    composer update ${{ matrix.dependency-version }} --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
             -   name: Setup SQLite Database

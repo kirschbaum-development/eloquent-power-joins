@@ -70,8 +70,8 @@ jobs:
             postgresql:
                 image: postgres:15
                 env:
-                    POSTGRES_DB: forge
-                    POSTGRES_USER: forge
+                    POSTGRES_DB: laravel
+                    POSTGRES_USER: laravel
                     POSTGRES_PASSWORD: password
                 ports:
                     - 5432:5432
@@ -123,7 +123,7 @@ jobs:
                 run: vendor/bin/phpunit
                 env:
                     DB_CONNECTION: pgsql
-                    DB_USERNAME: forge
+                    DB_USERNAME: laravel
                     DB_PASSWORD: password
 
     sqlite:

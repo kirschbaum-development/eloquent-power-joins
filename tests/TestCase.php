@@ -21,9 +21,4 @@ class TestCase extends \Orchestra\Testbench\TestCase
     {
         return [PowerJoinsServiceProvider::class];
     }
-
-    protected function getEnvironmentSetUp($app)
-    {
-        $app->config->set('databases.connections.pgsql.database', env('DB_DATABASE', 'laravel'));
-    }
 }

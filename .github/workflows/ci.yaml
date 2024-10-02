@@ -123,6 +123,7 @@ jobs:
                 run: vendor/bin/phpunit
                 env:
                     DB_CONNECTION: pgsql
+                    DB_DATABASE: laravel
                     DB_USERNAME: laravel
                     DB_PASSWORD: password
 

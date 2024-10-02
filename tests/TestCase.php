@@ -22,7 +22,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
         return [PowerJoinsServiceProvider::class];
     }
 
-    public function assertQueryContains(string $expected, string $actual, ?string $message = null, ?int $times = null): void
+    public function assertQueryContains(string $expected, string $actual, string $message = '', ?int $times = null): void
     {
         $actual = str_replace(['`', '"'], '', $actual);
         $expected = str_replace(['`', '"'], '', $expected);
@@ -51,7 +51,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
                 substr_count($actual, $expected),
                 $message
             );
-            
+
             return;
         }
 

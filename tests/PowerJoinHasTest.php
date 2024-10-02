@@ -2,10 +2,11 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\PowerJoins\Tests\Models\Comment;
-use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Group;
+use Kirschbaum\PowerJoins\Tests\Models\Image;
+use Kirschbaum\PowerJoins\Tests\Models\Comment;
 
 class PowerJoinHasTest extends TestCase
 {
@@ -103,13 +104,16 @@ class PowerJoinHasTest extends TestCase
     public function test_has_with_joins_and_nested_relations()
     {
         [$user1, $user2] = factory(User::class)->times(2)->create();
-        $post1 = factory(Post::class)->create(['user_id' => $user1->id]);
-        $post2 = factory(Post::class)->create(['user_id' => $user2->id]);
+        $post1 = factory(Post::class)->state('published')->create(['user_id' => $user1->id]);
+        $post2 = factory(Post::class)->state('unpublished')->create(['user_id' => $user2->id]);
         $commentsPost1 = factory(Comment::class)->times(2)->create(['post_id' => $post1->id]);
         $commentsPost2 = factory(Comment::class)->times(5)->create(['post_id' => $post2->id]);
 
         $this->assertCount(2, User::has('posts.comments')->get());
         $this->assertCount(2, User::powerJoinHas('posts.comments')->get());
+        $this->assertCount(1, User::powerJoinWhereHas('posts.comments', callback: [
+            'posts' => fn ($query) => $query->where('posts.published', true)
+        ])->get());
     }
 
     /** @test */
@@ -143,5 +147,57 @@ class PowerJoinHasTest extends TestCase
 
         $this->assertCount(2, User::whereHas('commentsThroughPosts', $closure)->get());
         $this->assertCount(2, User::powerJoinWhereHas('commentsThroughPosts', ['comments' => $closure])->get());
+    }
+
+    /** @test */
+    public function test_where_has_with_joins_on_belongs_to_many_relationship()
+    {
+        [$user1, $user2] = factory(User::class)->times(2)->create();
+        $group = factory(Group::class)->create();
+        $highAccessLevelGroup = factory(Group::class)->create([
+            'access_level' => 999,
+        ]);
+
+        $user1->groups()->attach($group);
+        $user1->groups()->attach($highAccessLevelGroup);
+        $user2->groups()->attach($group);
+
+        $closure = fn ($query) => $query->where('access_level', 999);
+
+        $powerJoinQuery = User::powerJoinWhereHas('groups', [
+            'groups' => $closure,
+        ]);
+
+        $this->assertCount(1, User::whereHas('groups', $closure)->get());
+        $this->assertStringContainsString(
+            'left join "groups" on "groups"."id" = "group_members"."group_id" and "access_level" = ?',
+            $powerJoinQuery->toSql()
+        );
+        $this->assertCount(1, $powerJoinQuery->get());
+    }
+
+    public function test_power_join_has_with_morph_to()
+    {
+        $post = factory(Post::class)->state('published')->create();
+        $postImage = factory(Image::class)->state('owner:post')->create(['imageable_id' => $post->id]);
+        $user = factory(Post::class)->create();
+        $userImage = factory(Image::class)->state('owner:user')->create(['imageable_id' => $user->id]);
+
+        $postImagesQueried = Image::query()
+            ->powerJoinHas('imageable', morphable: Post::class)
+            ->get();
+
+        $userImagesQueried = Image::query()
+            ->powerJoinHas('imageable', morphable: User::class)
+            ->get();
+
+        $this->assertCount(1, $postImagesQueried);
+        $this->assertCount(1, Image::powerJoinHas('imageable', morphable: Post::class, callback: fn ($query) => $query->where('posts.published', true))->get());
+        $this->assertCount(0, Image::powerJoinHas('imageable', morphable: Post::class, callback: fn ($query) => $query->where('posts.published', false))->get());
+        $this->assertCount(0, Image::powerJoinHas('imageable', count: 2, morphable: Post::class)->get());
+        $this->assertTrue($postImage->is($postImagesQueried->sole()));
+
+        $this->assertCount(1, $userImagesQueried);
+        $this->assertTrue($userImage->is($userImagesQueried->sole()));
     }
 }

@@ -12,5 +12,6 @@ $factory->define(Post::class, function (Faker\Generator $faker) {
     ];
 });
 
+$factory->state(Post::class, 'reviewed', ['reviewed' => true]);
 $factory->state(Post::class, 'published', ['published' => true]);
 $factory->state(Post::class, 'unpublished', ['published' => false]);

@@ -32,6 +32,7 @@ class CreateTables extends Migration
         Schema::create('groups', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');
+            $table->tinyInteger('access_level')->default(0);
             $table->timestamps();
         });
 
@@ -50,8 +51,10 @@ class CreateTables extends Migration
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('category_id');
             $table->string('title');
+            $table->boolean('reviewed')->default(true);
             $table->boolean('published')->default(true);
             $table->timestamps();
+            $table->softDeletes();
         });
 
         Schema::create('post_groups', function (Blueprint $table) {
@@ -82,6 +85,18 @@ class CreateTables extends Migration
             $table->morphs('imageable');
             $table->boolean('cover')->default(false);
             $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('tags', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->timestamps();
+        });
+
+        Schema::create('taggables', function (Blueprint $table) {
+            $table->foreignId('tag_id');
+            $table->morphs('taggable');
         });
     }
 

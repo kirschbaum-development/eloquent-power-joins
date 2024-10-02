@@ -1,7 +1,7 @@
 ![Eloquent Power Joins](screenshots/eloquent-power-joins.jpg "Eloquent Power Joins")
 
-![Laravel Supported Versions](https://img.shields.io/badge/laravel-6.x/7.x/8.x/9.x-green.svg)
-[![Actions Status](https://github.com/kirschbaum-development/eloquent-power-joins/workflows/CI/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions)
+![Laravel Supported Versions](https://img.shields.io/badge/laravel-8.x/9.x/10.x/11.x-green.svg)
+[![run-tests](https://github.com/kirschbaum-development/eloquent-power-joins/actions/workflows/ci.yaml/badge.svg)](https://github.com/kirschbaum-development/eloquent-power-joins/actions/workflows/ci.yaml)
 [![MIT Licensed](https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square)](LICENSE.md)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
 [![Total Downloads](https://img.shields.io/packagist/dt/kirschbaum-development/eloquent-power-joins.svg?style=flat-square)](https://packagist.org/packages/kirschbaum-development/eloquent-power-joins)
@@ -17,7 +17,7 @@ A few things we consider is missing when using joins which are very powerful Elo
 * Ability to query relationship existence using joins instead of where exists;
 * Ability to easily sort results based on columns or aggregations from related tables;
 
-You can read a more detailed explanation on the problems this package solves on [this blog post](https://kirschbaumdevelopment.com/news-articles/adding-some-laravel-magic-to-your-eloquent-joins).
+You can read a more detailed explanation on the problems this package solves on [this blog post](https://kirschbaumdevelopment.com/insights/power-joins).
 
 ## Installation
 
@@ -27,18 +27,13 @@ You can install the package via composer:
 composer require kirschbaum-development/eloquent-power-joins
 ```
 
-## Usage
+For Laravel versions < 8, use the 2.* version:
 
-On any model you want to be able to use the methods described below, you should use the following trait:
-
-```php
-use Kirschbaum\PowerJoins\PowerJoins;
-
-class User extends Model
-{
-    use PowerJoins;
-}
+```bash
+composer require kirschbaum-development/eloquent-power-joins:2.*
 ```
+
+## Usage
 
 This package provides a few features.
 
@@ -73,7 +68,7 @@ User::rightJoinRelationship('posts.comments');
 
 #### Joining polymorphic relationships
 
-Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you would also need to apply the `where imageable_type = Image::class` condition, otherwise you could get messy results.
+Let's imagine, you have a `Image` model that is a polymorphic relationship (`Post -> morphMany -> Image`). Besides the regular join, you would also need to apply the `where imageable_type = Post::class` condition, otherwise you could get messy results.
 
 Turns out, if you join a polymorphic relationship, Eloquent Power Joins automatically applies this condition for you. You simply need to call the same method.
 
@@ -81,27 +76,34 @@ Turns out, if you join a polymorphic relationship, Eloquent Power Joins automati
 Post::joinRelationship('images');
 ```
 
+You can also join MorphTo relationships.
+
+```php
+Image::joinRelationship('imageable', morphable: Post::class);
+```
+
+Note: Querying morph to relationships only supports one morphable type at a time.
+
 **Applying conditions & callbacks to the joins**
 
 Now, let's say you want to apply a condition to the join you are making. You simply need to pass a callback as the second parameter to the `joinRelationship` method.
 
 ```php
-User::joinRelationship('posts', function ($join) {
-    $join->where('posts.approved', true);
-})->toSql();
+User::joinRelationship('posts', fn ($join) => $join->where('posts.approved', true))->toSql();
+```
+
+You can also specify the type of join you want to make in the callback:
+
+```php
+User::joinRelationship('posts', fn ($join) => $join->left());
 ```
 
 For **nested calls**, you simply need to pass an array referencing the relationship names.
 
 ```php
 User::joinRelationship('posts.comments', [
-    'posts' => function ($join) {
-        $join->where('posts.published', true);
-    },
-    'comments' => function ($join) {
-        $join->where('comments.approved', true);
-        $join->left(); // you may also indicate join type using methods ->left()/->inner()
-    }
+    'posts' => fn ($join) => $join->where('posts.published', true),
+    'comments' => fn ($join) => $join->where('comments.approved', true),
 ]);
 ```
 
@@ -114,9 +116,7 @@ User::joinRelationship('groups', [
             // ...
         },
         // group_members is the intermediary table here
-        'group_members' => function ($join) {
-            $join->where('group_members.active', true);
-        },
+        'group_members' => fn ($join) => $join->where('group_members.active', true),
     ]
 ]);
 ```
@@ -163,12 +163,8 @@ Post::joinRelationshipUsingAlias('category', 'category_alias')->get();
 
 ```php
 Post::joinRelationship('category.parent', [
-    'category' => function ($join) {
-        $join->as('category_alias');
-    },
-    'parent' => function ($join) {
-        $join->as('category_parent');
-    },
+    'category' => fn ($join) => $join->as('category_alias'),
+    'parent' => fn ($join) => $join->as('category_parent'),
 ])->get()
 ```
 
@@ -177,12 +173,8 @@ For *belongs to many* or *has many through* calls, you need to pass an array wit
 ```php
 Group::joinRelationship('posts.user', [
     'posts' => [
-        'posts' => function ($join) {
-            $join->as('posts_alias');
-        },
-        'post_groups' => function($join) {
-            $join->as('post_groups_alias');
-        },
+        'posts' => fn ($join) => $join->as('posts_alias'),
+        'post_groups' => fn ($join) => $join->as('post_groups_alias'),
     ],
 ])->toSql();
 ```
@@ -214,17 +206,13 @@ and "users"."deleted_at" is null
 In case you want to include trashed models, you can call the `->withTrashed()` method in the join callback.
 
 ```php
-UserProfile::joinRelationship('users', function ($join) {
-    $join->withTrashed();
-});
+UserProfile::joinRelationship('users', fn ($join) => $join->withTrashed());
 ```
 
 You can also call the `onlyTrashed` model as well:
 
 ```php
-UserProfile::joinRelationship('users', function ($join) {
-    $join->onlyTrashed();
-});
+UserProfile::joinRelationship('users', ($join) => $join->onlyTrashed());
 ```
 
 #### Extra conditions defined in relationships
@@ -252,9 +240,7 @@ select users.* from users inner join posts on posts.user_id = posts.id and posts
 If your model have global scopes applied to it, you can enable the global scopes by calling the `withGlobalScopes` method in your join clause, like this:
 
 ```php
-UserProfile::joinRelationship('users', function ($join) {
-    $join->withGlobalScopes();
-});
+UserProfile::joinRelationship('users', fn ($join) => $join->withGlobalScopes());
 ```
 
 There's, though, a gotcha here. Your global scope **cannot** type-hint the `Eloquent\Builder` class in the first parameter of the `apply` method, otherwise you will get errors.
@@ -265,15 +251,16 @@ There's, though, a gotcha here. Your global scope **cannot** type-hint the `Eloq
 
 This packages implements the same functionality, but instead of using the `where exists` syntax, it uses **joins**. Below, you can see the methods this package implements and also the Laravel equivalent.
 
+Please note that although the methods are similar, you will not always get the same results when using joins, depending on the context of your query. You should be aware of the differences between querying the data with `where exists` vs `joins`.
+
 **Laravel Native Methods**
 
 ``` php
 User::has('posts');
 User::has('posts.comments');
 User::has('posts', '>', 3);
-User::whereHas('posts', function ($query) {
-    $query->where('posts.published', true);
-});
+User::whereHas('posts', fn ($query) => $query->where('posts.published', true));
+User::whereHas('posts.comments', ['posts' => fn ($query) => $query->where('posts.published', true));
 User::doesntHave('posts');
 ```
 
@@ -351,7 +338,7 @@ Please see [CONTRIBUTING](CONTRIBUTING.md) for details.
 
 ### Security
 
-If you discover any security related issues, please email luis@kirschbaumdevelopment.com or nathan@kirschbaumdevelopment.com instead of using the issue tracker.
+If you discover any security related issues, please email security@kirschbaumdevelopment.com instead of using the issue tracker.
 
 ## Credits
 

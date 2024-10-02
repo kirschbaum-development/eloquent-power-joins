@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins\Tests;
 
 use Illuminate\Support\Facades\DB;
+use Kirschbaum\PowerJoins\FakeJoinCallback;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
@@ -177,5 +178,38 @@ class OrderByTest extends TestCase
         // making sure left join do not throw exceptions
         User::orderByLeftPowerJoinsMin('comments.votes')->get();
         User::orderByLeftPowerJoinsMax('comments.votes')->get();
+    }
+
+    /** @test */
+    public function test_order_by_relationship_with_relationship_alias()
+    {
+        $query = User::orderByPowerJoins('posts.category.title', 'desc', aliases: [
+            'posts' => fn ($join) => $join->as('posts_alias'),
+            'category' => fn ($join) => $join->as('category_alias'),
+        ]);
+
+        $this->assertStringContainsString(
+            'select "users".* from "users" inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users"."id" inner join "categories" as "category_alias" on "posts_alias"."category_id" = "category_alias"."id" where "users"."deleted_at" is null order by "category_alias"."title" desc',
+            $query->toSql()
+        );
+
+        $query->get();
+
+        $this->assertTrue(true, 'No exceptions, we are good :)');
+    }
+
+    /** @test */
+    public function test_order_by_relationship_aggregation_with_relationship_alias()
+    {
+        $query = User::orderByPowerJoins('comments.votes', 'desc', 'sum', 'leftJoin', aliases: 'comments_alias');
+
+        $this->assertStringContainsString(
+            'select "users".*, sum(comments_alias.votes) as comments_alias_votes_sum from "users" left join "comments" as "comments_alias" on "comments_alias"."user_id" = "users"."id" where "users"."deleted_at" is null group by "users"."id" order by comments_alias_votes_sum desc',
+            $query->toSql()
+        );
+
+        $query->get();
+
+        $this->assertTrue(true, 'No exceptions, we are good :)');
     }
 }

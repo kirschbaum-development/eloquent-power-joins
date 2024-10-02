@@ -4,6 +4,7 @@ namespace Kirschbaum\PowerJoins\Tests;
 
 use Kirschbaum\PowerJoins\Tests\Models\Post;
 use Kirschbaum\PowerJoins\Tests\Models\User;
+use Kirschbaum\PowerJoins\Tests\Models\Tag;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
 use Kirschbaum\PowerJoins\Tests\Models\Image;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
@@ -23,12 +24,13 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $query = Post::query()->joinRelationship('userWithTrashed')->toSql();
         $posts = Post::query()->joinRelationship('userWithTrashed')->get();
 
-        $this->assertCount(1, $posts);
 
         $this->assertStringContainsString(
-            'inner join "users" on "posts"."user_id" = "users"."id" and "users"."deleted_at" is null',
+            'inner join "users" on "posts"."user_id" = "users"."id"',
             $query
         );
+
+        $this->assertCount(2, $posts);
     }
 
     /** @test */
@@ -140,7 +142,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, Group::joinRelationship('publishedPosts')->get());
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."published" = ?',
+            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."deleted_at" is null and "posts"."published" = ?',
             Group::joinRelationship('publishedPosts')->toSql()
         );
     }
@@ -162,7 +164,7 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(2, Group::joinRelationship('recentPosts')->get());
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "post_groups"."assigned_at" >= ?',
+            'inner join "posts" on "posts"."id" = "post_groups"."post_id" and "posts"."deleted_at" is null and "post_groups"."assigned_at" >= ?',
             Group::joinRelationship('recentPosts')->toSql()
         );
     }
@@ -179,19 +181,65 @@ class JoinRelationshipExtraConditionsTest extends TestCase
         $this->assertCount(1, $posts);
 
         $this->assertStringContainsString(
-            'inner join "images" on "images"."imageable_id" = "posts"."id" and "imageable_type" = ? and "cover" = ?',
+            'inner join "images" on "images"."imageable_id" = "posts"."id" and "images"."imageable_type" = ? and "cover" = ?',
             $query
         );
     }
 
     /** @test */
-    public function test_extra_conditions_with_closure()
+    public function test_extra_conditions_in_morph_to_many()
     {
-        $query = User::joinRelationship('publishedPosts')->toSql();
-        User::joinRelationship('publishedPosts')->get();
+        $tag = factory(Tag::class)->create();
+        $post = factory(Post::class)->create();
+        $comment = factory(Comment::class)->create();
+
+        $tag->posts()->attach($post->id);
+        $tag->comments()->attach($comment->id);
+
+        $postsQuery = Post::joinRelationship('tags');
+        $commentsQuery = Comment::joinRelationship('tags');
+
+        $this->assertCount(1, $postsQuery->get());
+        $this->assertCount(1, $commentsQuery->get());
 
         $this->assertStringContainsString(
-            'inner join "posts" on "posts"."user_id" = "users"."id" and "published" = ?',
+            'inner join "taggables" on "taggables"."taggable_id" = "posts"."id" and "taggables"."taggable_type" = ?',
+            $postsQuery->toSql()
+        );
+
+        $this->assertStringContainsString(
+            'inner join "taggables" on "taggables"."taggable_id" = "comments"."id" and "taggables"."taggable_type" = ?',
+            $commentsQuery->toSql()
+        );
+    }
+
+    /** @test */
+    public function test_count_in_morph_to_many_left_join()
+    {
+        $tag = factory(Tag::class)->create();
+        $post = factory(Post::class)->create();
+        $comment = factory(Comment::class)->create([
+            'post_id' => $post->id,
+        ]);
+
+        $tag->posts()->attach($post->id);
+        $tag->comments()->attach($comment->id);
+
+        $posts = Post::leftJoinRelationship('tags')->get();
+        $comments = Comment::leftJoinRelationship('tags')->get();
+
+        $this->assertCount(1, $posts);
+        $this->assertCount(1, $comments);
+    }
+
+    /** @test */
+    public function test_extra_conditions_with_closure()
+    {
+        $query = User::joinRelationship('publishedOrReviewedPosts')->toSql();
+        User::joinRelationship('publishedOrReviewedPosts')->get();
+
+        $this->assertStringContainsString(
+            'inner join "posts" on "posts"."user_id" = "users"."id" and "posts"."deleted_at" is null and ("published" = ? or "reviewed" = ?)',
             $query
         );
     }

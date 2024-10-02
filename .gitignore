@@ -5,3 +5,4 @@ vendor
 coverage
 .phpunit.result.cache
 .php_cs.cache
+.envrc

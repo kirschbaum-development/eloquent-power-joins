@@ -40,7 +40,7 @@ class TestCase extends \Orchestra\Testbench\TestCase
         $this->assertStringContainsString($expected, $actual, $message);
     }
 
-    public function assertQueryNotContains(string $expected, string $actual, ?string $message = null, ?int $times = null): void
+    public function assertQueryNotContains(string $expected, string $actual, string $message = '', ?int $times = null): void
     {
         $actual = str_replace(['`', '"'], '', $actual);
         $expected = str_replace(['`', '"'], '', $expected);

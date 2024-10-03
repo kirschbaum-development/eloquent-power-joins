@@ -244,6 +244,28 @@ class PowerJoinClause extends JoinClause
         return $this;
     }
 
+    public function left(): self
+    {
+        return $this->joinType('left');
+    }
+
+    public function right(): self
+    {
+        return $this->joinType('right');
+    }
+
+    public function inner(): self
+    {
+        return $this->joinType('inner');
+    }
+
+    public function joinType(string $joinType): self
+    {
+        $this->type = $joinType;
+
+        return $this;
+    }
+
     public function __call($name, $arguments)
     {
         $scope = 'scope'.ucfirst($name);
@@ -268,27 +290,5 @@ class PowerJoinClause extends JoinClause
 
             throw new InvalidArgumentException(sprintf('Method %s does not exist in PowerJoinClause class', $name));
         }
-    }
-
-    public function left()
-    {
-        return $this->joinType('left');
-    }
-
-    public function right()
-    {
-        return $this->joinType('right');
-    }
-
-    public function inner()
-    {
-        return $this->joinType('inner');
-    }
-
-    public function joinType($join_type)
-    {
-        $this->type = $join_type;
-
-        return $this;
     }
 }

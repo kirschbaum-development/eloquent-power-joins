@@ -8,15 +8,6 @@ namespace Illuminate\Database\Eloquent {
     {
         // join relationship methods
         /** @return self */
-        public function joinRelation(string $relationName, Closure|array|string $callback = null, string $joinType = 'join', bool $useAlias = false, bool $disableExtraConditions = false, string $morphable = null) {}
-
-        /** @return self */
-        public function leftJoinRelation(string $relationName, Closure|array|string $callback = null, string $joinType = 'join', bool $useAlias = false, bool $disableExtraConditions = false, string $morphable = null) {}
-
-        /** @return self */
-        public function rightJoinRelation(string $relationName, Closure|array|string $callback = null, string $joinType = 'join', bool $useAlias = false, bool $disableExtraConditions = false, string $morphable = null) {}
-
-        /** @return self */
         public function joinRelationship(string $relationName, Closure|array|string $callback = null, string $joinType = 'join', bool $useAlias = false, bool $disableExtraConditions = false, string $morphable = null) {}
 
         /** @return self */

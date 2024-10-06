@@ -66,6 +66,8 @@ jobs:
                 run: vendor/bin/phpunit
                 env:
                     DB_CONNECTION: mysql
+                    DB_DATABASE: laravel
+                    DB_USERNAME: root
 
     pgsql_15:
         runs-on: ubuntu-24.04
@@ -187,3 +189,4 @@ jobs:
                 run: vendor/bin/phpunit
                 env:
                     DB_CONNECTION: sqlite
+                    DB_DATABASE: :memory:

@@ -530,7 +530,7 @@ class RelationshipsExtraMethods
     public function shouldNotApplyExtraCondition()
     {
         return function ($condition) {
-            if (isset($condition['column']) && Str::endsWith($condition['column'], '.')) {
+            if (isset($condition['column']) && ($condition['column'] === '' || Str::endsWith($condition['column'], '.'))) {
                 return true;
             }
 

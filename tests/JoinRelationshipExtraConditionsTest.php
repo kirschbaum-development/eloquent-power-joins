@@ -242,4 +242,22 @@ class JoinRelationshipExtraConditionsTest extends TestCase
             $query
         );
     }
+
+    public function test_belongs_to_many_with_custom_related_key()
+    {
+        $post = factory(Post::class)->create();
+        $group = factory(Group::class)->create();
+        $group->slugPosts()->attach($post->slug);
+
+        $this->assertCount(1, $group->slugPosts()->get());
+
+        $query = Group::leftJoinRelationship('slugPosts')->addSelect('posts.*');
+
+        $this->assertQueryContains(
+            'left join "posts" on "posts"."slug" = "post_groups_slug"."post_slug"',
+            $query->toSql()
+        );
+
+        $this->assertEquals($post->slug, $query->first()->slug);
+    }
 }

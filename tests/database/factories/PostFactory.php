@@ -9,6 +9,7 @@ $factory->define(Post::class, function (Faker\Generator $faker) {
         'user_id' => factory(User::class),
         'category_id' => factory(Category::class),
         'title' => $faker->words(3, true),
+        'slug' => $faker->slug,
     ];
 });
 

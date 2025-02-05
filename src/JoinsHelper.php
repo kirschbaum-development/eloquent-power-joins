@@ -96,6 +96,7 @@ class JoinsHelper
      */
     public function relationshipAlreadyJoined($model, string $relation): bool
     {
+		dump($relation);
         return isset($this->joinRelationshipCache[spl_object_id($model)][$relation]);
     }
 

@@ -151,7 +151,7 @@ class JoinRelationship
                 ? "{$aliasString}.{$relationQuery->getModel()->getTable()}.{$relationName}"
                 : "{$relationQuery->getModel()->getTable()}.{$relationName}";
 
-            if ($joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache)) {
+            if ($joinHelper->relationshipAlreadyJoined($this, $relationJoinCache)) {
                 return $this;
             }
 
@@ -319,7 +319,7 @@ class JoinRelationship
                     StaticCache::setTableAliasForModel($relation->getModel(), $alias);
                 }
 
-                if ($joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache)) {
+                if ($joinHelper->relationshipAlreadyJoined($this, $relationJoinCache)) {
                     $latestRelation = $relation;
 
                     continue;

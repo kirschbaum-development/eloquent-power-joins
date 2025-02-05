@@ -94,9 +94,9 @@ class JoinsHelper
     /**
      * Checks if the relationship was already joined.
      */
-    public function relationshipAlreadyJoined($query, string $relation): bool
+    public function relationshipAlreadyJoined($model, string $relation): bool
     {
-        return isset($this->joinRelationshipCache[spl_object_id($query)][$relation]);
+        return isset($this->joinRelationshipCache[spl_object_id($model)][$relation]);
     }
 
     /**

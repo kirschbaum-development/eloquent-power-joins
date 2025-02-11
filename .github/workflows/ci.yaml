@@ -98,7 +98,7 @@ jobs:
                 uses: actions/checkout@v4
 
             -   name: Cache dependencies
-                uses: actions/cache@v1
+                uses: actions/cache@v4
                 with:
                     path: ~/.composer/cache/files
                     key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
@@ -152,7 +152,7 @@ jobs:
                 uses: actions/checkout@v4
 
             -   name: Cache dependencies
-                uses: actions/cache@v1
+                uses: actions/cache@v4
                 with:
                     path: ~/.composer/cache/files
                     key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}

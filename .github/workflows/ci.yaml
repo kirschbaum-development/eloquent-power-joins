@@ -11,19 +11,18 @@ jobs:
 
         services:
             mysql:
-            image: mysql:8
-            env:
-                MYSQL_ALLOW_EMPTY_PASSWORD: yes
-                MYSQL_DATABASE: laravel
-                MYSQL_ROOT_PASSWORD: root
-            ports:
-                - 3306:3306
-            options: --default-authentication-plugin=mysql_native_password --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
+                image: mysql:8
+                env:
+                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
+                    MYSQL_DATABASE: laravel
+                ports:
+                    - 3306:3306
+                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
         strategy:
             fail-fast: true
             matrix:
-                php: [ 8.1, 8.2, 8.3 ]
+                php: [ 8.2, 8.3, 8.4 ]
                 laravel: [ 10.*, 11.* ]
                 include:
                     -   laravel: 11.*
@@ -31,8 +30,8 @@ jobs:
                     -   laravel: 10.*
                         testbench: 8.*
                 exclude:
-                    -   laravel: 11.*
-                        php: 8.1
+                    -   laravel: 10.*
+                        php: 8.4
 
         name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -43,7 +42,7 @@ jobs:
             -   name: Setup PHP
                 uses: shivammathur/setup-php@v2
                 with:
-                    php-version: 8.2
+                    php-version: ${{ matrix.php }}
                     extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, :php-psr
                     tools: composer:v2
                     coverage: none
@@ -62,6 +61,7 @@ jobs:
                 run: vendor/bin/phpunit
                 env:
                     DB_CONNECTION: mysql
+                    DB_DATABASE: laravel
 
     pgsql_15:
         runs-on: ubuntu-24.04
@@ -81,7 +81,7 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php: [ 8.1, 8.2, 8.3 ]
+                php: [ 8.2, 8.3, 8.4 ]
                 laravel: [ 10.*, 11.* ]
                 include:
                     -   laravel: 11.*
@@ -89,8 +89,8 @@ jobs:
                     -   laravel: 10.*
                         testbench: 8.*
                 exclude:
-                    -   laravel: 11.*
-                        php: 8.1
+                    -   laravel: 10.*
+                        php: 8.4
 
         name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -99,7 +99,7 @@ jobs:
                 uses: actions/checkout@v4
 
             -   name: Cache dependencies
-                uses: actions/cache@v1
+                uses: actions/cache@v4
                 with:
                     path: ~/.composer/cache/files
                     key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
@@ -135,7 +135,7 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php: [ 8.1, 8.2, 8.3 ]
+                php: [ 8.2, 8.3, 8.4 ]
                 laravel: [ 10.*, 11.* ]
                 include:
                     -   laravel: 11.*
@@ -143,8 +143,8 @@ jobs:
                     -   laravel: 10.*
                         testbench: 8.*
                 exclude:
-                    -   laravel: 11.*
-                        php: 8.1
+                    -   laravel: 10.*
+                        php: 8.4
 
         name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -153,7 +153,7 @@ jobs:
                 uses: actions/checkout@v4
 
             -   name: Cache dependencies
-                uses: actions/cache@v1
+                uses: actions/cache@v4
                 with:
                     path: ~/.composer/cache/files
                     key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}

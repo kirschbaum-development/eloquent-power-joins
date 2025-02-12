@@ -3,7 +3,6 @@
 namespace Kirschbaum\PowerJoins\Tests;
 
 use Exception;
-use Kirschbaum\PowerJoins\JoinsHelper;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
@@ -283,10 +282,10 @@ class JoinRelationshipTest extends TestCase
 
         // making sure it doesn't throw any errors
         User::query()
-	        ->select('users.*')
-	        ->joinRelationship('posts')
-	        ->joinRelationship('posts')
-	        ->get();
+            ->select('users.*')
+            ->joinRelationship('posts')
+            ->joinRelationship('posts')
+            ->get();
 
         $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
@@ -900,12 +899,12 @@ class JoinRelationshipTest extends TestCase
         $query = Post::query();
 
         $query->leftJoinRelationship('user');
-		
+
         $clonedSql = $query
-	        ->clone()
-	        ->leftJoinRelationship('user')
-	        ->toSql();
-		
+            ->clone()
+            ->leftJoinRelationship('user')
+            ->toSql();
+
         $sql = $query->toSql();
 
         $this->assertEquals($clonedSql, $sql);

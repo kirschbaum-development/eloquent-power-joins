@@ -104,10 +104,6 @@ class JoinRelationship
 				JoinsHelper::make($this->getModel())->clear($this->getModel());
 			});
 			
-//			if ( method_exists($this, 'onClone') ) {
-//				$this->onClone();
-//			}
-			
 			if ( is_null($this->getSelect()) ) {
 				$this->select(sprintf('%s.*', $this->getModel()->getTable()));
 			}

@@ -87,19 +87,21 @@ class JoinsHelper
 		if (method_exists($query, 'onClone')) {
 			// Method added in Laravel ^11.42.
 			$query->onClone(static function (Builder $query) {
-				$model = $query->getModel();
-				$originalJoinsHelper = JoinsHelper::make($model);
+				$originalModel = $query->getModel();
+				$originalJoinsHelper = JoinsHelper::make($originalModel);
 				
-				$query->setModel($modelClone = new $model);
+				$query->setModel($model = new $originalModel);
 				
 				foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
 					/** @var Closure $beforeQueryCallback */
 					$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
 				}
 				
-				$joinsHelper = JoinsHelper::make($modelClone);
-				//
-				$originalJoinsHelper->cloneTo($joinsHelper, $model, $modelClone);
+				$joinsHelper = JoinsHelper::make($model);
+				
+				foreach ($originalJoinsHelper->joinRelationshipCache[spl_object_id($originalModel)] ?? [] as $relation => $value) {
+					$joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
+				}
 			});
 		}
 	}
@@ -201,15 +203,5 @@ class JoinsHelper
 	public function clear($model): void
 	{
 		unset($this->joinRelationshipCache[spl_object_id($model)]);
-	}
-	
-	public function cloneTo($joinsHelper, $oldModel, $newModel): void
-	{
-		$originalJoinsHelper = JoinsHelper::make($oldModel);
-		$joinsHelper = JoinsHelper::make($newModel);
-		
-		foreach ($originalJoinsHelper->joinRelationshipCache[spl_object_id($oldModel)] ?? [] as $relation => $value) {
-			$joinsHelper->markRelationshipAsAlreadyJoined($newModel, $relation);
-		}
 	}
 }

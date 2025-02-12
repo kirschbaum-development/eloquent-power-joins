@@ -94,6 +94,13 @@ class JoinRelationship
 		return function (string $relationName, Closure|array|string|null $callback = null, string $joinType = 'join', bool $useAlias = false, bool $disableExtraConditions = false, ?string $morphable = null) {
 			$joinType = JoinsHelper::$joinMethodsMap[$joinType]??$joinType;
 			$useAlias = is_string($callback) ? false : $useAlias;
+			
+//			JoinsHelper::ensureFreshModel();
+//
+//			if (JoinsHelper::shouldRefreshModel($this)) {
+//				JoinsHelper::refreshModel($this);
+//			}
+			
 			$joinHelper = JoinsHelper::make($this->getModel());
 			$callback = $joinHelper->formatJoinCallback($callback);
 			
@@ -109,14 +116,14 @@ class JoinRelationship
 				}
 				
 				$newJoinsHelper = JoinsHelper::make($modelClone);
-				
+//
 				$oldJoinsHelper->cloneTo($newJoinsHelper, $model, $modelClone);
 			};
 			
 			$querySplObjectId = spl_object_id($this);
 			$modelSplObjectId = spl_object_id($this->getModel());
 			
-			$cachedModelSplObjectId = JoinsHelper::$queryModelDictionary[$modelSplObjectId] ?? null;
+			$cachedModelSplObjectId = JoinsHelper::$modelQueryDictionary[$modelSplObjectId] ?? null;
 			
 			if ($cachedModelSplObjectId && $cachedModelSplObjectId !== $querySplObjectId) {
 				$onCloneCallback($this);
@@ -125,18 +132,14 @@ class JoinRelationship
 				$modelSplObjectId = spl_object_id($this->getModel());
 			}
 			
-			JoinsHelper::$queryModelDictionary[$modelSplObjectId] = $querySplObjectId;
+			JoinsHelper::$modelQueryDictionary[$modelSplObjectId] = $querySplObjectId;
 			
-			if ( !$this->getQuery()->beforeQueryCallbacks ) {
 				$this->getQuery()->beforeQuery(function () {
 					JoinsHelper::make($this->getModel())->clear($this->getModel());
 				});
-			}
 			
 			if ( method_exists($this, 'onClone') ) {
-				if ( !$this->onCloneCallbacks ) {
 					$this->onClone($onCloneCallback);
-				}
 			}
 			
 			if ( is_null($this->getSelect()) ) {

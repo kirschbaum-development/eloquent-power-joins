@@ -33,4 +33,9 @@ class Group extends Model
     {
         return $this->belongsToMany(Group::class, 'group_parent', 'parent_group_id', 'group_id');
     }
+
+    public function slugPosts(): BelongsToMany
+    {
+        return $this->belongsToMany(Post::class, 'post_groups_slug', 'group_id', 'post_slug', 'id', 'slug');
+    }
 }

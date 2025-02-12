@@ -92,9 +92,10 @@ class JoinsHelper
 				$query->setModel($model = new $originalModel);
 				
 				foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
+					/** @var Closure $beforeQueryCallback */
+					
 					if ( in_array($beforeQueryCallback, static::$beforeQueryCallbacks, true) ) {
-						/** @var Closure $beforeQueryCallback */
-						$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
+						static::$beforeQueryCallbacks[] = $query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
 					}
 				}
 				
@@ -109,9 +110,13 @@ class JoinsHelper
 	
 	public static function clearCacheBeforeQuery($query): void
 	{
-		$query->getQuery()->beforeQuery($beforeQueryCallback = (function () {
+		$beforeQueryCallback = function () {
 			JoinsHelper::make($this->getModel())->clear($this->getModel());
-		})->bindTo($query));
+		};
+		
+		$beforeQueryCallback = $beforeQueryCallback->bindTo($query);
+		
+		$query->getQuery()->beforeQuery($beforeQueryCallback);
 		
 		static::$beforeQueryCallbacks[] = $beforeQueryCallback;
 	}

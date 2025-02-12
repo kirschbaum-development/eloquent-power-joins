@@ -101,12 +101,6 @@ class JoinRelationship
 			JoinsHelper::ensureModelIsUniqueToQuery($this);
 			JoinsHelper::clearCacheBeforeQuery($this);
 			
-//			$this->getQuery()->beforeQuery($beforeQueryCallback = function () {
-//				JoinsHelper::make($this->getModel())->clear($this->getModel());
-//			});
-//
-//			JoinsHelper::$beforeQueryCallbacks[] = $beforeQueryCallback;
-			
 			if ( is_null($this->getSelect()) ) {
 				$this->select(sprintf('%s.*', $this->getModel()->getTable()));
 			}

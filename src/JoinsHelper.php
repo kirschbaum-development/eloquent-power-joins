@@ -5,6 +5,7 @@ namespace Kirschbaum\PowerJoins;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use ReflectionClass;
 
 class JoinsHelper
 {
@@ -96,7 +97,6 @@ class JoinsHelper
      */
     public function relationshipAlreadyJoined($model, string $relation): bool
     {
-		dump($relation);
         return isset($this->joinRelationshipCache[spl_object_id($model)][$relation]);
     }
 
@@ -108,8 +108,32 @@ class JoinsHelper
         $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
     }
 
-    public function clear(): void
+    public function clear($model): void
     {
-        $this->joinRelationshipCache = [];
+		unset($this->joinRelationshipCache[spl_object_id($model)]);
     }
+
+    public function clone($modelClone, $model): void
+    {
+		if (! isset($this->joinRelationshipCache[spl_object_id($model)])) {
+			dump('No cache on clone');
+			return;
+		}
+		
+		$modelJoinRelationshipCache = $this->joinRelationshipCache[spl_object_id($model)];
+		
+		$this->joinRelationshipCache[spl_object_id($modelClone)] = $modelJoinRelationshipCache;
+    }
+	
+	public function setCache($cache): void
+	{
+		$this->joinRelationshipCache = $cache;
+	}
+	
+	public function cloneTo($joinsHelper, $oldModel, $newModel): void
+	{
+		$cacheForModel = $this->joinRelationshipCache[spl_object_id($oldModel)];
+		
+		$joinsHelper->joinRelationshipCache[spl_object_id($newModel)] = $cacheForModel;
+	}
 }

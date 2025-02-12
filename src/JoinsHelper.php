@@ -56,7 +56,10 @@ class JoinsHelper
         $originalModelSplObjectId = spl_object_id($originalModel);
         $querySplObjectId = spl_object_id($query);
 
-        if (isset(static::$modelQueryDictionary[$originalModelSplObjectId]) && static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId) {
+        if (
+			isset(static::$modelQueryDictionary[$originalModelSplObjectId])
+			&& static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId
+        ) {
             // If the model is already associated with another query, we need to clone the model.
             // This can happen if a certain query, *before having interacted with the library
             // `joinRelationship()` method, was cloned by previous code.
@@ -72,13 +75,6 @@ class JoinsHelper
             foreach ($originalJoinsHelper->joinRelationshipCache[$originalModelSplObjectId] ?? [] as $relation => $value) {
                 $joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
             }
-
-        //			foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
-        //				/** @var Closure $beforeQueryCallback */
-        //				$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
-        //			}
-
-        // TODO: we will need to update any `beforeQueryCallbacks` to bind the new `$query` to them. Or not here?
         } else {
             static::$modelQueryDictionary[$originalModelSplObjectId] = $querySplObjectId;
         }
@@ -170,8 +166,10 @@ class JoinsHelper
                 }
             }
         }
-
-        return $useAlias ? $this->generateAliasForRelationship($relation, $relationName) : null;
+	    
+	    return $useAlias
+		    ? $this->generateAliasForRelationship($relation, $relationName)
+		    : null;
     }
 
     /**
@@ -189,9 +187,9 @@ class JoinsHelper
     {
         $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
     }
-
-    public function clear($model): void
-    {
-        unset($this->joinRelationshipCache[spl_object_id($model)]);
-    }
+	
+	public function clear(): void
+	{
+		$this->joinRelationshipCache = [];
+	}
 }

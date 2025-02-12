@@ -103,10 +103,10 @@ class JoinRelationship
             $useAlias = is_string($callback) ? false : $useAlias;
             $joinHelper = JoinsHelper::make($this->getModel());
             $callback = $joinHelper->formatJoinCallback($callback);
-	        
-	        JoinsHelper::ensureModelIsUniqueToQuery($this);
-	        JoinsHelper::clearCacheBeforeQuery($this);
-			
+
+            JoinsHelper::ensureModelIsUniqueToQuery($this);
+            JoinsHelper::clearCacheBeforeQuery($this);
+
             if (is_null($this->getSelect())) {
                 $this->select(sprintf('%s.*', $this->getModel()->getTable()));
             }

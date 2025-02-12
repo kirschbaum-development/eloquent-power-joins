@@ -37,6 +37,10 @@ class JoinRelationshipAfterCloneTest extends TestCase
     {
         $query = User::query();
 
+        if (!method_exists($query, 'onClone')) {
+            $this->markTestSkipped('This test requires the `onClone` method to be present on the query builder introduced in Laravel 11.42.');
+        }
+
         $query = $query->joinRelationship('posts');
 
         $queryClone = $query->clone();
@@ -58,6 +62,10 @@ class JoinRelationshipAfterCloneTest extends TestCase
         $beforeQueryCallbackThis = [];
 
         $query = User::query();
+
+        if (!method_exists($query, 'onClone')) {
+            $this->markTestSkipped('This test requires the `onClone` method to be present on the query builder introduced in Laravel 11.42.');
+        }
 
         $query = $query->joinRelationship('posts');
 

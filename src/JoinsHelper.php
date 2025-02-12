@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins;
 
 use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -67,7 +68,6 @@ class JoinsHelper
 			$originalJoinsHelper = JoinsHelper::make($originalModel);
 			$joinsHelper = JoinsHelper::make($model);
 			
-			dump("Copy register in cache");
 			static::$modelQueryDictionary[spl_object_id($model)] = $querySplObjectId;
 			
 			foreach ($originalJoinsHelper->joinRelationshipCache[$originalModelSplObjectId] ?? [] as $relation => $value) {
@@ -81,8 +81,26 @@ class JoinsHelper
 			
 			// TODO: we will need to update any `beforeQueryCallbacks` to bind the new `$query` to them. Or not here?
 		} else {
-			dump("Normal in cache");
 			static::$modelQueryDictionary[$originalModelSplObjectId] = $querySplObjectId;
+		}
+		
+		if (method_exists($query, 'onClone')) {
+			// Method added in Laravel ^11.42.
+			$query->onClone(static function (Builder $query) {
+				$model = $query->getModel();
+				$originalJoinsHelper = JoinsHelper::make($model);
+				
+				$query->setModel($modelClone = new $model);
+				
+				foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
+					/** @var Closure $beforeQueryCallback */
+					$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
+				}
+				
+				$joinsHelper = JoinsHelper::make($modelClone);
+				//
+				$originalJoinsHelper->cloneTo($joinsHelper, $model, $modelClone);
+			});
 		}
 	}
 	

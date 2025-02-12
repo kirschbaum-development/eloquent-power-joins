@@ -95,14 +95,17 @@ class JoinRelationship
 			$joinType = JoinsHelper::$joinMethodsMap[$joinType]??$joinType;
 			$useAlias = is_string($callback) ? false : $useAlias;
 			
-			$joinHelper = JoinsHelper::make($this->getModel());
-			$callback = $joinHelper->formatJoinCallback($callback);
+			$joinsHelper = JoinsHelper::make($this->getModel());
+			$callback = $joinsHelper->formatJoinCallback($callback);
 			
 			JoinsHelper::ensureModelIsUniqueToQuery($this);
+			JoinsHelper::clearCacheBeforeQuery($this);
 			
-			$this->getQuery()->beforeQuery(function () {
-				JoinsHelper::make($this->getModel())->clear($this->getModel());
-			});
+//			$this->getQuery()->beforeQuery($beforeQueryCallback = function () {
+//				JoinsHelper::make($this->getModel())->clear($this->getModel());
+//			});
+//
+//			JoinsHelper::$beforeQueryCallbacks[] = $beforeQueryCallback;
 			
 			if ( is_null($this->getSelect()) ) {
 				$this->select(sprintf('%s.*', $this->getModel()->getTable()));
@@ -122,11 +125,11 @@ class JoinRelationship
 			
 			$relation = $this->getModel()->{$relationName}();
 			$relationQuery = $relation->getQuery();
-			$alias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
+			$alias = $joinsHelper->getAliasName($useAlias, $relation, $relationName,
 				$relationQuery->getModel()->getTable(), $relationCallback);
 			
 			if ( $relation instanceof BelongsToMany && !is_array($alias) ) {
-				$extraAlias = $joinHelper->getAliasName($useAlias, $relation, $relationName, $relation->getTable(),
+				$extraAlias = $joinsHelper->getAliasName($useAlias, $relation, $relationName, $relation->getTable(),
 					$relationCallback);
 				$alias = [
 					$extraAlias,
@@ -139,7 +142,7 @@ class JoinRelationship
 			
 			$relationJoinCache = $alias ? "{$aliasString}.{$relationQuery->getModel()->getTable()}.{$relationName}" : "{$relationQuery->getModel()->getTable()}.{$relationName}";
 			
-			if ( $joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache) ) {
+			if ( $joinsHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache) ) {
 				return $this;
 			}
 			
@@ -147,7 +150,7 @@ class JoinRelationship
 				StaticCache::setTableAliasForModel($relation->getModel(), $alias);
 			}
 			
-			$joinHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
+			$joinsHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
 			StaticCache::clear();
 			
 			$relation->performJoinForEloquentPowerJoins(builder: $this, joinType: $joinType,
@@ -238,7 +241,7 @@ class JoinRelationship
 	{
 		return function (string $relationships, Closure|array|string|null $callback = null, string $joinType = 'join', bool $useAlias = false, bool $disableExtraConditions = false, ?string $morphable = null) {
 			$relations = explode('.', $relationships);
-			$joinHelper = JoinsHelper::make($this->getModel());
+			$joinsHelper = JoinsHelper::make($this->getModel());
 			/** @var Relation */
 			$latestRelation = null;
 			
@@ -259,11 +262,11 @@ class JoinRelationship
 					$relationCallback = $callback[$fullRelationName];
 				}
 				
-				$alias = $joinHelper->getAliasName($useAlias, $relation, $relationName,
+				$alias = $joinsHelper->getAliasName($useAlias, $relation, $relationName,
 					$relation->getQuery()->getModel()->getTable(), $relationCallback);
 				
 				if ( $alias && $relation instanceof BelongsToMany && !is_array($alias) ) {
-					$extraAlias = $joinHelper->getAliasName($useAlias, $relation, $relationName, $relation->getTable(),
+					$extraAlias = $joinsHelper->getAliasName($useAlias, $relation, $relationName, $relation->getTable(),
 						$relationCallback);
 					
 					$alias = [
@@ -285,7 +288,7 @@ class JoinRelationship
 					StaticCache::setTableAliasForModel($relation->getModel(), $alias);
 				}
 				
-				if ( $joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache) ) {
+				if ( $joinsHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache) ) {
 					$latestRelation = $relation;
 					
 					continue;
@@ -295,7 +298,7 @@ class JoinRelationship
 					$disableExtraConditions, $morphable);
 				
 				$latestRelation = $relation;
-				$joinHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
+				$joinsHelper->markRelationshipAsAlreadyJoined($this->getModel(), $relationJoinCache);
 			}
 			
 			StaticCache::clear();

@@ -32,6 +32,7 @@ class JoinRelationshipAfterCloneTest extends TestCase
 		
 		$this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
 	}
+	
 	/** @test */
 	public function test_join_with_clone_after_first_join()
 	{
@@ -50,5 +51,37 @@ class JoinRelationshipAfterCloneTest extends TestCase
 		$this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $querySql);
 		
 		$this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
+	}
+	
+	/** @test */
+	public function test_join_with_clone_after_first_join_before_query_callbacks_maintain_this()
+	{
+		$beforeQueryCallbackThis = [];
+		
+		$query = User::query();
+		
+		$query = $query->joinRelationship('posts');
+		
+		$query->beforeQuery(function () use (&$beforeQueryCallbackThis) {
+			$beforeQueryCallbackThis[] = $this;
+		});
+		
+		$queryClone = $query->clone();
+		$queryClone = $queryClone->joinRelationship('posts');
+		
+		$this->assertSame(
+			$querySql= $query->toSql(),
+			$queryCloneSql = $queryClone->toSql()
+		);
+		
+		$this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $querySql);
+		
+		$this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
+		
+		$this->assertCount(2, $beforeQueryCallbackThis);
+		
+		foreach ($beforeQueryCallbackThis as $beforeQueryCallbackBound) {
+			$this->assertSame($this, $beforeQueryCallbackBound);
+		}
 	}
 }

@@ -47,6 +47,8 @@ class JoinsHelper
 	 */
 	public static array $modelQueryDictionary = [];
 	
+	public static array $beforeQueryCallbacks = [];
+	
 	public static function ensureModelIsUniqueToQuery($query): void
 	{
 		$originalModel = $query->getModel();
@@ -54,10 +56,7 @@ class JoinsHelper
 		$originalModelSplObjectId = spl_object_id($originalModel);
 		$querySplObjectId = spl_object_id($query);
 		
-		if (
-			isset(static::$modelQueryDictionary[$originalModelSplObjectId])
-			&& static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId
-		) {
+		if ( isset(static::$modelQueryDictionary[$originalModelSplObjectId]) && static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId ) {
 			// If the model is already associated with another query, we need to clone the model.
 			// This can happen if a certain query, *before having interacted with the library
 			// `joinRelationship()` method, was cloned by previous code.
@@ -70,21 +69,21 @@ class JoinsHelper
 			
 			static::$modelQueryDictionary[spl_object_id($model)] = $querySplObjectId;
 			
-			foreach ($originalJoinsHelper->joinRelationshipCache[$originalModelSplObjectId] ?? [] as $relation => $value) {
+			foreach ($originalJoinsHelper->joinRelationshipCache[$originalModelSplObjectId]??[] as $relation => $value) {
 				$joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
 			}
 			
-//			foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
-//				/** @var Closure $beforeQueryCallback */
-//				$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
-//			}
+			//			foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
+			//				/** @var Closure $beforeQueryCallback */
+			//				$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
+			//			}
 			
 			// TODO: we will need to update any `beforeQueryCallbacks` to bind the new `$query` to them. Or not here?
 		} else {
 			static::$modelQueryDictionary[$originalModelSplObjectId] = $querySplObjectId;
 		}
 		
-		if (method_exists($query, 'onClone')) {
+		if ( method_exists($query, 'onClone') ) {
 			// Method added in Laravel ^11.42.
 			$query->onClone(static function (Builder $query) {
 				$originalModel = $query->getModel();
@@ -93,42 +92,29 @@ class JoinsHelper
 				$query->setModel($model = new $originalModel);
 				
 				foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
-					/** @var Closure $beforeQueryCallback */
-					$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
+					if ( in_array($beforeQueryCallback, static::$beforeQueryCallbacks, true) ) {
+						/** @var Closure $beforeQueryCallback */
+						$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
+					}
 				}
 				
 				$joinsHelper = JoinsHelper::make($model);
 				
-				foreach ($originalJoinsHelper->joinRelationshipCache[spl_object_id($originalModel)] ?? [] as $relation => $value) {
+				foreach ($originalJoinsHelper->joinRelationshipCache[spl_object_id($originalModel)]??[] as $relation => $value) {
 					$joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
 				}
 			});
 		}
 	}
 	
-	public static function shouldRefreshModel($query): bool
+	public static function clearCacheBeforeQuery($query): void
 	{
+		$query->getQuery()->beforeQuery($beforeQueryCallback = (function () {
+			JoinsHelper::make($this->getModel())->clear($this->getModel());
+		})->bindTo($query));
 		
-		if ( !isset(static::$modelQueryDictionary[$queryModelSplObjectId]) ) {
-			static::$modelQueryDictionary[$queryModelSplObjectId] = $querySplObjectId;
-			
-			return false;
-		}
-		
-		return tap(static::$modelQueryDictionary[$queryModelSplObjectId] !== $querySplObjectId, function () use ($querySplObjectId, $queryModelSplObjectId) {
-			static::$modelQueryDictionary[$queryModelSplObjectId] = $querySplObjectId;
-		});
+		static::$beforeQueryCallbacks[] = $beforeQueryCallback;
 	}
-	
-	public static function refreshModel($query): void
-	{
-		$queryModelSplObjectId = spl_object_id($query->getModel());
-		
-		if ( isset(static::$modelQueryDictionary[$queryModelSplObjectId]) ) {
-			static::$modelQueryDictionary[$queryModelSplObjectId] = spl_object_id($query);
-		}
-	}
-	
 	
 	/**
 	 * Format the join callback.

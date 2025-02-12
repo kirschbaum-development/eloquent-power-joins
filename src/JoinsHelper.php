@@ -47,8 +47,16 @@ class JoinsHelper
      */
     public static array $modelQueryDictionary = [];
 
+    /**
+     * An array of `beforeQuery` callbacks that are
+     * registered by the library.
+     */
     public static array $beforeQueryCallbacks = [];
 
+    /**
+     * Ensure that any query model can only belong to
+     * maximum one query, e.g. because of cloning.
+     */
     public static function ensureModelIsUniqueToQuery($query): void
     {
         $originalModel = $query->getModel();
@@ -57,8 +65,8 @@ class JoinsHelper
         $querySplObjectId = spl_object_id($query);
 
         if (
-			isset(static::$modelQueryDictionary[$originalModelSplObjectId])
-			&& static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId
+            isset(static::$modelQueryDictionary[$originalModelSplObjectId])
+            && static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId
         ) {
             // If the model is already associated with another query, we need to clone the model.
             // This can happen if a certain query, *before having interacted with the library
@@ -166,10 +174,10 @@ class JoinsHelper
                 }
             }
         }
-	    
-	    return $useAlias
-		    ? $this->generateAliasForRelationship($relation, $relationName)
-		    : null;
+
+        return $useAlias
+            ? $this->generateAliasForRelationship($relation, $relationName)
+            : null;
     }
 
     /**
@@ -187,9 +195,9 @@ class JoinsHelper
     {
         $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
     }
-	
-	public function clear(): void
-	{
-		$this->joinRelationshipCache = [];
-	}
+
+    public function clear(): void
+    {
+        $this->joinRelationshipCache = [];
+    }
 }

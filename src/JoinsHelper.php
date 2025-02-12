@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins;
 
+use Closure;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
@@ -45,15 +46,48 @@ class JoinsHelper
 	 */
 	public static array $modelQueryDictionary = [];
 	
-	public static function ensureFreshModel($query): void
+	public static function ensureModelIsUniqueToQuery($query): void
 	{
-		//
+		$originalModel = $query->getModel();
+		
+		$originalModelSplObjectId = spl_object_id($originalModel);
+		$querySplObjectId = spl_object_id($query);
+		
+		if (
+			isset(static::$modelQueryDictionary[$originalModelSplObjectId])
+			&& static::$modelQueryDictionary[$originalModelSplObjectId] !== $querySplObjectId
+		) {
+			// If the model is already associated with another query, we need to clone the model.
+			// This can happen if a certain query, *before having interacted with the library
+			// `joinRelationship()` method, was cloned by previous code.
+			$query->setModel($model = new ($query->getModel()));
+			
+			// If there is a `JoinsHelper` with a cache associated with the old model,
+			// we will copy the cache over to the new fresh model clone added to it.
+			$originalJoinsHelper = JoinsHelper::make($originalModel);
+			$joinsHelper = JoinsHelper::make($model);
+			
+			dump("Copy register in cache");
+			static::$modelQueryDictionary[spl_object_id($model)] = $querySplObjectId;
+			
+			foreach ($originalJoinsHelper->joinRelationshipCache[$originalModelSplObjectId] ?? [] as $relation => $value) {
+				$joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
+			}
+			
+//			foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
+//				/** @var Closure $beforeQueryCallback */
+//				$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
+//			}
+			
+			// TODO: we will need to update any `beforeQueryCallbacks` to bind the new `$query` to them. Or not here?
+		} else {
+			dump("Normal in cache");
+			static::$modelQueryDictionary[$originalModelSplObjectId] = $querySplObjectId;
+		}
 	}
 	
 	public static function shouldRefreshModel($query): bool
 	{
-		$querySplObjectId = spl_object_id($query);
-		$queryModelSplObjectId = spl_object_id($query->getModel());
 		
 		if ( !isset(static::$modelQueryDictionary[$queryModelSplObjectId]) ) {
 			static::$modelQueryDictionary[$queryModelSplObjectId] = $querySplObjectId;
@@ -153,8 +187,11 @@ class JoinsHelper
 	
 	public function cloneTo($joinsHelper, $oldModel, $newModel): void
 	{
-		$cacheForModel = $this->joinRelationshipCache[spl_object_id($oldModel)]??[];
+		$originalJoinsHelper = JoinsHelper::make($oldModel);
+		$joinsHelper = JoinsHelper::make($newModel);
 		
-		$joinsHelper->joinRelationshipCache[spl_object_id($newModel)] = $cacheForModel;
+		foreach ($originalJoinsHelper->joinRelationshipCache[spl_object_id($oldModel)] ?? [] as $relation => $value) {
+			$joinsHelper->markRelationshipAsAlreadyJoined($newModel, $relation);
+		}
 	}
 }

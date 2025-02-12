@@ -95,18 +95,16 @@ class JoinRelationship
 			$joinType = JoinsHelper::$joinMethodsMap[$joinType]??$joinType;
 			$useAlias = is_string($callback) ? false : $useAlias;
 			
-//			JoinsHelper::ensureFreshModel();
-//
-//			if (JoinsHelper::shouldRefreshModel($this)) {
-//				JoinsHelper::refreshModel($this);
-//			}
+			//			if (JoinsHelper::shouldRefreshModel($this)) {
+			//				JoinsHelper::refreshModel($this);
+			//			}
 			
 			$joinHelper = JoinsHelper::make($this->getModel());
 			$callback = $joinHelper->formatJoinCallback($callback);
 			
 			$onCloneCallback = static function (self $query) {
 				$model = $query->getModel();
-				$oldJoinsHelper = JoinsHelper::make($model);
+				$originalJoinsHelper = JoinsHelper::make($model);
 				
 				$query->setModel($modelClone = new $model);
 				
@@ -115,31 +113,35 @@ class JoinRelationship
 					$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
 				}
 				
-				$newJoinsHelper = JoinsHelper::make($modelClone);
-//
-				$oldJoinsHelper->cloneTo($newJoinsHelper, $model, $modelClone);
+				$joinsHelper = JoinsHelper::make($modelClone);
+				//
+				$originalJoinsHelper->cloneTo($joinsHelper, $model, $modelClone);
 			};
 			
 			$querySplObjectId = spl_object_id($this);
 			$modelSplObjectId = spl_object_id($this->getModel());
 			
-			$cachedModelSplObjectId = JoinsHelper::$modelQueryDictionary[$modelSplObjectId] ?? null;
+			$cachedModelSplObjectId = JoinsHelper::$modelQueryDictionary[$modelSplObjectId]??null;
 			
-			if ($cachedModelSplObjectId && $cachedModelSplObjectId !== $querySplObjectId) {
-				$onCloneCallback($this);
-				// We assume this is a clone then that was cloned before...
-				
+			dump('Ensur emodel is Unique');
+			dump($modelSplObjectId);
+			JoinsHelper::ensureModelIsUniqueToQuery($this);
+			
+			dump(spl_object_id($this->getModel()));
+			
+			if ( $cachedModelSplObjectId && $cachedModelSplObjectId !== $querySplObjectId ) {
 				$modelSplObjectId = spl_object_id($this->getModel());
+				dump($modelSplObjectId);
 			}
 			
-			JoinsHelper::$modelQueryDictionary[$modelSplObjectId] = $querySplObjectId;
+//			JoinsHelper::$modelQueryDictionary[$modelSplObjectId] = $querySplObjectId;
 			
-				$this->getQuery()->beforeQuery(function () {
-					JoinsHelper::make($this->getModel())->clear($this->getModel());
-				});
+			$this->getQuery()->beforeQuery(function () {
+				JoinsHelper::make($this->getModel())->clear($this->getModel());
+			});
 			
 			if ( method_exists($this, 'onClone') ) {
-					$this->onClone($onCloneCallback);
+				$this->onClone($onCloneCallback);
 			}
 			
 			if ( is_null($this->getSelect()) ) {

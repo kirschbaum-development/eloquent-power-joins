@@ -66,7 +66,7 @@ class CreateTables extends Migration
 
         Schema::create('post_groups_slug', function (Blueprint $table) {
             $table->unsignedInteger('group_id');
-            $table->unsignedInteger('post_slug');
+            $table->string('post_slug');
         });
 
         Schema::create('categories', function (Blueprint $table) {

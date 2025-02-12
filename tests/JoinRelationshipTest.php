@@ -899,30 +899,15 @@ class JoinRelationshipTest extends TestCase
     {
         $query = Post::query();
 
-		dump("Query");
         $query->leftJoinRelationship('user');
 		
-		
         $clonedSql = $query
-	        ->tap(fn () => dump("Second clone"))
 	        ->clone()
-	        ->tap(function () {
-		        dump("After second clone");
-				
-				dump(JoinsHelper::$instances);
-	        })
 	        ->leftJoinRelationship('user')
-	        ->tap(function () {
-		        dump('After second left join relationship');
-		        
-		        dump(JoinsHelper::$instances);
-	        })
 	        ->toSql();
 		
-		dump('Finished to sql');
         $sql = $query->toSql();
 
-		dump($clonedSql, $sql);
         $this->assertEquals($clonedSql, $sql);
     }
 

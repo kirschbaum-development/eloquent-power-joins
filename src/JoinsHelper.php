@@ -114,12 +114,12 @@ class JoinsHelper
     public static function clearCacheBeforeQuery($query): void
     {
         $beforeQueryCallback = function () {
-            JoinsHelper::make($this->getModel())->clear($this->getModel());
+            JoinsHelper::make($this->getModel())->clear();
         };
 
-        $beforeQueryCallback = $beforeQueryCallback->bindTo($query);
-
-        $query->getQuery()->beforeQuery($beforeQueryCallback);
+        $query->getQuery()->beforeQuery(
+            $beforeQueryCallback = $beforeQueryCallback->bindTo($query)
+        );
 
         static::$beforeQueryCallbacks[] = $beforeQueryCallback;
     }

@@ -275,25 +275,11 @@ class JoinRelationshipTest extends TestCase
     /** @test */
     public function test_it_doesnt_join_the_same_relationship_twice()
     {
-//		dump(
-//			spl_object_id(User::query()->getModel())
-//			===
-//			spl_object_id(User::query()->getModel())
-//		);
-//		dump(
-//			spl_object_id(User::query()->getModel()),
-//			'lala',
-//		) ;
-		
         $query = User::query()
             ->select('users.*')
-	        ->tap(fn () => dump('Selected stuff'))
             ->joinRelationship('posts')
-	        ->tap(fn () => dump('Just joined'))
             ->joinRelationship('posts')
-	        ->tap(fn () => dump('Just joined II'))
             ->toSql();
-		dump($query);
 
         // making sure it doesn't throw any errors
         User::query()

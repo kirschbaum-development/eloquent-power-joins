@@ -101,22 +101,12 @@ class JoinRelationship
 				$model = $query->getModel();
 				$oldJoinsHelper = JoinsHelper::make($model);
 				
-				dump('Model object ID in onClone: ' . spl_object_id($model));
-				
 				$query->setModel($modelClone = new $model);
 				
 				foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
 					/** @var Closure $beforeQueryCallback */
 					$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query);
 				}
-				
-				//						foreach ($query->getQuery()->beforeQueryCallbacks as $beforeQueryCallback) {
-				//							/** @var Closure $beforeQueryCallback */
-				//							$beforeQueryCallback->bindTo($query);
-				//						}
-				//$query->getQuery()->beforeQuery($callback)
-				
-				dump('Model object ID new in onClone after clone: ' . spl_object_id($modelClone));
 				
 				$newJoinsHelper = JoinsHelper::make($modelClone);
 				
@@ -128,28 +118,17 @@ class JoinRelationship
 			
 			$cachedModelSplObjectId = JoinsHelper::$queryModelDictionary[$modelSplObjectId] ?? null;
 			
-			dump(
-				JoinsHelper::$queryModelDictionary,
-				$querySplObjectId,
-				$modelSplObjectId,
-				$cachedModelSplObjectId,
-			);
 			if ($cachedModelSplObjectId && $cachedModelSplObjectId !== $querySplObjectId) {
-				dump('FIX ');
 				$onCloneCallback($this);
 				// We assume this is a clone then that was cloned before...
 				
 				$modelSplObjectId = spl_object_id($this->getModel());
-				dump("New Model Spl Object Id: " . $modelSplObjectId);
 			}
 			
 			JoinsHelper::$queryModelDictionary[$modelSplObjectId] = $querySplObjectId;
 			
-			dump("Model object ID: " . spl_object_id($this->getModel()));
 			if ( !$this->getQuery()->beforeQueryCallbacks ) {
 				$this->getQuery()->beforeQuery(function () {
-					dump("Model object ID in before query clear: " . spl_object_id($this->getModel()));
-					
 					JoinsHelper::make($this->getModel())->clear($this->getModel());
 				});
 			}
@@ -196,7 +175,6 @@ class JoinRelationship
 			$relationJoinCache = $alias ? "{$aliasString}.{$relationQuery->getModel()->getTable()}.{$relationName}" : "{$relationQuery->getModel()->getTable()}.{$relationName}";
 			
 			if ( $joinHelper->relationshipAlreadyJoined($this->getModel(), $relationJoinCache) ) {
-				dump("Relation already joined");
 				return $this;
 			}
 			

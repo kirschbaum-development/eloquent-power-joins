@@ -36,6 +36,8 @@ class JoinsHelper
         'rightJoin' => 'rightPowerJoin',
     ];
 
+	public static array $queryModelDictionary = [];
+	
     /**
      * Format the join callback.
      */
@@ -132,7 +134,7 @@ class JoinsHelper
 	
 	public function cloneTo($joinsHelper, $oldModel, $newModel): void
 	{
-		$cacheForModel = $this->joinRelationshipCache[spl_object_id($oldModel)];
+		$cacheForModel = $this->joinRelationshipCache[spl_object_id($oldModel)] ?? [];
 		
 		$joinsHelper->joinRelationshipCache[spl_object_id($newModel)] = $cacheForModel;
 	}

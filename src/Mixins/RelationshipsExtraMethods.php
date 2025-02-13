@@ -138,7 +138,7 @@ class RelationshipsExtraMethods
                 }
 
                 $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
+                    "{$this->getModel()->getTable()}.{$this->getRelatedKeyName()}",
                     '=',
                     "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
                 );

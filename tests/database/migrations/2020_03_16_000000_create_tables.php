@@ -50,6 +50,7 @@ class CreateTables extends Migration
             $table->increments('id');
             $table->unsignedInteger('user_id');
             $table->unsignedInteger('category_id');
+            $table->string('slug');
             $table->string('title');
             $table->boolean('reviewed')->default(true);
             $table->boolean('published')->default(true);
@@ -61,6 +62,11 @@ class CreateTables extends Migration
             $table->unsignedInteger('group_id');
             $table->unsignedInteger('post_id');
             $table->timestamp('assigned_at')->nullable()->default(null);
+        });
+
+        Schema::create('post_groups_slug', function (Blueprint $table) {
+            $table->unsignedInteger('group_id');
+            $table->string('post_slug');
         });
 
         Schema::create('categories', function (Blueprint $table) {

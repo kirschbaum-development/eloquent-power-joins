@@ -23,10 +23,7 @@ jobs:
             fail-fast: true
             matrix:
                 php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.* ]
-                include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
+                laravel: [ 11.*, 12.*-dev ]
 
         name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -77,10 +74,7 @@ jobs:
             fail-fast: true
             matrix:
                 php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.* ]
-                include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
+                laravel: [ 11.*, 12.*-dev ]
 
         name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -106,7 +100,6 @@ jobs:
                 run: |
                     composer --version
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
                     composer update --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 
@@ -126,10 +119,7 @@ jobs:
             fail-fast: true
             matrix:
                 php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.* ]
-                include:
-                    -   laravel: 11.*
-                        testbench: 9.*-dev
+                laravel: [ 11.*, 12.*-dev ]
 
         name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -155,7 +145,6 @@ jobs:
                 run: |
                     composer --version
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
                     composer update --prefer-dist --no-interaction --no-suggest --dev
                     composer dump
 

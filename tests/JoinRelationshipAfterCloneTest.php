@@ -28,8 +28,11 @@ class JoinRelationshipAfterCloneTest extends TestCase
         );
 
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $querySql);
-
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
+
+        // executing the queries to make sure there are no exceptions
+        $this->assertCount(0, $query->get());
+        $this->assertCount(0, $queryClone->get());
     }
 
     /** @test */
@@ -48,8 +51,11 @@ class JoinRelationshipAfterCloneTest extends TestCase
         );
 
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $querySql);
-
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
+
+        // executing the queries to make sure there are no exceptions
+        $this->assertCount(0, $query->get());
+        $this->assertCount(0, $queryClone->get());
     }
 
     /** @test */
@@ -74,7 +80,6 @@ class JoinRelationshipAfterCloneTest extends TestCase
         );
 
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $querySql);
-
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
 
         $this->assertCount(2, $beforeQueryCallbackBoundThis);

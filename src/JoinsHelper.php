@@ -18,8 +18,8 @@ class JoinsHelper
      * This is used to determine if a query is a clone of another
      * query and therefore if we should refresh the model in it.
      *
-     * The keys are the spl object IDs of the model, and the
-     * value is the spl object ID of the associated query.
+     * The keys are the model objects, and the value is the spl
+     * object ID of the associated query builder instance.
      */
     public static WeakMap $modelQueryDictionary;
 

@@ -2,29 +2,51 @@
 
 namespace Kirschbaum\PowerJoins;
 
+use Closure;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
+use WeakMap;
 
 class JoinsHelper
 {
-    public static array $instances = [];
+    public static WeakMap $instances;
+
+    /**
+     * Cache to determine which query model belongs to which query.
+     * This is used to determine if a query is a clone of another
+     * query and therefore if we should refresh the model in it.
+     *
+     * The keys are the model objects, and the value is the spl
+     * object ID of the associated Eloquent builder instance.
+     */
+    public static WeakMap $modelQueryDictionary;
+
+    /**
+     * An array of `beforeQuery` callbacks that
+     * are registered by the library.
+     */
+    public static WeakMap $beforeQueryCallbacks;
 
     protected function __construct()
     {
+        static::$instances ??= new WeakMap();
+        static::$modelQueryDictionary ??= new WeakMap();
+        static::$beforeQueryCallbacks ??= new WeakMap();
+
+        $this->joinRelationshipCache = new WeakMap();
     }
 
-    public static function make(): static
+    public static function make($model): static
     {
-        $objects = array_map(fn ($object) => spl_object_id($object), func_get_args());
-
-        return static::$instances[implode('-', $objects)] ??= new self();
+        return static::$instances[$model] ??= new self();
     }
 
     /**
      * Cache to not join the same relationship twice.
      */
-    private array $joinRelationshipCache = [];
+    private WeakMap $joinRelationshipCache;
 
     /**
      * Join method map.
@@ -34,6 +56,80 @@ class JoinsHelper
         'leftJoin' => 'leftPowerJoin',
         'rightJoin' => 'rightPowerJoin',
     ];
+
+    /**
+     * Ensure that any query model can only belong to
+     * maximum one query, e.g. because of cloning.
+     */
+    public static function ensureModelIsUniqueToQuery($query): void
+    {
+        $originalModel = $query->getModel();
+
+        $querySplObjectId = spl_object_id($query);
+
+        if (
+            isset(static::$modelQueryDictionary[$originalModel])
+            && static::$modelQueryDictionary[$originalModel] !== $querySplObjectId
+        ) {
+            // If the model is already associated with another query, we need to clone the model.
+            // This can happen if a certain query, *before having interacted with the library
+            // `joinRelationship()` method*, was cloned by previous code.
+            $query->setModel($model = new ($query->getModel()));
+
+            // Link the Spl Object ID of the query to the new model...
+            static::$modelQueryDictionary[$model] = $querySplObjectId;
+
+            // If there is a `JoinsHelper` with a cache associated with the old model,
+            // we will copy the cache over to the new fresh model clone added to it.
+            $originalJoinsHelper = JoinsHelper::make($originalModel);
+            $joinsHelper = JoinsHelper::make($model);
+
+            foreach ($originalJoinsHelper->joinRelationshipCache[$originalModel] ?? [] as $relation => $value) {
+                $joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
+            }
+        } else {
+            static::$modelQueryDictionary[$originalModel] = $querySplObjectId;
+        }
+
+        $query->onClone(static function (Builder $query) {
+            $originalModel = $query->getModel();
+            $originalJoinsHelper = JoinsHelper::make($originalModel);
+
+            // Ensure the model of the cloned query is unique to the query.
+            $query->setModel($model = new $originalModel());
+
+            // Update any `beforeQueryCallbacks` to link to the new `$this` as Eloquent Query,
+            // otherwise the reference to the current Eloquent query goes wrong. These query
+            // callbacks are stored on the `QueryBuilder` instance and therefore do not get
+            // an instance of Eloquent Builder passed, but an instance of `QueryBuilder`.
+            foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
+                /** @var Closure $beforeQueryCallback */
+                if (isset(static::$beforeQueryCallbacks[$beforeQueryCallback])) {
+                    static::$beforeQueryCallbacks[$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query)] = true;
+                }
+            }
+
+            $joinsHelper = JoinsHelper::make($model);
+
+            foreach ($originalJoinsHelper->joinRelationshipCache[$originalModel] ?? [] as $relation => $value) {
+                $joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
+            }
+        });
+    }
+
+    public static function clearCacheBeforeQuery($query): void
+    {
+        $beforeQueryCallback = function () {
+            /* @var Builder $this */
+            JoinsHelper::make($this->getModel())->clear();
+        };
+
+        $query->getQuery()->beforeQuery(
+            $beforeQueryCallback = $beforeQueryCallback->bindTo($query)
+        );
+
+        static::$beforeQueryCallbacks[$beforeQueryCallback] = true;
+    }
 
     /**
      * Format the join callback.
@@ -96,7 +192,7 @@ class JoinsHelper
      */
     public function relationshipAlreadyJoined($model, string $relation): bool
     {
-        return isset($this->joinRelationshipCache[spl_object_id($model)][$relation]);
+        return isset($this->joinRelationshipCache[$model][$relation]);
     }
 
     /**
@@ -104,11 +200,13 @@ class JoinsHelper
      */
     public function markRelationshipAsAlreadyJoined($model, string $relation): void
     {
-        $this->joinRelationshipCache[spl_object_id($model)][$relation] = true;
+        $this->joinRelationshipCache[$model] ??= [];
+
+        $this->joinRelationshipCache[$model][$relation] = true;
     }
 
     public function clear(): void
     {
-        $this->joinRelationshipCache = [];
+        $this->joinRelationshipCache = new WeakMap();
     }
 }

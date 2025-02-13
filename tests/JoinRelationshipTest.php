@@ -281,7 +281,11 @@ class JoinRelationshipTest extends TestCase
             ->toSql();
 
         // making sure it doesn't throw any errors
-        User::query()->select('users.*')->joinRelationship('posts')->joinRelationship('posts')->get();
+        User::query()
+            ->select('users.*')
+            ->joinRelationship('posts')
+            ->joinRelationship('posts')
+            ->get();
 
         $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
@@ -895,7 +899,12 @@ class JoinRelationshipTest extends TestCase
         $query = Post::query();
 
         $query->leftJoinRelationship('user');
-        $clonedSql = $query->clone()->leftJoinRelationship('user')->toSql();
+
+        $clonedSql = $query
+            ->clone()
+            ->leftJoinRelationship('user')
+            ->toSql();
+
         $sql = $query->toSql();
 
         $this->assertEquals($clonedSql, $sql);

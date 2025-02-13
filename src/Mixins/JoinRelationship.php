@@ -104,9 +104,8 @@ class JoinRelationship
             $joinHelper = JoinsHelper::make($this->getModel());
             $callback = $joinHelper->formatJoinCallback($callback);
 
-            $this->getQuery()->beforeQuery(function () use ($joinHelper) {
-                $joinHelper->clear();
-            });
+            JoinsHelper::ensureModelIsUniqueToQuery($this);
+            JoinsHelper::clearCacheBeforeQuery($this);
 
             if (is_null($this->getSelect())) {
                 $this->select(sprintf('%s.*', $this->getModel()->getTable()));

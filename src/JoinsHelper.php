@@ -24,8 +24,8 @@ class JoinsHelper
     public static WeakMap $modelQueryDictionary;
 
     /**
-     * An array of `beforeQuery` callbacks that are
-     * registered by the library.
+     * An array of `beforeQuery` callbacks that
+     * are registered by the library.
      */
     public static WeakMap $beforeQueryCallbacks;
 
@@ -104,7 +104,7 @@ class JoinsHelper
             // instance of Eloquent Builder passed, but an instance of `QueryBuilder`.
             foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
                 /** @var Closure $beforeQueryCallback */
-                if (static::$beforeQueryCallbacks->offsetExists($beforeQueryCallback)) {
+                if (isset(static::$beforeQueryCallbacks[$beforeQueryCallback])) {
                     static::$beforeQueryCallbacks[$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query)] = true;
                 }
             }

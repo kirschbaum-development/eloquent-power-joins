@@ -100,8 +100,8 @@ class JoinsHelper
 
             // Update any `beforeQueryCallbacks` to link to the new `$this` as Eloquent Query,
             // otherwise the reference to the current Eloquent query goes wrong. These query
-            // callbacks are stored on the `QueryBuilder` instance and therefore do not an
-            // instance of Eloquent Builder passed, but an instance of `QueryBuilder`.
+            // callbacks are stored on the `QueryBuilder` instance and therefore do not get
+            // an instance of Eloquent Builder passed, but an instance of `QueryBuilder`.
             foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
                 /** @var Closure $beforeQueryCallback */
                 if (isset(static::$beforeQueryCallbacks[$beforeQueryCallback])) {

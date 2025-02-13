@@ -37,10 +37,6 @@ class JoinRelationshipAfterCloneTest extends TestCase
     {
         $query = User::query();
 
-        if (!method_exists($query, 'onClone')) {
-            $this->markTestSkipped('This test requires the `onClone` method to be present on the query builder introduced in Laravel 11.42.');
-        }
-
         $query = $query->joinRelationship('posts');
 
         $queryClone = $query->clone();
@@ -59,18 +55,14 @@ class JoinRelationshipAfterCloneTest extends TestCase
     /** @test */
     public function test_join_with_clone_after_first_join_before_query_callbacks_maintain_this()
     {
-        $beforeQueryCallbackThis = [];
+        $beforeQueryCallbackBoundThis = [];
 
         $query = User::query();
 
-        if (!method_exists($query, 'onClone')) {
-            $this->markTestSkipped('This test requires the `onClone` method to be present on the query builder introduced in Laravel 11.42.');
-        }
-
         $query = $query->joinRelationship('posts');
 
-        $query->beforeQuery(function () use (&$beforeQueryCallbackThis) {
-            $beforeQueryCallbackThis[] = $this;
+        $query->beforeQuery(function () use (&$beforeQueryCallbackBoundThis) {
+            $beforeQueryCallbackBoundThis[] = $this;
         });
 
         $queryClone = $query->clone();
@@ -85,9 +77,9 @@ class JoinRelationshipAfterCloneTest extends TestCase
 
         $this->assertQueryContains('inner join "posts" on "posts"."user_id" = "users"."id"', $queryCloneSql);
 
-        $this->assertCount(2, $beforeQueryCallbackThis);
+        $this->assertCount(2, $beforeQueryCallbackBoundThis);
 
-        foreach ($beforeQueryCallbackThis as $beforeQueryCallbackBound) {
+        foreach ($beforeQueryCallbackBoundThis as $beforeQueryCallbackBound) {
             $this->assertSame($this, $beforeQueryCallbackBound);
         }
     }

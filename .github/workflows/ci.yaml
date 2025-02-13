@@ -23,16 +23,11 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php: [ 8.1, 8.2, 8.3 ]
-                laravel: [ 10.*, 11.* ]
+                php: [ 8.2, 8.3, 8.4 ]
+                laravel: [ 11.* ]
                 include:
                     -   laravel: 11.*
                         testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
-                exclude:
-                    -   laravel: 11.*
-                        php: 8.1
 
         name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -81,16 +76,11 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php: [ 8.1, 8.2, 8.3 ]
-                laravel: [ 10.*, 11.* ]
+                php: [ 8.2, 8.3, 8.4 ]
+                laravel: [ 11.* ]
                 include:
                     -   laravel: 11.*
                         testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
-                exclude:
-                    -   laravel: 11.*
-                        php: 8.1
 
         name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -135,16 +125,11 @@ jobs:
         strategy:
             fail-fast: true
             matrix:
-                php: [ 8.1, 8.2, 8.3 ]
-                laravel: [ 10.*, 11.* ]
+                php: [ 8.2, 8.3, 8.4 ]
+                laravel: [ 11.* ]
                 include:
                     -   laravel: 11.*
                         testbench: 9.*-dev
-                    -   laravel: 10.*
-                        testbench: 8.*
-                exclude:
-                    -   laravel: 11.*
-                        php: 8.1
 
         name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 

@@ -19,7 +19,7 @@ class JoinsHelper
      * query and therefore if we should refresh the model in it.
      *
      * The keys are the model objects, and the value is the spl
-     * object ID of the associated query builder instance.
+     * object ID of the associated Eloquent builder instance.
      */
     public static WeakMap $modelQueryDictionary;
 

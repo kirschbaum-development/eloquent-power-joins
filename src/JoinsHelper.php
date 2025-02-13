@@ -73,15 +73,16 @@ class JoinsHelper
         ) {
             // If the model is already associated with another query, we need to clone the model.
             // This can happen if a certain query, *before having interacted with the library
-            // `joinRelationship()` method, was cloned by previous code.
+            // `joinRelationship()` method*, was cloned by previous code.
             $query->setModel($model = new ($query->getModel()));
+
+            // Link the Spl Object ID of the query to the new model...
+            static::$modelQueryDictionary[$model] = $querySplObjectId;
 
             // If there is a `JoinsHelper` with a cache associated with the old model,
             // we will copy the cache over to the new fresh model clone added to it.
             $originalJoinsHelper = JoinsHelper::make($originalModel);
             $joinsHelper = JoinsHelper::make($model);
-
-            static::$modelQueryDictionary[$model] = $querySplObjectId;
 
             foreach ($originalJoinsHelper->joinRelationshipCache[$originalModel] ?? [] as $relation => $value) {
                 $joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
@@ -90,33 +91,36 @@ class JoinsHelper
             static::$modelQueryDictionary[$originalModel] = $querySplObjectId;
         }
 
-        if (method_exists($query, 'onClone')) {
-            // Method added in Laravel ^11.42.
-            $query->onClone(static function (Builder $query) {
-                $originalModel = $query->getModel();
-                $originalJoinsHelper = JoinsHelper::make($originalModel);
+        $query->onClone(static function (Builder $query) {
+            $originalModel = $query->getModel();
+            $originalJoinsHelper = JoinsHelper::make($originalModel);
 
-                $query->setModel($model = new $originalModel());
+            // Ensure the model of the cloned query is unique to the query.
+            $query->setModel($model = new $originalModel());
 
-                foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
-                    /** @var Closure $beforeQueryCallback */
-                    if (static::$beforeQueryCallbacks->offsetExists($beforeQueryCallback)) {
-                        static::$beforeQueryCallbacks[$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query)] = true;
-                    }
+            // Update any `beforeQueryCallbacks` to link to the new `$this` as Eloquent Query,
+            // otherwise the reference to the current Eloquent query goes wrong. These query
+            // callbacks are stored on the `QueryBuilder` instance and therefore do not an
+            // instance of Eloquent Builder passed, but an instance of `QueryBuilder`.
+            foreach ($query->getQuery()->beforeQueryCallbacks as $key => $beforeQueryCallback) {
+                /** @var Closure $beforeQueryCallback */
+                if (static::$beforeQueryCallbacks->offsetExists($beforeQueryCallback)) {
+                    static::$beforeQueryCallbacks[$query->getQuery()->beforeQueryCallbacks[$key] = $beforeQueryCallback->bindTo($query)] = true;
                 }
+            }
 
-                $joinsHelper = JoinsHelper::make($model);
+            $joinsHelper = JoinsHelper::make($model);
 
-                foreach ($originalJoinsHelper->joinRelationshipCache[$originalModel] ?? [] as $relation => $value) {
-                    $joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
-                }
-            });
-        }
+            foreach ($originalJoinsHelper->joinRelationshipCache[$originalModel] ?? [] as $relation => $value) {
+                $joinsHelper->markRelationshipAsAlreadyJoined($model, $relation);
+            }
+        });
     }
 
     public static function clearCacheBeforeQuery($query): void
     {
         $beforeQueryCallback = function () {
+            /* @var Builder $this */
             JoinsHelper::make($this->getModel())->clear();
         };
 

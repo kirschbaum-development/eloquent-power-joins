@@ -26,7 +26,7 @@
         "friendsofphp/php-cs-fixer": "dev-master",
         "laravel/legacy-factories": "^1.0@dev",
         "orchestra/testbench": "^9.0|^10.0",
-        "phpunit/phpunit": "^10.0"
+        "phpunit/phpunit": "^10.0|^11.0"
     },
     "autoload": {
         "psr-4": {

@@ -2,6 +2,7 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
+use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\Group;
@@ -266,5 +267,23 @@ class JoinRelationshipUsingAliasTest extends TestCase
             'inner join "images" as "foo" on "foo"."imageable_id" = "posts"."id" and "foo"."imageable_type" = ?',
             $query
         );
+    }
+
+    /** @test */
+    public function test_join_model_with_soft_deletes_using_alias()
+    {
+        $queryA = UserProfile::query()->joinRelationshipUsingAlias('user', 'user_alias')->toSql();
+        $queryB = UserProfile::query()->joinRelationship('user', 'user_alias')->toSql();
+        $queryC = UserProfile::query()->joinRelationship(
+            'user',
+            fn (PowerJoinClause $join) => $join->as('user_alias')
+        )->toSql();
+
+        $this->assertQueryContains(
+            $expected = 'inner join "users" as "user_alias" on "user_profiles"."user_id" = "user_alias"."id" and "user_alias"."deleted_at" is null',
+            $queryA
+        );
+        $this->assertQueryContains($expected, $queryB);
+        $this->assertQueryContains($expected, $queryC);
     }
 }

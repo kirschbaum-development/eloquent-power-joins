@@ -209,7 +209,7 @@ class OrderByTest extends TestCase
         ]);
 
         $this->assertQueryContains(
-            'select "users".* from "users" inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users"."id" inner join "categories" as "category_alias" on "posts_alias"."category_id" = "category_alias"."id" where "users"."deleted_at" is null order by "category_alias"."title" desc',
+            'select "users".* from "users" inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users"."id" and "posts_alias"."deleted_at" is null inner join "categories" as "category_alias" on "posts_alias"."category_id" = "category_alias"."id" where "users"."deleted_at" is null order by "category_alias"."title" desc',
             $query->toSql()
         );
 

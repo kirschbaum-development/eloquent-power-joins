@@ -111,8 +111,22 @@ class PowerJoinClause extends JoinClause
         }
 
         $this->wheres = collect($this->wheres)->filter(function ($where) {
-            return in_array($where['type'] ?? '', ['Column', 'Basic'], true);
+            $whereType = $where['type'] ?? '';
+
+            if (in_array($whereType, ['Column', 'Basic'], true)) {
+                return true;
+            }
+
+            if ($whereType === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+                return true;
+            }
+
+            return false;
         })->map(function ($where) {
+            if ($where['type'] === 'Null') {
+                return $where;
+            }
+
             $key = $this->model->getKeyName();
             $table = $this->tableName;
             $replaceMethod = sprintf('useAliasInWhere%sType', ucfirst($where['type']));

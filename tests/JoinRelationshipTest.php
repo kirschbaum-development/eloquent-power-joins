@@ -793,7 +793,7 @@ class JoinRelationshipTest extends TestCase
         );
 
         $this->assertQueryContains(
-            'inner join "posts" as "posts_1" on "posts_1"."id" = "pivot_posts_1"."post_id" and "posts_1"."id" = ?',
+            'inner join "posts" as "posts_1" on "posts_1"."id" = "pivot_posts_1"."post_id" and "posts_1"."deleted_at" is null and "posts_1"."id" = ?',
             $sql
         );
     }

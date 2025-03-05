@@ -120,7 +120,7 @@ class PowerJoinClause extends JoinClause
             if ($whereType === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
                 return true;
             }
-            
+
             return false;
         })->map(function ($where) {
             if ($where['type'] === 'Null') {

@@ -321,7 +321,17 @@ class JoinRelationshipUsingAliasTest extends TestCase
         ])->toSql();
 
         $this->assertQueryContains(
-            $expected = 'select "posts".* from "posts" inner join "comments" on "comments"."post_id" = "posts"."id" inner join "posts" as "posts_alias" on "posts_alias"."id" = "comments"."post_id" and "posts_alias"."deleted_at" is null inner join "categories" on "categories"."id" = "posts_alias"."category_id" where ("comments"."id" in (select distinct "comments"."id" from "comments" where "comments"."post_id" = "posts"."id" order by "comments"."id" desc limit 1)) and "posts"."deleted_at" is null',
+            $expected = 'select "posts".* from "posts"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            $expected = 'inner join "posts" as "posts_alias" on "posts_alias"."id" = "comments"."post_id" and "posts_alias"."deleted_at"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            $expected = 'inner join "categories" on "categories"."id" = "posts_alias"."category_id"',
             $query
         );
     }

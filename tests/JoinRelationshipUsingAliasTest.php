@@ -286,4 +286,53 @@ class JoinRelationshipUsingAliasTest extends TestCase
         $this->assertQueryContains($expected, $queryB);
         $this->assertQueryContains($expected, $queryC);
     }
+
+    /** @test */
+    public function test_join_through_model_with_soft_deletes_using_alias()
+    {
+        // has one through
+        $query = Comment::query()->joinRelationship('postCategory', [
+            'postCategory' => [
+                'posts' => fn ($join) => $join->as('posts_alias'),
+            ],
+        ])->toSql();
+
+        $this->assertQueryContains(
+            $expected = 'select comments.* from comments inner join posts as posts_alias on posts_alias.id = comments.post_id and posts_alias.deleted_at is null inner join categories on categories.id = posts_alias.category_id',
+            $query
+        );
+
+        // has many through
+        $query = User::query()->joinRelationship('commentsThroughPosts', [
+            'comments' => fn ($join) => $join->as('comments_alias'),
+            'posts' => fn ($join) => $join->as('posts_alias'),
+        ])->toSql();
+
+        $this->assertQueryContains(
+            $expected = 'select "users".* from "users" inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users"."id" and "posts_alias"."deleted_at" is null inner join "comments" as "comments_alias" on "comments_alias"."post_id" = "posts_alias"."id" where "users"."deleted_at" is null',
+            $query
+        );
+
+        // ensure for nested relation too
+        $query = Post::query()->joinRelationship('lastComment.postCategory', [
+            'postCategory' => [
+                'posts' => fn ($join) => $join->as('posts_alias'),
+            ],
+        ])->toSql();
+
+        $this->assertQueryContains(
+            $expected = 'select "posts".* from "posts"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            $expected = 'inner join "posts" as "posts_alias" on "posts_alias"."id" = "comments"."post_id" and "posts_alias"."deleted_at"',
+            $query
+        );
+
+        $this->assertQueryContains(
+            $expected = 'inner join "categories" on "categories"."id" = "posts_alias"."category_id"',
+            $query
+        );
+    }
 }

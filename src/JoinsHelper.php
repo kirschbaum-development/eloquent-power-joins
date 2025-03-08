@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasManyThrough;
+use Illuminate\Database\Eloquent\Relations\HasOneOrManyThrough;
 use Illuminate\Database\Eloquent\Relations\Relation;
 use WeakMap;
 
@@ -170,6 +171,32 @@ class JoinsHelper
                 if ($fakeJoinCallback->getAlias()) {
                     return $fakeJoinCallback->getAlias();
                 }
+            }
+
+            if (is_array($callback) && $relation instanceof HasOneOrManyThrough) {
+                $alias = [null, null];
+
+                $throughParentTable = $relation->getThroughParent()->getTable();
+                if (isset($callback[$throughParentTable])) {
+                    $fakeJoinCallback = new FakeJoinCallback($relation->getBaseQuery(), 'inner', $throughParentTable);
+                    $callback[$throughParentTable]($fakeJoinCallback);
+
+                    if ($fakeJoinCallback->getAlias()) {
+                        $alias[0] = $fakeJoinCallback->getAlias();
+                    }
+                }
+
+                $farParentTable = $relation->getFarParent()->getTable();
+                if (isset($callback[$farParentTable])) {
+                    $fakeJoinCallback = new FakeJoinCallback($relation->getBaseQuery(), 'inner', $farParentTable);
+                    $callback[$farParentTable]($fakeJoinCallback);
+
+                    if ($fakeJoinCallback->getAlias()) {
+                        $alias[1] = $fakeJoinCallback->getAlias();
+                    }
+                }
+
+                return $alias;
             }
 
             if (is_array($callback) && isset($callback[$tableName])) {

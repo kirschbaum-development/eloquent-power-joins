@@ -98,6 +98,7 @@ class JoinsHelper
 
             // Ensure the model of the cloned query is unique to the query.
             $query->setModel($model = new $originalModel());
+            $model->mergeCasts($originalModel->getCasts());
 
             // Update any `beforeQueryCallbacks` to link to the new `$this` as Eloquent Query,
             // otherwise the reference to the current Eloquent query goes wrong. These query
@@ -175,8 +176,8 @@ class JoinsHelper
 
             if (is_array($callback) && $relation instanceof HasOneOrManyThrough) {
                 $alias = [null, null];
-
                 $throughParentTable = $relation->getThroughParent()->getTable();
+
                 if (isset($callback[$throughParentTable])) {
                     $fakeJoinCallback = new FakeJoinCallback($relation->getBaseQuery(), 'inner', $throughParentTable);
                     $callback[$throughParentTable]($fakeJoinCallback);

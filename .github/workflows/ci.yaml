@@ -23,12 +23,12 @@ jobs:
             fail-fast: true
             matrix:
                 php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.*, 12.*-dev ]
+                laravel: [ 11.*, 12.* ]
                 include:
                     -   laravel: 11.*
                         testbench: 9.*
-                    -   laravel: 12.*-dev
-                        testbench: 10.*-dev
+                    -   laravel: 12.*
+                        testbench: 10.*
 
         name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -43,9 +43,6 @@ jobs:
                     extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, :php-psr
                     tools: composer:v2
                     coverage: none
-
-            -   name: Set Framework version
-                run: composer config version "11.x-dev"
 
             -   name: Install dependencies
                 uses: nick-fields/retry@v3
@@ -79,12 +76,12 @@ jobs:
             fail-fast: true
             matrix:
                 php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.*, 12.*-dev ]
+                laravel: [ 11.*, 12.* ]
                 include:
                     -   laravel: 11.*
                         testbench: 9.*
-                    -   laravel: 12.*-dev
-                        testbench: 10.*-dev
+                    -   laravel: 12.*
+                        testbench: 10.*
 
         name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
@@ -130,12 +127,12 @@ jobs:
             fail-fast: true
             matrix:
                 php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.*, 12.*-dev ]
+                laravel: [ 11.*, 12.* ]
                 include:
                     -   laravel: 11.*
                         testbench: 9.*
-                    -   laravel: 12.*-dev
-                        testbench: 10.*-dev
+                    -   laravel: 12.*
+                        testbench: 10.*
 
         name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 

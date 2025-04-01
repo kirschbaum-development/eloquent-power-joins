@@ -76,6 +76,7 @@ class JoinsHelper
             // This can happen if a certain query, *before having interacted with the library
             // `joinRelationship()` method*, was cloned by previous code.
             $query->setModel($model = new ($query->getModel()));
+            $model->mergeCasts($originalModel->getCasts());
 
             // Link the Spl Object ID of the query to the new model...
             static::$modelQueryDictionary[$model] = $querySplObjectId;
@@ -98,6 +99,7 @@ class JoinsHelper
 
             // Ensure the model of the cloned query is unique to the query.
             $query->setModel($model = new $originalModel());
+            $model->mergeCasts($originalModel->getCasts());
 
             // Update any `beforeQueryCallbacks` to link to the new `$this` as Eloquent Query,
             // otherwise the reference to the current Eloquent query goes wrong. These query

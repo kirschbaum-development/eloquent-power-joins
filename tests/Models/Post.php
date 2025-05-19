@@ -57,6 +57,11 @@ class Post extends Model
         return $this->morphMany(Image::class, 'imageable');
     }
 
+    public function likes(): MorphMany
+    {
+        return $this->morphMany(Like::class, 'likeable');
+    }
+
     public function coverImages(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable')->where('cover', true);

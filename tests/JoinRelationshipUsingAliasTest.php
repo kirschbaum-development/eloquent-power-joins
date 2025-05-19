@@ -267,6 +267,12 @@ class JoinRelationshipUsingAliasTest extends TestCase
             'inner join "images" as "foo" on "foo"."imageable_id" = "posts"."id" and "foo"."imageable_type" = ?',
             $query
         );
+
+        $query = Post::query()
+            ->joinRelationship('likes', fn ($join) => $join->as('foo'))
+            ->toSql();
+
+        $this->assertQueryContains('inner join likes as foo on foo.likeable_id = posts.id and foo.likeable_type = ? and foo.deleted_at is null', $query);
     }
 
     /** @test */
@@ -299,6 +305,16 @@ class JoinRelationshipUsingAliasTest extends TestCase
 
         $this->assertQueryContains(
             $expected = 'select comments.* from comments inner join posts as posts_alias on posts_alias.id = comments.post_id and posts_alias.deleted_at is null inner join categories on categories.id = posts_alias.category_id',
+            $query
+        );
+
+        // has one through - alias on related
+        $query = User::query()->joinRelationship('postsThroughComments', [
+            'posts' => fn ($join) => $join->as('post_alias'),
+        ])->toSql();
+
+        $this->assertQueryContains(
+            $expected = 'select users.* from users inner join comments on comments.user_id = users.id inner join posts as post_alias on post_alias.comment_id = comments.id and post_alias.deleted_at is null where users.deleted_at is null',
             $query
         );
 

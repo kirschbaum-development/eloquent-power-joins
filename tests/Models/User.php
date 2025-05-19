@@ -68,6 +68,11 @@ class User extends Model
         return $this->hasManyThrough(Comment::class, Post::class);
     }
 
+    public function postsThroughComments(): HasManyThrough
+    {
+        return $this->hasManyThrough(Post::class, Comment::class);
+    }
+
     public function images(): MorphMany
     {
         return $this->morphMany(Image::class, 'imageable');

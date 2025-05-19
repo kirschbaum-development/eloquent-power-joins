@@ -94,6 +94,13 @@ class CreateTables extends Migration
             $table->softDeletes();
         });
 
+        Schema::create('likes', function (Blueprint $table) {
+            $table->increments('id');
+            $table->morphs('likeable');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
         Schema::create('tags', function (Blueprint $table) {
             $table->increments('id');
             $table->string('name');

@@ -223,7 +223,11 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForMorph()
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $disableExtraConditions) {
+            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $disableExtraConditions, $alias) {
+                if ($alias) {
+                    $join->as($alias);
+                }
+
                 $join->on(
                     "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
                     '=',

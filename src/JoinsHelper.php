@@ -41,6 +41,8 @@ class JoinsHelper
 
     public static function make($model): static
     {
+        static::$instances ??= new WeakMap();
+
         return static::$instances[$model] ??= new self();
     }
 

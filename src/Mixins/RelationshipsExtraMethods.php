@@ -299,8 +299,8 @@ class RelationshipsExtraMethods
                 $column = $this->getOneOfManySubQuery()->getQuery()->columns[0];
                 $fkColumn = $this->getOneOfManySubQuery()->getQuery()->columns[1];
 
-                $builder->where(function ($query) use ($column, $joinType, $joinedModel, $builder, $fkColumn) {
-                    $query->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn) {
+                $builder->where(function ($query) use ($column, $joinType, $joinedModel, $builder, $fkColumn, $parentTable) {
+                    $query->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn, $parentTable) {
                         $columnValue = $column->getValue($builder->getGrammar());
                         $direction = Str::contains($columnValue, 'min(') ? 'asc' : 'desc';
 
@@ -308,11 +308,11 @@ class RelationshipsExtraMethods
                         $columnName = Str::replace(['"', "'", '`'], '', $columnName);
 
                         if ($builder->getConnection() instanceof MySqlConnection) {
-                            $query->select('*')->from(function ($query) use ($joinedModel, $columnName, $fkColumn, $direction, $builder) {
+                            $query->select('*')->from(function ($query) use ($joinedModel, $columnName, $fkColumn, $direction, $parentTable) {
                                 $query
                                     ->select($joinedModel->getQualifiedKeyName())
                                     ->from($joinedModel->getTable())
-                                    ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
+                                    ->whereColumn($fkColumn, "{$parentTable}.{$this->localKey}")
                                     ->orderBy($columnName, $direction)
                                     ->take(1);
                             });
@@ -321,7 +321,7 @@ class RelationshipsExtraMethods
                                 ->select($joinedModel->getQualifiedKeyName())
                                 ->distinct($columnName)
                                 ->from($joinedModel->getTable())
-                                ->whereColumn($fkColumn, $builder->getModel()->getQualifiedKeyName())
+                                ->whereColumn($fkColumn, "{$parentTable}.{$this->localKey}")
                                 ->orderBy($columnName, $direction)
                                 ->take(1);
                         }

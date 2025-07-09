@@ -37,7 +37,7 @@ class LatestOfManyJoinTest extends TestCase
         // in the subquery for latestOfMany
         // Expected: all joins should use kvh_code
         // Actual: subquery uses addresses.id instead of addresses.kvh_code
-        
+
         // This assertion will fail because the subquery incorrectly uses addresses.id
         $this->assertStringNotContainsString('"requested_addresses"."kvh_code" = "addresses"."id"', $query);
     }

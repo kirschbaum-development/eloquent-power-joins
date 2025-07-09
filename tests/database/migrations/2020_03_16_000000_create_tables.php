@@ -111,6 +111,24 @@ class CreateTables extends Migration
             $table->foreignId('tag_id');
             $table->morphs('taggable');
         });
+
+        Schema::create('addresses', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('kvh_code')->unique();
+            $table->string('name');
+            $table->timestamps();
+            $table->softDeletes();
+        });
+
+        Schema::create('requested_addresses', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('kvh_code');
+            $table->timestamp('requested_at');
+            $table->string('status')->default('pending');
+            $table->timestamps();
+
+            $table->index('kvh_code');
+        });
     }
 
     /**

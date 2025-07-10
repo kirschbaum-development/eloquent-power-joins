@@ -154,12 +154,12 @@ class JoinsHelper
     {
         if ($relation instanceof BelongsToMany || $relation instanceof HasManyThrough) {
             return [
-                md5($relationName.'table1'.time()),
-                md5($relationName.'table2'.time()),
+                md5($relationName.'table1'.uniqid('', true)),
+                md5($relationName.'table2'.uniqid('', true)),
             ];
         }
 
-        return md5($relationName.time());
+        return md5($relationName.uniqid('', true));
     }
 
     /**

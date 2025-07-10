@@ -19,7 +19,9 @@ class TestCase extends \Orchestra\Testbench\TestCase
 
     protected function getPackageProviders($app)
     {
-        return [PowerJoinsServiceProvider::class];
+        return [
+            PowerJoinsServiceProvider::class,
+        ];
     }
 
     public function assertQueryContains(string $expected, string $actual, string $message = '', ?int $times = null): void

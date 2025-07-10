@@ -59,8 +59,8 @@ class DuplicateAliasGenerationTest extends TestCase
 
         $sql = $query->toSql();
 
-        // Count how many times "posts" appears with "as" in the SQL
-        $aliasCount = substr_count($sql, '"posts" as');
+        // Count how many times "posts" appears with "as" in the SQL (database-agnostic)
+        $aliasCount = substr_count($sql, '"posts" as') + substr_count($sql, '`posts` as');
 
         // We expect 2 different aliases, but due to the time() issue,
         // we might get the same alias twice, resulting in only 1 unique join

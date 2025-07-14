@@ -119,8 +119,6 @@ class CreateTables extends Migration
             $table->unsignedInteger('city_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
-
-            $table->foreign('city_id')->references('id')->on('cities');
         });
 
         Schema::create('requested_addresses', function (Blueprint $table) {
@@ -145,8 +143,6 @@ class CreateTables extends Migration
             $table->string('name');
             $table->unsignedInteger('country_id');
             $table->timestamps();
-
-            $table->foreign('country_id')->references('id')->on('countries');
         });
     }
 

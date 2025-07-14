@@ -17,18 +17,18 @@ class LaravelScopeAttributeTest extends TestCase
         // Create test data
         $denmark = Country::create(['name' => 'Denmark', 'iso' => 'DK']);
         $usa = Country::create(['name' => 'United States', 'iso' => 'US']);
-        
+
         $copenhagen = City::create(['name' => 'Copenhagen', 'country_id' => $denmark->id]);
         $newyork = City::create(['name' => 'New York', 'country_id' => $usa->id]);
-        
+
         $addressInDenmark = Address::create([
             'kvh_code' => 'DK001',
             'name' => 'Danish Address',
             'city_id' => $copenhagen->id,
         ]);
-        
+
         $addressInUSA = Address::create([
-            'kvh_code' => 'US001', 
+            'kvh_code' => 'US001',
             'name' => 'US Address',
             'city_id' => $newyork->id,
         ]);

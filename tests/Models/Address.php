@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins\Tests\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -16,7 +17,13 @@ class Address extends Model
     protected $fillable = [
         'kvh_code',
         'name',
+        'city_id',
     ];
+
+    public function city(): BelongsTo
+    {
+        return $this->belongsTo(City::class);
+    }
 
     public function requested_addresses(): HasMany
     {

@@ -26,7 +26,7 @@ class City extends Model
     }
 
     #[\Illuminate\Database\Eloquent\Attributes\Scope]
-    protected function inCountry($query, CountryEnum $country)
+    public function inCountry($query, CountryEnum $country)
     {
         $countryId = Country::select('id')->where('iso', $country->value)->valueOrFail('id');
 

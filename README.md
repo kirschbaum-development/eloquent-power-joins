@@ -209,14 +209,12 @@ In case you want to include trashed models, you can call the `->withTrashed()` m
 
 ```php
 UserProfile::joinRelationship('users', fn ($join) => $join->withTrashed());
-UserProfile::crossJoinRelationship('users', fn ($join) => $join->withTrashed());
 ```
 
 You can also call the `onlyTrashed` model as well:
 
 ```php
 UserProfile::joinRelationship('users', ($join) => $join->onlyTrashed());
-UserProfile::crossJoinRelationship('users', ($join) => $join->onlyTrashed());
 ```
 
 #### Extra conditions defined in relationships
@@ -248,76 +246,6 @@ UserProfile::joinRelationship('users', fn ($join) => $join->withGlobalScopes());
 ```
 
 There's, though, a gotcha here. Your global scope **cannot** type-hint the `Eloquent\Builder` class in the first parameter of the `apply` method, otherwise you will get errors.
-
-#### Cross Joins
-
-Cross joins generate a cartesian product between the first table and the joined table. This package provides cross join support for relationships, following the same patterns as other join types.
-
-```php
-// Basic cross join
-User::crossJoinRelationship('posts');
-
-// Cross join with nested relationships
-User::crossJoinRelationship('posts.comments');
-
-// Cross join with aliases
-User::crossJoinRelationshipUsingAlias('posts');
-```
-
-**Cross joins with conditions and scopes**
-
-Even though cross joins don't typically have join conditions, you can still apply conditions and use model scopes in the callback. These conditions will be applied to the main query's WHERE clause:
-
-```php
-// Using model scopes
-User::crossJoinRelationship('posts', function ($join) {
-    $join->published();
-});
-
-// Using custom conditions
-User::crossJoinRelationship('posts', function ($join) {
-    $join->where('posts.created_at', '>', now()->subDays(30));
-});
-
-// Using aliases in callback
-User::crossJoinRelationship('posts', function ($join) {
-    $join->as('p');
-});
-```
-
-**Cross joins with soft deletes**
-
-Cross joins automatically handle soft deletes, just like other join types:
-
-```php
-// Excludes soft deleted posts (default behavior)
-User::crossJoinRelationship('posts');
-
-// Includes soft deleted posts
-User::crossJoinRelationship('posts', function ($join) {
-    $join->withTrashed();
-});
-```
-
-**Cross joins with BelongsToMany relationships**
-
-Cross joins work with all relationship types, including many-to-many relationships:
-
-```php
-// Cross join posts with their tags (through pivot table)
-Post::crossJoinRelationship('tags');
-```
-
-**Understanding cartesian products**
-
-Cross joins create a cartesian product, meaning every row from the first table is combined with every row from the second table:
-
-```php
-// If you have 2 users and 3 posts, this will return 6 rows (2 × 3)
-$results = User::crossJoinRelationship('posts')
-    ->select('users.name', 'posts.title')
-    ->get();
-```
 
 ### 2 - Querying relationship existence (Using Joins)
 

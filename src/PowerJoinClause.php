@@ -287,7 +287,13 @@ class PowerJoinClause extends JoinClause
             return;
         }
 
-        if ($this->hasLaravelScopeAttribute($name) || method_exists($this->getModel(), 'scope'.ucfirst($name))) {
+        if (method_exists($this->getModel(), 'scope'.ucfirst($name))) {
+            $scope = 'scope'.ucfirst($name);
+
+            return $this->getModel()->{$scope}($this, ...$arguments);
+        }
+
+        if ($this->hasLaravelScopeAttribute($name) && version_compare(app()->version(), '12.0.0', '>=')) {
             return $this->getModel()->callNamedScope($name, array_merge([$this], $arguments));
         }
 

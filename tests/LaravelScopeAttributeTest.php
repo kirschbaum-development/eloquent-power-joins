@@ -14,6 +14,10 @@ class LaravelScopeAttributeTest extends TestCase
      */
     public function it_can_use_laravel_scope_attribute_in_join_relationship_callback()
     {
+        if (version_compare(app()->version(), '12.0.0', '<')) {
+            $this->markTestSkipped('Laravel 12+ is required for this test');
+        }
+
         // Create test data
         $denmark = Country::create(['name' => 'Denmark', 'iso' => 'DK']);
         $usa = Country::create(['name' => 'United States', 'iso' => 'US']);

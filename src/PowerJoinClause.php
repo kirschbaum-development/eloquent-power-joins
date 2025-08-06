@@ -10,6 +10,7 @@ use Illuminate\Database\Query\Builder;
 use Illuminate\Database\Query\JoinClause;
 use Illuminate\Support\Str;
 use InvalidArgumentException;
+use ReflectionClass;
 
 class PowerJoinClause extends JoinClause
 {
@@ -282,27 +283,58 @@ class PowerJoinClause extends JoinClause
 
     public function __call($name, $arguments)
     {
-        $scope = 'scope'.ucfirst($name);
-
         if (!$this->getModel()) {
             return;
         }
 
-        if (method_exists($this->getModel(), $scope)) {
+        if (method_exists($this->getModel(), 'scope'.ucfirst($name))) {
+            $scope = 'scope'.ucfirst($name);
+
             return $this->getModel()->{$scope}($this, ...$arguments);
-        } else {
-            if (static::hasMacro($name)) {
-                return $this->macroCall($name, $arguments);
-            }
-
-            $eloquentBuilder = $this->getModel()->newEloquentBuilder($this);
-            if (method_exists($eloquentBuilder, $name)) {
-                $eloquentBuilder->setModel($this->getModel());
-
-                return $eloquentBuilder->{$name}(...$arguments);
-            }
-
-            throw new InvalidArgumentException(sprintf('Method %s does not exist in PowerJoinClause class', $name));
         }
+
+        if ($this->hasLaravelScopeAttribute($name) && version_compare(app()->version(), '12.0.0', '>=')) {
+            return $this->getModel()->callNamedScope($name, array_merge([$this], $arguments));
+        }
+
+        if (static::hasMacro($name)) {
+            return $this->macroCall($name, $arguments);
+        }
+
+        $eloquentBuilder = $this->getModel()->newEloquentBuilder($this);
+        if (method_exists($eloquentBuilder, $name)) {
+            $eloquentBuilder->setModel($this->getModel());
+
+            return $eloquentBuilder->{$name}(...$arguments);
+        }
+
+        throw new InvalidArgumentException(sprintf('Method %s does not exist in PowerJoinClause class', $name));
+    }
+
+    /**
+     * Check if a method has the Laravel Scope attribute.
+     */
+    protected function hasLaravelScopeAttribute(string $methodName): bool
+    {
+        if (!method_exists($this->getModel(), $methodName)) {
+            return false;
+        }
+
+        $reflection = new ReflectionClass($this->getModel());
+
+        if (!$reflection->hasMethod($methodName)) {
+            return false;
+        }
+
+        $method = $reflection->getMethod($methodName);
+        $attributes = $method->getAttributes();
+
+        foreach ($attributes as $attribute) {
+            if ($attribute->getName() === 'Illuminate\Database\Eloquent\Attributes\Scope') {
+                return true;
+            }
+        }
+
+        return false;
     }
 }

@@ -116,6 +116,7 @@ class CreateTables extends Migration
             $table->increments('id');
             $table->string('kvh_code')->unique();
             $table->string('name');
+            $table->unsignedInteger('city_id')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });
@@ -128,6 +129,20 @@ class CreateTables extends Migration
             $table->timestamps();
 
             $table->index('kvh_code');
+        });
+
+        Schema::create('countries', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->string('iso', 2)->unique();
+            $table->timestamps();
+        });
+
+        Schema::create('cities', function (Blueprint $table) {
+            $table->increments('id');
+            $table->string('name');
+            $table->unsignedInteger('country_id');
+            $table->timestamps();
         });
     }
 

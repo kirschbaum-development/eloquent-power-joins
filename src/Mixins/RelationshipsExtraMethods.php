@@ -377,10 +377,11 @@ class RelationshipsExtraMethods
                     $join->as($alias1);
                 }
 
+                $farParentTable = StaticCache::getTableOrAliasForModel($this->getFarParent());
                 $join->on(
                     "{$throughTable}.{$this->getFirstKeyName()}",
                     '=',
-                    $this->getQualifiedLocalKeyName()
+                    "{$farParentTable}.{$this->localKey}"
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {

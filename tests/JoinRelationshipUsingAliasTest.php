@@ -351,4 +351,35 @@ class JoinRelationshipUsingAliasTest extends TestCase
             $query
         );
     }
+
+    public function test_join_through_model_twice_using_alias()
+    {
+        // has many throuh
+        $query = Comment::joinRelationship('user.commentsThroughPosts', [
+            'user' => fn ($join) => $join->as('users_alias')->withTrashed(),
+            'commentsThroughPosts' => [
+                'posts' => fn ($join) => $join->as('posts_alias')->withTrashed(),
+            ],
+        ])->toSql();
+
+        // Expect users_alias.id to be used as the join key
+        $this->assertQueryContains(
+            'inner join "posts" as "posts_alias" on "posts_alias"."user_id" = "users_alias"."id"',
+            $query
+        );
+
+        // has one through
+        $query = Post::joinRelationship('comments.postCategory', [
+            'comments' => fn ($join) => $join->as('comments_alias')->withTrashed(),
+            'postCategory' => [
+                'posts' => fn ($join) => $join->as('posts_alias')->withTrashed(),
+            ],
+        ])->toSql();
+
+        // Expect comments_alias.post_id to be used as the join key
+        $this->assertQueryContains(
+            'inner join "posts" as "posts_alias" on "posts_alias"."id" = "comments_alias"."post_id"',
+            $query
+        );
+    }
 }

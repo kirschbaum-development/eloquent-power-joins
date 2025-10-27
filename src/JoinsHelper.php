@@ -58,6 +58,7 @@ class JoinsHelper
         'join' => 'powerJoin',
         'leftJoin' => 'leftPowerJoin',
         'rightJoin' => 'rightPowerJoin',
+        'crossJoin' => 'crossPowerJoin',
     ];
 
     /**

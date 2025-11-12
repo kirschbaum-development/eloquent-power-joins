@@ -1016,7 +1016,7 @@ class JoinRelationshipTest extends TestCase
 
         // The join should reference the alias
         $this->assertQueryContains(
-            'inner join "users" on "users"."id" = "p"."user_id"',
+            'inner join "users" on "p"."user_id" = "users"."id"',
             $query
         );
     }
@@ -1042,7 +1042,7 @@ class JoinRelationshipTest extends TestCase
 
         // The second join should work normally
         $this->assertQueryContains(
-            'inner join "users" on "users"."id" = "comments"."user_id"',
+            'inner join "users" on "comments"."user_id" = "users"."id"',
             $query
         );
     }
@@ -1064,7 +1064,7 @@ class JoinRelationshipTest extends TestCase
 
         // The join should reference the alias
         $this->assertQueryContains(
-            'inner join "users" on "users"."id" = "p"."user_id"',
+            'inner join "users" on "p"."user_id" = "users"."id"',
             $query
         );
 

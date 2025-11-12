@@ -1000,4 +1000,78 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertCount(1, $nestedUserImages);
     }
+
+    /** @test */
+    public function test_join_relationship_preserves_main_table_alias()
+    {
+        $query = Post::from('posts as p')
+            ->joinRelationship('user')
+            ->toSql();
+
+        // The query should preserve the 'p' alias for the posts table
+        $this->assertQueryContains(
+            'from "posts" as "p"',
+            $query
+        );
+
+        // The join should reference the alias
+        $this->assertQueryContains(
+            'inner join "users" on "users"."id" = "p"."user_id"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_relationship_preserves_main_table_alias_with_nested_relationships()
+    {
+        $query = Post::from('posts as p')
+            ->joinRelationship('comments.user')
+            ->toSql();
+
+        // The query should preserve the 'p' alias for the posts table
+        $this->assertQueryContains(
+            'from "posts" as "p"',
+            $query
+        );
+
+        // The first join should reference the alias
+        $this->assertQueryContains(
+            'inner join "comments" on "comments"."post_id" = "p"."id"',
+            $query
+        );
+
+        // The second join should work normally
+        $this->assertQueryContains(
+            'inner join "users" on "users"."id" = "comments"."user_id"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_relationship_preserves_main_table_alias_when_selecting_columns()
+    {
+        $query = Post::from('posts as p')
+            ->select('p.id', 'p.title')
+            ->joinRelationship('user')
+            ->where('p.published', true)
+            ->toSql();
+
+        // The query should preserve the 'p' alias for the posts table
+        $this->assertQueryContains(
+            'from "posts" as "p"',
+            $query
+        );
+
+        // The join should reference the alias
+        $this->assertQueryContains(
+            'inner join "users" on "users"."id" = "p"."user_id"',
+            $query
+        );
+
+        // The where clause should work with the alias
+        $this->assertQueryContains(
+            'where "p"."published" = ?',
+            $query
+        );
+    }
 }

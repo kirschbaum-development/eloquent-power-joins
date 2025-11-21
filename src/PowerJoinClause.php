@@ -227,6 +227,9 @@ class PowerJoinClause extends JoinClause
             return true;
         });
 
+        // Set a flag to indicate withTrashed was called (for cross joins)
+        $this->_withTrashedCalled = true;
+
         return $this;
     }
 
@@ -272,6 +275,11 @@ class PowerJoinClause extends JoinClause
     public function inner(): self
     {
         return $this->joinType('inner');
+    }
+
+    public function cross(): self
+    {
+        return $this->joinType('cross');
     }
 
     public function joinType(string $joinType): self

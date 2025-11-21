@@ -58,6 +58,11 @@ class RelationshipsExtraMethods
     public function performJoinForEloquentPowerJoins()
     {
         return function ($builder, $joinType = 'leftJoin', $callback = null, $alias = null, bool $disableExtraConditions = false, ?string $morphable = null, bool $hasCheck = false) {
+            // Handle cross joins differently - they don't need relationship conditions
+            if ($joinType === 'crossPowerJoin') {
+                return $this->performCrossJoinForEloquentPowerJoins($builder, $callback, $alias, $disableExtraConditions);
+            }
+
             return match (true) {
                 $this instanceof MorphToMany => $this->performJoinForEloquentPowerJoinsForMorphToMany($builder, $joinType, $callback, $alias, $disableExtraConditions),
                 $this instanceof BelongsToMany => $this->performJoinForEloquentPowerJoinsForBelongsToMany($builder, $joinType, $callback, $alias, $disableExtraConditions),
@@ -67,6 +72,207 @@ class RelationshipsExtraMethods
                 $this instanceof MorphTo => $this->performJoinForEloquentPowerJoinsForMorphTo($builder, $joinType, $callback, $alias, $disableExtraConditions, $morphable),
                 default => $this->performJoinForEloquentPowerJoinsForBelongsTo($builder, $joinType, $callback, $alias, $disableExtraConditions),
             };
+        };
+    }
+
+    /**
+     * Perform the CROSS JOIN clause for eloquent power joins.
+     */
+    protected function performCrossJoinForEloquentPowerJoins()
+    {
+        return function ($builder, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            return match (true) {
+                $this instanceof MorphToMany => $this->performCrossJoinForEloquentPowerJoinsForMorphToMany($builder, $callback, $alias, $disableExtraConditions),
+                $this instanceof BelongsToMany => $this->performCrossJoinForEloquentPowerJoinsForBelongsToMany($builder, $callback, $alias, $disableExtraConditions),
+                $this instanceof HasManyThrough || $this instanceof HasOneThrough => $this->performCrossJoinForEloquentPowerJoinsForHasManyThrough($builder, $callback, $alias, $disableExtraConditions),
+                default => $this->performCrossJoinForEloquentPowerJoinsForSingleTable($builder, $callback, $alias, $disableExtraConditions),
+            };
+        };
+    }
+
+    /**
+     * Perform the CROSS JOIN clause for single table relationships.
+     */
+    protected function performCrossJoinForEloquentPowerJoinsForSingleTable()
+    {
+        return function ($builder, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            $joinedTable = $this->query->getModel()->getTable();
+            $tableAlias = $alias ?: $joinedTable;
+
+            // Create a temporary join clause to capture callback conditions
+            $tempJoin = null;
+
+            $builder->crossPowerJoin($joinedTable, function ($join) use ($callback, $alias, &$tempJoin) {
+                if ($alias) {
+                    $join->as($alias);
+                }
+
+                $tempJoin = $join;
+
+                if ($callback && is_callable($callback)) {
+                    $callback($join);
+                }
+            }, $this->query->getModel());
+
+            // Add soft delete conditions to the main query WHERE clause, not as join conditions
+            if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
+                // Check if withTrashed was called by checking if the join has any trashed-related state
+                $withTrashedCalled = $tempJoin && $this->crossJoinHasWithTrashedCalled($tempJoin);
+
+                if (!$withTrashedCalled) {
+                    $builder->whereNull("{$tableAlias}.{$this->query->getModel()->getDeletedAtColumn()}");
+                }
+            }
+
+            // Apply extra conditions to the main query WHERE clause
+            if ($disableExtraConditions === false) {
+                $this->applyCrossJoinExtraConditions($builder, $tableAlias);
+            }
+
+            // Apply callback conditions to the main query WHERE clause
+            if ($tempJoin && !empty($tempJoin->wheres)) {
+                $this->applyCrossJoinCallbackConditions($builder, $tempJoin, $tableAlias);
+            }
+        };
+    }
+
+    /**
+     * Perform the CROSS JOIN clause for BelongsToMany relationships.
+     */
+    protected function performCrossJoinForEloquentPowerJoinsForBelongsToMany()
+    {
+        return function ($builder, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            [$alias1, $alias2] = $alias;
+
+            $joinedTable = $alias1 ?: $this->getTable();
+            $relatedTableAlias = $alias2 ?: $this->getModel()->getTable();
+
+            $builder->crossPowerJoin($this->getTable(), function ($join) use ($callback, $alias1) {
+                if ($alias1) {
+                    $join->as($alias1);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getTable()])) {
+                    $callback[$this->getTable()]($join);
+                }
+            });
+
+            $builder->crossPowerJoin($this->getModel()->getTable(), function ($join) use ($callback, $alias2) {
+                if ($alias2) {
+                    $join->as($alias2);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                    $callback[$this->getModel()->getTable()]($join);
+                }
+            }, $this->getModel());
+
+            // Add soft delete conditions to the main query WHERE clause
+            if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
+                $builder->whereNull("{$relatedTableAlias}.{$this->query->getModel()->getDeletedAtColumn()}");
+            }
+
+            // Apply extra conditions to the main query WHERE clause
+            if ($disableExtraConditions === false) {
+                $this->applyCrossJoinExtraConditions($builder, $relatedTableAlias);
+            }
+
+            return $this;
+        };
+    }
+
+    /**
+     * Perform the CROSS JOIN clause for MorphToMany relationships.
+     */
+    protected function performCrossJoinForEloquentPowerJoinsForMorphToMany()
+    {
+        return function ($builder, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            [$alias1, $alias2] = $alias;
+
+            $joinedTable = $alias1 ?: $this->getTable();
+            $relatedTableAlias = $alias2 ?: $this->getModel()->getTable();
+
+            $builder->crossPowerJoin($this->getTable(), function ($join) use ($callback, $alias1) {
+                if ($alias1) {
+                    $join->as($alias1);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getTable()])) {
+                    $callback[$this->getTable()]($join);
+                }
+            });
+
+            $builder->crossPowerJoin($this->getModel()->getTable(), function ($join) use ($callback, $alias2) {
+                if ($alias2) {
+                    $join->as($alias2);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                    $callback[$this->getModel()->getTable()]($join);
+                }
+            }, $this->getModel());
+
+            // Add soft delete conditions to the main query WHERE clause
+            if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
+                $builder->whereNull("{$relatedTableAlias}.{$this->query->getModel()->getDeletedAtColumn()}");
+            }
+
+            // Apply extra conditions to the main query WHERE clause
+            if ($disableExtraConditions === false) {
+                $this->applyCrossJoinExtraConditions($builder, $relatedTableAlias);
+            }
+
+            return $this;
+        };
+    }
+
+    /**
+     * Perform the CROSS JOIN clause for HasManyThrough relationships.
+     */
+    protected function performCrossJoinForEloquentPowerJoinsForHasManyThrough()
+    {
+        return function ($builder, $callback = null, $alias = null, bool $disableExtraConditions = false) {
+            [$alias1, $alias2] = $alias;
+            $throughTable = $alias1 ?: $this->getThroughParent()->getTable();
+            $farTable = $alias2 ?: $this->getModel()->getTable();
+
+            $builder->crossPowerJoin($this->getThroughParent()->getTable(), function (PowerJoinClause $join) use ($callback, $alias1, $disableExtraConditions) {
+                if ($alias1) {
+                    $join->as($alias1);
+                }
+
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
+                    $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
+                }
+
+                if ($disableExtraConditions === false) {
+                    $this->applyExtraConditions($join);
+                }
+
+                if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
+                    $callback[$this->getThroughParent()->getTable()]($join);
+                }
+
+                if ($callback && is_callable($callback)) {
+                    $callback($join);
+                }
+            }, $this->getThroughParent());
+
+            $builder->crossPowerJoin($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $farTable, $alias2) {
+                if ($alias2) {
+                    $join->as($alias2);
+                }
+
+                if ($this->usesSoftDeletes($this->getScopes())) {
+                    $join->whereNull("{$farTable}.{$this->getModel()->getDeletedAtColumn()}");
+                }
+
+                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
+                    $callback[$this->getModel()->getTable()]($join);
+                }
+            }, $this->getModel());
+
+            return $this;
         };
     }
 
@@ -553,6 +759,117 @@ class RelationshipsExtraMethods
             }
 
             return $condition['column'] === $key;
+        };
+    }
+
+    public function applyCrossJoinExtraConditions()
+    {
+        return function ($builder, $tableAlias) {
+            foreach ($this->getQuery()->getQuery()->wheres as $condition) {
+                if ($this->shouldNotApplyExtraCondition($condition)) {
+                    continue;
+                }
+
+                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull'], true)) {
+                    continue;
+                }
+
+                $method = "applyCrossJoin{$condition['type']}Condition";
+                $this->$method($builder, $condition, $tableAlias);
+            }
+        };
+    }
+
+    public function applyCrossJoinBasicCondition()
+    {
+        return function ($builder, $condition, $tableAlias) {
+            // Replace table name with alias if needed
+            $column = $condition['column'];
+            if (Str::contains($column, $this->query->getModel()->getTable())) {
+                $column = str_replace($this->query->getModel()->getTable(), $tableAlias, $column);
+            }
+            $builder->where($column, $condition['operator'], $condition['value'], $condition['boolean']);
+        };
+    }
+
+    public function applyCrossJoinNullCondition()
+    {
+        return function ($builder, $condition, $tableAlias) {
+            $column = $condition['column'];
+            if (Str::contains($column, $this->query->getModel()->getTable())) {
+                $column = str_replace($this->query->getModel()->getTable(), $tableAlias, $column);
+            }
+            $builder->whereNull($column, $condition['boolean']);
+        };
+    }
+
+    public function applyCrossJoinNotNullCondition()
+    {
+        return function ($builder, $condition, $tableAlias) {
+            $column = $condition['column'];
+            if (Str::contains($column, $this->query->getModel()->getTable())) {
+                $column = str_replace($this->query->getModel()->getTable(), $tableAlias, $column);
+            }
+            $builder->whereNotNull($column, $condition['boolean']);
+        };
+    }
+
+    public function crossJoinHasWithTrashedCalled()
+    {
+        return function ($tempJoin) {
+            // Check if there are any conditions that suggest withTrashed was called
+            // withTrashed removes soft delete conditions, so if we don't find the expected
+            // soft delete condition, it means withTrashed was likely called
+            $deletedAtColumn = $this->query->getModel()->getDeletedAtColumn();
+
+            foreach ($tempJoin->wheres as $condition) {
+                if ($condition['type'] === 'Null' && Str::contains($condition['column'], $deletedAtColumn)) {
+                    return false; // Found soft delete condition, withTrashed was not called
+                }
+            }
+
+            // If we have conditions but no soft delete condition, withTrashed might have been called
+            // But we need a more reliable way to detect this. Let's use a different approach.
+            // We'll add a flag to the PowerJoinClause when withTrashed is called
+            return property_exists($tempJoin, '_withTrashedCalled') && $tempJoin->_withTrashedCalled;
+        };
+    }
+
+    public function applyCrossJoinCallbackConditions()
+    {
+        return function ($builder, $tempJoin, $tableAlias) {
+            foreach ($tempJoin->wheres as $condition) {
+                if (!in_array($condition['type'], ['Basic', 'Null', 'NotNull'], true)) {
+                    continue;
+                }
+
+                switch ($condition['type']) {
+                    case 'Basic':
+                        $column = $condition['column'];
+                        if (Str::contains($column, $this->query->getModel()->getTable())) {
+                            $column = str_replace($this->query->getModel()->getTable(), $tableAlias, $column);
+                        }
+                        $builder->where($column, $condition['operator'], $condition['value'], $condition['boolean']);
+                        break;
+                    case 'Null':
+                        $column = $condition['column'];
+                        if (Str::contains($column, $this->query->getModel()->getTable())) {
+                            $column = str_replace($this->query->getModel()->getTable(), $tableAlias, $column);
+                        }
+                        $builder->whereNull($column, $condition['boolean']);
+                        break;
+                    case 'NotNull':
+                        $column = $condition['column'];
+                        if (Str::contains($column, $this->query->getModel()->getTable())) {
+                            $column = str_replace($this->query->getModel()->getTable(), $tableAlias, $column);
+                        }
+                        $builder->whereNotNull($column, $condition['boolean']);
+                        break;
+                }
+            }
+
+            // Clear the join conditions since we've moved them to the main query
+            $tempJoin->wheres = [];
         };
     }
 

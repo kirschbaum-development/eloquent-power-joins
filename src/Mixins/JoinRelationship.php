@@ -79,6 +79,35 @@ class JoinRelationship
         };
     }
 
+    /**
+     * New clause for making cross joins, where we pass the model to the joiner class.
+     */
+    public function crossPowerJoin(): Closure
+    {
+        return function ($table, $first = null, $operator = null, $second = null) {
+            // For cross joins, we need to handle the model parameter differently
+            // The model can be passed as $operator (3rd parameter) when $first is a Closure
+            $model = null;
+            if ($first instanceof Model) {
+                $model = $first;
+            } elseif ($operator instanceof Model) {
+                $model = $operator;
+            }
+
+            $join = $this->newPowerJoinClause($this->query, 'cross', $table, $model);
+
+            // Cross joins don't have conditions by default, but we can still apply callbacks
+            if ($first instanceof Closure) {
+                $first($join);
+            }
+
+            $this->query->joins[] = $join;
+            $this->query->addBinding($join->getBindings(), 'join');
+
+            return $this;
+        };
+    }
+
     public function newPowerJoinClause(): Closure
     {
         return function (QueryBuilder $parentQuery, string $type, string $table, ?Model $model = null) {
@@ -217,6 +246,16 @@ class JoinRelationship
         };
     }
 
+    /**
+     * Cross join the relationship(s) using table aliases.
+     */
+    public function crossJoinRelationshipUsingAlias(): Closure
+    {
+        return function (string $relationName, Closure|array|string|null $callback = null, bool $disableExtraConditions = false, ?string $morphable = null) {
+            return $this->joinRelationship($relationName, $callback, 'crossJoin', true, $disableExtraConditions, morphable: $morphable);
+        };
+    }
+
     public function joinRelation(): Closure
     {
         return function (
@@ -256,6 +295,20 @@ class JoinRelationship
     {
         return function (string $relation, Closure|array|string|null $callback = null, bool $useAlias = false, bool $disableExtraConditions = false, ?string $morphable = null) {
             return $this->joinRelationship($relation, $callback, 'rightJoin', $useAlias, $disableExtraConditions, morphable: $morphable);
+        };
+    }
+
+    public function crossJoinRelationship(): Closure
+    {
+        return function (string $relation, Closure|array|string|null $callback = null, bool $useAlias = false, bool $disableExtraConditions = false, ?string $morphable = null) {
+            return $this->joinRelationship($relation, $callback, 'crossJoin', $useAlias, $disableExtraConditions, morphable: $morphable);
+        };
+    }
+
+    public function crossJoinRelation(): Closure
+    {
+        return function (string $relation, Closure|array|string|null $callback = null, bool $useAlias = false, bool $disableExtraConditions = false, ?string $morphable = null) {
+            return $this->joinRelationship($relation, $callback, 'crossJoin', $useAlias, $disableExtraConditions, morphable: $morphable);
         };
     }
 

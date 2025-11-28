@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins\Tests;
 
 use Exception;
+use Kirschbaum\PowerJoins\Exceptions\SingleCallbackNotAllowed;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
@@ -269,6 +270,14 @@ class JoinRelationshipTest extends TestCase
             'inner join "groups" on "groups"."id" = "group_members"."group_id" and "groups"."name" = ?',
             $query
         );
+    }
+
+    /** @test */
+    public function test_single_callback_in_belongs_to_many_should_throw_exception()
+    {
+        $this->expectException(SingleCallbackNotAllowed::class);
+
+        User::query()->joinRelationship('groups', fn ($join) => $join->where('groups.name', 'Test'));
     }
 
     /** @test */

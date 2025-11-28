@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\MySqlConnection;
 use Illuminate\Support\Str;
+use Kirschbaum\PowerJoins\Exceptions\SingleCallbackNotAllowed;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\StaticCache;
 
@@ -129,6 +130,8 @@ class RelationshipsExtraMethods
 
                 if (is_array($callback) && isset($callback[$this->getTable()])) {
                     $callback[$this->getTable()]($join);
+                } elseif ($callback && is_callable($callback)) {
+                    throw new SingleCallbackNotAllowed();
                 }
             });
 

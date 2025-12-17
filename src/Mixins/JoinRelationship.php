@@ -110,7 +110,7 @@ class JoinRelationship
             // Check if the main table has an alias (e.g., "posts as p") and set it as the main table or alias if it does.
             $fromClause = $this->getQuery()->from;
             $mainTableOrAlias = $this->getModel()->getTable();
-            if ($fromClause && preg_match('/^.+\s+as\s+["\'\`]?(.+?)["\'\`]?$/i', $fromClause, $matches)) {
+            if ($fromClause && is_string($fromClause) && preg_match('/^.+\s+as\s+["\'\`]?(.+?)["\'\`]?$/i', $fromClause, $matches)) {
                 // Register the alias for the main model so joins use it
                 $mainTableOrAlias = $matches[1];
                 StaticCache::setTableAliasForModel($this->getModel(), $mainTableOrAlias);

@@ -3,6 +3,7 @@
 namespace Kirschbaum\PowerJoins\Tests;
 
 use Exception;
+use Illuminate\Support\Facades\DB;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\Tests\Models\Category;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
@@ -541,6 +542,35 @@ class JoinRelationshipTest extends TestCase
 
         $this->assertQueryContains(
             'inner join "posts" on "posts"."user_id" = "users"."id"',
+            $query
+        );
+    }
+
+    /** @test */
+    public function test_join_relationship_respects_columns_defined_in_first()
+    {
+        $user = factory(User::class)->create();
+        factory(Post::class)->create([
+            'user_id' => $user->id,
+            'title' => 'Power Joins',
+        ]);
+
+        DB::enableQueryLog();
+        DB::flushQueryLog();
+
+        User::query()
+            ->joinRelationship('posts')
+            ->first(['posts.title as post_title']);
+
+        $query = collect(DB::getQueryLog())->last()['query'];
+
+        $this->assertQueryContains(
+            'select "posts"."title" as "post_title"',
+            $query
+        );
+
+        $this->assertQueryNotContains(
+            'select "users".* from "users"',
             $query
         );
     }

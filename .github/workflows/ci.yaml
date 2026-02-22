@@ -5,167 +5,235 @@ on:
   pull_request:
 
 jobs:
-    mysql_8:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 5
+  mysql_8:
+    runs-on: ubuntu-24.04
 
-        services:
-            mysql:
-                image: mysql:8
-                env:
-                    MYSQL_ALLOW_EMPTY_PASSWORD: yes
-                    MYSQL_DATABASE: laravel
-                ports:
-                    - 3306:3306
-                options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-        strategy:
-            fail-fast: true
-            matrix:
-                php: [ 8.2, 8.3, 8.4, 8.5 ]
-                laravel: [ 11.*, 12.* ]
-                include:
-                    -   laravel: 11.*
-                        testbench: 9.*
-                    -   laravel: 12.*
-                        testbench: 10.*
 
-        name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    timeout-minutes: 5
 
-        steps:
-            -   name: Checkout code
-                uses: actions/checkout@v4
 
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: ${{ matrix.php }}
-                    extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, :php-psr
-                    tools: composer:v2
-                    coverage: none
+    services:
+      mysql:
+        image: mysql:8
+        env:
+          MYSQL_ALLOW_EMPTY_PASSWORD: yes
+          MYSQL_DATABASE: laravel
+        ports:
+          - 3306:3306
+        options: --health-cmd="mysqladmin ping" --health-interval=10s --health-timeout=5s --health-retries=3
 
-            -   name: Install dependencies
-                uses: nick-fields/retry@v3
-                with:
-                    timeout_minutes: 5
-                    max_attempts: 5
-                    command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
-            -   name: Execute tests
-                run: vendor/bin/phpunit
-                env:
-                    DB_CONNECTION: mysql
-                    DB_DATABASE: laravel
 
-    pgsql_15:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 5
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.2, 8.3, 8.4, 8.5]
+        laravel: ['11.*', '12.*', '13.*']
+        include:
+          - laravel: 11.*
+            testbench: 9.*
+          - laravel: 12.*
+            testbench: 10.*
+          - laravel: 13.*
+            testbench: 11.*
+        exclude:
+          - laravel: 13.*
+            php: 8.2
 
-        services:
-            postgresql:
-                image: postgres:15
-                env:
-                    POSTGRES_DB: laravel
-                    POSTGRES_USER: laravel
-                    POSTGRES_PASSWORD: password
-                ports:
-                    - 5432:5432
-                options: --health-cmd=pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
 
-        strategy:
-            fail-fast: true
-            matrix:
-                php: [ 8.2, 8.3, 8.4, 8.5 ]
-                laravel: [ 11.*, 12.* ]
-                include:
-                    -   laravel: 11.*
-                        testbench: 9.*
-                    -   laravel: 12.*
-                        testbench: 10.*
 
-        name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+    name: MySQL 8 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
-        steps:
-            -   name: Checkout code
-                uses: actions/checkout@v4
 
-            -   name: Cache dependencies
-                uses: actions/cache@v4
-                with:
-                    path: ~/.composer/cache/files
-                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
 
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: ${{ matrix.php }}
-                    extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
-                    coverage: none
-                    tools: composer:v2
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
 
-            -   name: Install dependencies
-                run: |
-                    composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
-                    composer dump
 
-            -   name: Execute tests
-                run: vendor/bin/phpunit
-                env:
-                    DB_CONNECTION: pgsql
-                    DB_DATABASE: laravel
-                    DB_USERNAME: laravel
-                    DB_PASSWORD: password
 
-    sqlite:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 5
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: dom, curl, libxml, mbstring, zip, pcntl, pdo, pdo_mysql, :php-psr
+          tools: composer:v2
+          coverage: none
 
-        strategy:
-            fail-fast: true
-            matrix:
-                php: [ 8.2, 8.3, 8.4 ]
-                laravel: [ 11.*, 12.* ]
-                include:
-                    -   laravel: 11.*
-                        testbench: 9.*
-                    -   laravel: 12.*
-                        testbench: 10.*
 
-        name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
 
-        steps:
-            -   name: Checkout code
-                uses: actions/checkout@v4
+      - name: Install dependencies
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 5
+          max_attempts: 5
+          command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
-            -   name: Cache dependencies
-                uses: actions/cache@v4
-                with:
-                    path: ~/.composer/cache/files
-                    key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
 
-            -   name: Setup PHP
-                uses: shivammathur/setup-php@v2
-                with:
-                    php-version: ${{ matrix.php }}
-                    extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
-                    coverage: none
-                    tools: composer:v2
 
-            -   name: Install dependencies
-                run: |
-                    composer --version
-                    composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
-                    composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
-                    composer dump
+      - name: Execute tests
+        run: vendor/bin/phpunit
+        env:
+          DB_CONNECTION: mysql
+          DB_DATABASE: laravel
 
-            -   name: Setup SQLite Database
-                run: php vendor/bin/testbench package:create-sqlite-db
+  pgsql_15:
+    runs-on: ubuntu-24.04
 
-            -   name: Execute tests
-                run: vendor/bin/phpunit
-                env:
-                    DB_CONNECTION: sqlite
+
+
+    timeout-minutes: 5
+
+
+    services:
+      postgresql:
+        image: postgres:15
+        env:
+          POSTGRES_DB: laravel
+          POSTGRES_USER: laravel
+          POSTGRES_PASSWORD: password
+        ports:
+          - 5432:5432
+        options: --health-cmd=pg_isready --health-interval=10s --health-timeout=5s --health-retries=3
+
+
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.2, 8.3, 8.4, 8.5]
+        laravel: ['11.*', '12.*', '13.*']
+        include:
+          - laravel: 11.*
+            testbench: 9.*
+          - laravel: 12.*
+            testbench: 10.*
+          - laravel: 13.*
+            testbench: 11.*
+        exclude:
+          - laravel: 13.*
+            php: 8.2
+
+
+
+    name: PostgreSQL 15 - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+
+
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+
+
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
+          coverage: none
+          tools: composer:v2
+
+
+
+      - name: Install dependencies
+        run: |
+          composer --version
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+          composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+          composer update --prefer-dist --no-interaction --no-suggest --dev
+          composer dump
+
+
+
+      - name: Execute tests
+        run: vendor/bin/phpunit
+        env:
+          DB_CONNECTION: pgsql
+          DB_DATABASE: laravel
+          DB_USERNAME: laravel
+          DB_PASSWORD: password
+
+  sqlite:
+    runs-on: ubuntu-24.04
+
+
+
+    timeout-minutes: 5
+
+
+
+    strategy:
+      fail-fast: true
+      matrix:
+        php: [8.2, 8.3, 8.4]
+        laravel: ['11.*', '12.*', '13.*']
+        include:
+          - laravel: 11.*
+            testbench: 9.*
+          - laravel: 12.*
+            testbench: 10.*
+          - laravel: 13.*
+            testbench: 11.*
+        exclude:
+          - laravel: 13.*
+            php: 8.2
+
+
+
+    name: SQLite - PHP ${{ matrix.php }} - Laravel ${{ matrix.laravel }}
+
+
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+
+
+      - name: Cache dependencies
+        uses: actions/cache@v4
+        with:
+          path: ~/.composer/cache/files
+          key: dependencies-pw-v2-${{ matrix.laravel }}-php-${{ matrix.php }}-composer-${{ hashFiles('composer.json') }}
+
+
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          extensions: curl, mbstring, zip, pcntl, pdo, sqlite, pdo_sqlite, iconv
+          coverage: none
+          tools: composer:v2
+
+
+
+      - name: Install dependencies
+        run: |
+          composer --version
+          composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+          composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+          composer update --prefer-dist --no-interaction --no-suggest --dev
+          composer dump
+
+
+
+      - name: Setup SQLite Database
+        run: php vendor/bin/testbench package:create-sqlite-db
+
+
+
+      - name: Execute tests
+        run: vendor/bin/phpunit
+        env:
+          DB_CONNECTION: sqlite

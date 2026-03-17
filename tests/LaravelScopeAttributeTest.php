@@ -9,10 +9,8 @@ use Kirschbaum\PowerJoins\Tests\Models\CountryEnum;
 
 class LaravelScopeAttributeTest extends TestCase
 {
-    /**
-     * @test
-     */
-    public function it_can_use_laravel_scope_attribute_in_join_relationship_callback()
+    /** @test */
+    public function test_it_can_use_laravel_scope_attribute_in_join_relationship_callback()
     {
         if (version_compare(app()->version(), '12.0.0', '<')) {
             $this->markTestSkipped('Laravel 12+ is required for this test');

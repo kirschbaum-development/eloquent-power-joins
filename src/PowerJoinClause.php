@@ -205,9 +205,9 @@ class PowerJoinClause extends JoinClause
             $column($query);
 
             return $this->addNestedWhereQuery($query);
-        } else {
-            return parent::where($column, $operator, $value, $boolean);
         }
+
+        return parent::where($column, $operator, $value, $boolean);
     }
 
     /**

@@ -24,7 +24,7 @@
     },
     "require-dev": {
         "friendsofphp/php-cs-fixer": "dev-master",
-        "laravel/legacy-factories": "^1.0@dev",
+        "laravel/legacy-factories": "^1.0@dev|dev-master",
         "orchestra/testbench": "^9.0|^10.0|^11.0",
         "phpunit/phpunit": "^10.0|^11.0|^12.0"
     },

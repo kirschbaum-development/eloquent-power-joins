@@ -431,6 +431,10 @@ class RelationshipsExtraMethods
     public function performHavingForEloquentPowerJoins()
     {
         return function ($builder, $operator, $count, ?string $morphable = null) {
+            if (is_null($builder->getSelect())) {
+                $builder->select(sprintf('%s.*', $builder->getModel()->getTable()));
+            }
+
             if ($morphable) {
                 $modelInstance = new $morphable();
 

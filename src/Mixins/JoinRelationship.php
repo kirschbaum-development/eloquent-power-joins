@@ -116,9 +116,12 @@ class JoinRelationship
                 StaticCache::setTableAliasForModel($this->getModel(), $mainTableOrAlias);
             }
 
-            if (is_null($this->getSelect())) {
-                $this->select(sprintf('%s.*', $mainTableOrAlias));
-            }
+            $defaultSelect = sprintf('%s.*', $mainTableOrAlias);
+            $this->getQuery()->beforeQuery(function ($queryBuilder) use ($defaultSelect) {
+                if (is_null($queryBuilder->columns) || $queryBuilder->columns === ['*']) {
+                    $queryBuilder->columns = [$defaultSelect];
+                }
+            });
 
             if (Str::contains($relationName, '.')) {
                 $this->joinNestedRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions, $morphable);
@@ -399,6 +402,10 @@ class JoinRelationship
             }
 
             if ($aggregation) {
+                if (is_null($this->getSelect())) {
+                    $this->select(sprintf('%s.*', $this->getModel()->getTable()));
+                }
+
                 $aliasName = sprintf(
                     '%s_%s_%s',
                     $table,
@@ -530,9 +537,12 @@ class JoinRelationship
     public function powerJoinHas(): Closure
     {
         return function (string $relation, string $operator = '>=', int $count = 1, $boolean = 'and', Closure|array|string|null $callback = null, ?string $morphable = null): static {
-            if (is_null($this->getSelect())) {
-                $this->select(sprintf('%s.*', $this->getModel()->getTable()));
-            }
+            $defaultSelect = sprintf('%s.*', $this->getModel()->getTable());
+            $this->getQuery()->beforeQuery(function ($queryBuilder) use ($defaultSelect) {
+                if (is_null($queryBuilder->columns) || $queryBuilder->columns === ['*']) {
+                    $queryBuilder->columns = [$defaultSelect];
+                }
+            });
 
             if (is_null($this->getGroupBy())) {
                 $this->groupBy($this->getModel()->getQualifiedKeyName());

@@ -2,7 +2,6 @@
 
 namespace Kirschbaum\PowerJoins\Tests;
 
-use Kirschbaum\PowerJoins\ConnectionAwareTable;
 use Kirschbaum\PowerJoins\Tests\Models\CrossConnection\Article;
 use Kirschbaum\PowerJoins\Tests\Models\CrossConnection\Author;
 use Kirschbaum\PowerJoins\Tests\Models\CrossConnection\Comment;
@@ -15,12 +14,16 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         parent::defineEnvironment($app);
 
-        $app['config']->set('database.connections.testing.prefix', 'main_');
-
+        $app['config']->set('database.connections.primary', [
+            'driver' => 'mysql',
+            'database' => 'primary_db',
+            'prefix' => '',
+            'foreign_key_constraints' => false,
+        ]);
         $app['config']->set('database.connections.secondary', [
-            'driver' => 'sqlite',
-            'database' => ':memory:',
-            'prefix' => 'sec_',
+            'driver' => 'mysql',
+            'database' => 'secondary_db',
+            'prefix' => '',
             'foreign_key_constraints' => false,
         ]);
     }
@@ -36,12 +39,12 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationship('articles')->toSql();
 
-        $this->assertQueryContains('from "main_authors"', $query);
+        $this->assertQueryContains('from "authors"', $query);
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryNotContains('join "articles"', $query);
     }
 
     /** @test */
@@ -50,10 +53,9 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->leftJoinRelationship('articles')->toSql();
 
         $this->assertQueryContains(
-            'left join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'left join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_articles"', $query);
     }
 
     /** @test */
@@ -62,10 +64,9 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->rightJoinRelationship('articles')->toSql();
 
         $this->assertQueryContains(
-            'right join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'right join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_articles"', $query);
     }
 
     /** @test */
@@ -73,12 +74,12 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Article::query()->joinRelationship('author')->toSql();
 
-        $this->assertQueryContains('from "sec_articles"', $query);
+        $this->assertQueryContains('from "articles"', $query);
         $this->assertQueryContains(
-            'inner join "main_authors" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"sec_authors"', $query);
+        $this->assertQueryNotContains('"secondary_db"."authors"', $query);
     }
 
     /** @test */
@@ -87,10 +88,9 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('profile')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_profiles" on "sec_profiles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."profiles" on "secondary_db"."profiles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_profiles"', $query);
     }
 
     /*
@@ -102,54 +102,56 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     /** @test */
     public function test_nested_has_many_across_connections()
     {
-        // Author (main_) -> articles (sec_) -> comments (sec_)
+        // Author (testing) -> articles (secondary_db) -> comments (secondary_db)
         $query = Author::query()->joinRelationship('articles.comments')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "sec_comments" on "sec_comments"."article_id" = "sec_articles"."id"',
+            'inner join "secondary_db"."comments" on "secondary_db"."comments"."article_id" = "secondary_db"."articles"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_comments"', $query);
     }
 
     /** @test */
     public function test_nested_belongs_to_across_connections()
     {
-        // Comment (sec_) -> article (sec_) -> author (main_)
+        // Comment (secondary_db) -> article (secondary_db) -> author (primary_db)
+        // Comment->Article is same-connection (no qualifier); Article->Author is cross-connection
+        // and primary is in qualifyWithDatabase, so authors is qualified with primary_db.
         $query = Comment::query()->joinRelationship('article.author')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_comments"."article_id" = "sec_articles"."id"',
+            'inner join "articles" on "comments"."article_id" = "articles"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "main_authors" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"sec_authors"', $query);
+        $this->assertQueryNotContains('"secondary_db"."authors"', $query);
     }
 
     /** @test */
     public function test_nested_zig_zag_across_connections()
     {
-        // Profile (sec_) -> author (main_) -> articles (sec_)
+        // Profile (secondary_db) -> author (primary_db) -> articles (secondary_db)
+        // Cross-connection is measured from the base (Profile, secondary_db):
+        // Author is cross-connection and primary is qualified → primary_db.authors.
+        // Articles is same-connection as base (secondary_db) — no DB qualifier.
         $query = Profile::query()->joinRelationship('author.articles')->toSql();
 
         $this->assertQueryContains(
-            'inner join "main_authors" on "sec_profiles"."author_id" = "main_authors"."id"',
+            'inner join "primary_db"."authors" on "profiles"."author_id" = "primary_db"."authors"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "articles" on "articles"."author_id" = "primary_db"."authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"sec_authors"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryNotContains('"secondary_db"."articles"', $query);
     }
 
     /*
@@ -164,15 +166,13 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('tags')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_author_tag" on "sec_author_tag"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."author_tag" on "secondary_db"."author_tag"."author_id" = "authors"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "sec_tags" on "sec_tags"."id" = "sec_author_tag"."tag_id"',
+            'inner join "secondary_db"."tags" on "secondary_db"."tags"."id" = "secondary_db"."author_tag"."tag_id"',
             $query
         );
-        $this->assertQueryNotContains('"main_author_tag"', $query);
-        $this->assertQueryNotContains('"main_tags"', $query);
     }
 
     /** @test */
@@ -181,10 +181,9 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('stickers')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_stickers" on "sec_stickers"."stickerable_id" = "main_authors"."id"',
+            'inner join "secondary_db"."stickers" on "secondary_db"."stickers"."stickerable_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_stickers"', $query);
     }
 
     /** @test */
@@ -192,10 +191,17 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationship('labels')->toSql();
 
-        $this->assertQueryContains('"sec_labelables"', $query);
-        $this->assertQueryContains('"sec_labels"', $query);
-        $this->assertQueryNotContains('"main_labelables"', $query);
-        $this->assertQueryNotContains('"main_labels"', $query);
+        $this->assertQueryContains('"secondary_db"."labelables"', $query);
+        $this->assertQueryContains('"secondary_db"."labels"', $query);
+    }
+
+    /** @test */
+    public function test_morph_to_many_morph_type_condition_uses_correct_qualifier()
+    {
+        $query = Author::query()->joinRelationship('labels')->toSql();
+
+        // The morph type discriminator on the pivot must also carry the database qualifier.
+        $this->assertQueryContains('"secondary_db"."labelables"."labelable_type"', $query);
     }
 
     /*
@@ -207,24 +213,22 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     /** @test */
     public function test_has_many_through_uses_related_connection_for_through_and_far_tables()
     {
-        // Author (main_) hasManyThrough Comment (sec_) via Article (sec_)
+        // Author (testing) hasManyThrough Comment (secondary_db) via Article (secondary_db)
         $query = Author::query()->joinRelationship('commentsThroughArticles')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "sec_comments" on "sec_comments"."article_id" = "sec_articles"."id"',
+            'inner join "secondary_db"."comments" on "secondary_db"."comments"."article_id" = "secondary_db"."articles"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_comments"', $query);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Soft Deletes — deleted_at clauses must also use the correct prefix
+    | Soft Deletes — deleted_at clauses must also use the correct qualifier
     |--------------------------------------------------------------------------
     */
 
@@ -233,8 +237,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationship('articles')->toSql();
 
-        $this->assertQueryContains('"sec_articles"."deleted_at" is null', $query);
-        $this->assertQueryNotContains('"main_articles"."deleted_at"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"."deleted_at" is null', $query);
     }
 
     /** @test */
@@ -242,10 +245,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Article::query()->joinRelationship('author')->toSql();
 
-        // Article is soft-deletable; base table deleted_at filter applies main "from" side (sec_articles)
-        // Author is soft-deletable; join-side deleted_at must use main_ prefix
-        $this->assertQueryContains('"main_authors"."deleted_at" is null', $query);
-        $this->assertQueryNotContains('"sec_authors"."deleted_at"', $query);
+        $this->assertQueryContains('"primary_db"."authors"."deleted_at" is null', $query);
+        $this->assertQueryNotContains('"secondary_db"."authors"."deleted_at"', $query);
     }
 
     /** @test */
@@ -254,10 +255,24 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('articlesWithTrashed')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"sec_articles"."deleted_at"', $query);
+        $this->assertQueryNotContains('"secondary_db"."articles"."deleted_at"', $query);
+    }
+
+    /** @test */
+    public function test_belongs_to_with_trashed_cross_connection_does_not_add_deleted_at_clause()
+    {
+        // Inverse path: Article (secondary) belongsTo Author (primary) withTrashed.
+        // The primary_db qualifier must appear on the join but no deleted_at clause.
+        $query = Article::query()->joinRelationship('authorWithTrashed')->toSql();
+
+        $this->assertQueryContains(
+            'inner join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
+            $query
+        );
+        $this->assertQueryNotContains('"primary_db"."authors"."deleted_at"', $query);
     }
 
     /*
@@ -272,11 +287,10 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('publishedArticles')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryContains('"sec_articles"."published" = ?', $query);
-        $this->assertQueryNotContains('"main_articles"."published"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"."published" = ?', $query);
     }
 
     /** @test */
@@ -287,11 +301,10 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         })->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryContains('"sec_articles"."published"', $query);
-        $this->assertQueryNotContains('"main_articles"."published"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"."published"', $query);
     }
 
     /*
@@ -305,9 +318,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationship('articles', fn ($join) => $join->as('a'))->toSql();
 
-        $this->assertQueryContains('"sec_articles" as "a"', $query);
-        $this->assertQueryContains('"a"."author_id" = "main_authors"."id"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles" as "a"', $query);
+        $this->assertQueryContains('"a"."author_id" = "authors"."id"', $query);
     }
 
     /** @test */
@@ -315,9 +327,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationshipUsingAlias('articles')->toSql();
 
-        // The real table is sec_articles; alias is auto-generated
-        $this->assertQueryContains('"sec_articles" as', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles" as', $query);
     }
 
     /** @test */
@@ -325,8 +335,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationship('articles', 'my_alias')->toSql();
 
-        $this->assertQueryContains('"sec_articles" as "my_alias"', $query);
-        $this->assertQueryContains('"my_alias"."author_id" = "main_authors"."id"', $query);
+        $this->assertQueryContains('"secondary_db"."articles" as "my_alias"', $query);
+        $this->assertQueryContains('"my_alias"."author_id" = "authors"."id"', $query);
     }
 
     /*
@@ -340,7 +350,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationship('articles')->toSql();
 
-        $this->assertQueryContains('select "main_authors".* from "main_authors"', $query);
+        $this->assertQueryContains('select "authors".* from "authors"', $query);
     }
 
     /** @test */
@@ -348,7 +358,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Article::query()->joinRelationship('author')->toSql();
 
-        $this->assertQueryContains('select "sec_articles".* from "sec_articles"', $query);
+        $this->assertQueryContains('select "articles".* from "articles"', $query);
     }
 
     /*
@@ -362,8 +372,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->powerJoinHas('articles')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryNotContains('join "articles"', $query);
     }
 
     /** @test */
@@ -373,8 +383,26 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             $join->where('articles.published', true);
         })->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+    }
+
+    /** @test */
+    public function test_scope_using_power_join_where_has_works_across_connections()
+    {
+        // scopeHasPublishedArticles calls powerJoinWhereHas internally.
+        $query = Author::query()->hasPublishedArticles()->toSql();
+
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"."published"', $query);
+    }
+
+    /** @test */
+    public function test_power_join_has_with_minimum_count_threshold_across_connections()
+    {
+        $query = Author::query()->powerJoinHas('articles', '>=', 2)->toSql();
+
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryNotContains('join "articles"', $query);
     }
 
     /** @test */
@@ -382,8 +410,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->powerJoinDoesntHave('articles')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
     }
 
     /** @test */
@@ -391,10 +418,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->powerJoinWhereHas('articles.comments')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryContains('"sec_comments"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_comments"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryContains('"secondary_db"."comments"', $query);
     }
 
     /*
@@ -408,8 +433,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByPowerJoins('articles.id')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryNotContains('join "articles"', $query);
     }
 
     /*
@@ -427,43 +452,10 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             ->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query,
             times: 1
         );
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | qualifyWithDatabaseName opt-in
-    |--------------------------------------------------------------------------
-    */
-
-    /** @test */
-    public function test_qualify_with_database_name_prefixes_join_with_database()
-    {
-        ConnectionAwareTable::qualifyWithDatabaseName('secondary');
-
-        try {
-            $query = Author::query()->joinRelationship('articles')->toSql();
-
-            // sqlite :memory: returns ":memory:" as the database name
-            $this->assertQueryContains(':memory:"."sec_articles', $query);
-            $this->assertQueryContains(':memory:"."sec_articles"."author_id"', $query);
-        } finally {
-            ConnectionAwareTable::disableDatabaseQualification('secondary');
-        }
-    }
-
-    /** @test */
-    public function test_disable_database_qualification_removes_database_prefix()
-    {
-        ConnectionAwareTable::qualifyWithDatabaseName('secondary');
-        ConnectionAwareTable::disableDatabaseQualification('secondary');
-
-        $query = Author::query()->joinRelationship('articles')->toSql();
-
-        $this->assertQueryNotContains(':memory:"."sec_articles', $query);
     }
 
     /*
@@ -477,8 +469,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByPowerJoinsCount('articles.id')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
     }
 
     /** @test */
@@ -486,8 +477,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByPowerJoinsSum('articles.id')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
     }
 
     /** @test */
@@ -495,8 +485,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByPowerJoinsAvg('articles.id')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
     }
 
     /** @test */
@@ -504,8 +493,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByPowerJoinsMin('articles.id')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
     }
 
     /** @test */
@@ -513,8 +501,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByPowerJoinsMax('articles.id')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
     }
 
     /** @test */
@@ -522,8 +509,23 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->orderByLeftPowerJoins('articles.id')->toSql();
 
-        $this->assertQueryContains('left join "sec_articles"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('left join "secondary_db"."articles"', $query);
+    }
+
+    /** @test */
+    public function test_order_by_power_joins_three_level_nested_across_connections()
+    {
+        // Author (primary) -> articles (secondary_db) -> comments (secondary_db) -> id.
+        // Cross-connection is measured against the base (Author/primary), so BOTH
+        // articles and comments are cross-connection — both get the secondary_db qualifier.
+        $query = Author::query()->orderByPowerJoins('articles.comments.id')->toSql();
+
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryContains('"secondary_db"."comments"', $query);
+        $this->assertQueryContains(
+            'inner join "secondary_db"."comments" on "secondary_db"."comments"."article_id" = "secondary_db"."articles"."id"',
+            $query
+        );
     }
 
     /*
@@ -538,15 +540,13 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinNestedRelationship('articles.comments', joinType: 'powerJoin')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "sec_comments" on "sec_comments"."article_id" = "sec_articles"."id"',
+            'inner join "secondary_db"."comments" on "secondary_db"."comments"."article_id" = "secondary_db"."articles"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_comments"', $query);
     }
 
     /*
@@ -558,15 +558,32 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     /** @test */
     public function test_morph_to_uses_target_model_connection_prefix()
     {
+        // Sticker (secondary_db) -> Author (primary_db): primary is in qualifyWithDatabase,
+        // so authors is qualified with primary_db.
         $query = Sticker::query()
             ->joinRelationship('stickerable', morphable: Author::class)
             ->toSql();
 
         $this->assertQueryContains(
-            'inner join "main_authors" on "sec_stickers"."stickerable_id" = "main_authors"."id"',
+            'inner join "primary_db"."authors" on "stickers"."stickerable_id" = "primary_db"."authors"."id"',
             $query
         );
-        $this->assertQueryNotContains('"sec_authors"', $query);
+        $this->assertQueryNotContains('"secondary_db"."authors"', $query);
+    }
+
+    /** @test */
+    public function test_morph_to_same_connection_morphable_does_not_add_qualifier()
+    {
+        // Sticker (secondary_db) -> Article (secondary_db): same connection — no DB qualifier.
+        $query = Sticker::query()
+            ->joinRelationship('stickerable', morphable: Article::class)
+            ->toSql();
+
+        $this->assertQueryContains(
+            'inner join "articles" on "stickers"."stickerable_id" = "articles"."id"',
+            $query
+        );
+        $this->assertQueryNotContains('"secondary_db"."articles"', $query);
     }
 
     /*
@@ -581,11 +598,10 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('articlesOnlyTrashed')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
-        $this->assertQueryContains('"sec_articles"."deleted_at" is not null', $query);
-        $this->assertQueryNotContains('"main_articles"."deleted_at"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"."deleted_at" is not null', $query);
     }
 
     /*
@@ -602,17 +618,17 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             ->joinRelationship('comments')
             ->toSql();
 
-        $this->assertQueryContains('from "sec_articles"', $query);
+        $this->assertQueryContains('from "articles"', $query);
         $this->assertQueryContains(
-            'inner join "main_authors" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
             $query
         );
         $this->assertQueryContains(
-            'inner join "sec_comments" on "sec_comments"."article_id" = "sec_articles"."id"',
+            'inner join "comments" on "comments"."article_id" = "articles"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_comments"', $query);
-        $this->assertQueryNotContains('"sec_authors"', $query);
+        $this->assertQueryNotContains('"secondary_db"."comments"', $query);
+        $this->assertQueryNotContains('"secondary_db"."authors"', $query);
     }
 
     /** @test */
@@ -624,13 +640,10 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             ->joinRelationship('stickers')
             ->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryContains('"sec_author_tag"', $query);
-        $this->assertQueryContains('"sec_tags"', $query);
-        $this->assertQueryContains('"sec_stickers"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_tags"', $query);
-        $this->assertQueryNotContains('"main_stickers"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryContains('"secondary_db"."author_tag"', $query);
+        $this->assertQueryContains('"secondary_db"."tags"', $query);
+        $this->assertQueryContains('"secondary_db"."stickers"', $query);
     }
 
     /*
@@ -644,10 +657,19 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->powerJoinDoesntHave('articles.comments')->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryContains('"sec_comments"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_comments"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryContains('"secondary_db"."comments"', $query);
+    }
+
+    /** @test */
+    public function test_power_join_doesnt_have_morph_many_across_connections()
+    {
+        // MorphMany doesntHave: the morph type discriminator in the ON clause must
+        // also carry the database qualifier, not just the foreign key column.
+        $query = Author::query()->powerJoinDoesntHave('stickers')->toSql();
+
+        $this->assertQueryContains('"secondary_db"."stickers"', $query);
+        $this->assertQueryContains('"secondary_db"."stickers"."stickerable_type"', $query);
     }
 
     /** @test */
@@ -657,9 +679,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             $join->where('articles.published', true);
         })->toSql();
 
-        $this->assertQueryContains('"sec_articles"', $query);
-        $this->assertQueryContains('"sec_articles"."published"', $query);
-        $this->assertQueryNotContains('"main_articles"."published"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles"."published"', $query);
     }
 
     /*
@@ -676,7 +697,7 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $query = Author::query()->joinRelationship('articles')->toSql();
 
         $this->assertQueryContains(
-            'inner join "sec_articles" on "sec_articles"."author_id" = "main_authors"."id"',
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
             $query
         );
         $this->assertQueryNotContains(' as "a"', $query);
@@ -696,11 +717,10 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             ->joinRelationship('publishedArticles', fn ($join) => $join->as('p'))
             ->toSql();
 
-        $this->assertQueryContains('"sec_articles" as "p"', $query);
-        $this->assertQueryContains('"p"."author_id" = "main_authors"."id"', $query);
+        $this->assertQueryContains('"secondary_db"."articles" as "p"', $query);
+        $this->assertQueryContains('"p"."author_id" = "authors"."id"', $query);
         $this->assertQueryContains('"p"."published"', $query);
-        $this->assertQueryNotContains('"main_articles"."published"', $query);
-        $this->assertQueryNotContains('"sec_articles"."published"', $query);
+        $this->assertQueryNotContains('"secondary_db"."articles"."published"', $query);
     }
 
     /*
@@ -714,10 +734,8 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     {
         $query = Author::query()->joinRelationshipUsingAlias('articles.comments')->toSql();
 
-        $this->assertQueryContains('"sec_articles" as', $query);
-        $this->assertQueryContains('"sec_comments" as', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
-        $this->assertQueryNotContains('"main_comments"', $query);
+        $this->assertQueryContains('"secondary_db"."articles" as', $query);
+        $this->assertQueryContains('"secondary_db"."comments" as', $query);
     }
 
     /*
@@ -735,28 +753,63 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             ])
             ->toSql();
 
-        $this->assertQueryContains('"sec_articles" as "art"', $query);
-        $this->assertQueryContains('"art"."author_id" = "main_authors"."id"', $query);
-        $this->assertQueryNotContains('"main_articles"', $query);
+        $this->assertQueryContains('"secondary_db"."articles" as "art"', $query);
+        $this->assertQueryContains('"art"."author_id" = "authors"."id"', $query);
     }
 
     /*
     |--------------------------------------------------------------------------
-    | Regression: same-connection join must not wrap table in Expression
+    | Table prefix combined with database qualifier
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_connection_prefix_is_included_in_database_qualified_table_reference()
+    {
+        config(['database.connections.primary' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => 'pri_',
+            'foreign_key_constraints' => false,
+        ]]);
+        config(['database.connections.secondary' => [
+            'driver' => 'sqlite',
+            'database' => ':memory:',
+            'prefix' => 'sec_',
+            'foreign_key_constraints' => false,
+        ]]);
+
+        $query = Author::query()->joinRelationship('articles')->toSql();
+
+        // On sqlite databases, the lib skips the DB qualifier and applies only the prefix if exists.
+        $this->assertQueryContains(
+            'inner join "sec_articles" on "sec_articles"."author_id" = "pri_authors"."id"',
+            $query
+        );
+
+        $this->assertQueryNotContains('join "articles" on', $query);
+        $this->assertQueryNotContains('":memory:"', $query);
+
+        $this->getEnvironmentSetUp(app());
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Regression: same-connection join must not be qualified
     |--------------------------------------------------------------------------
     */
 
     /** @test */
     public function test_same_connection_join_under_cross_connection_suite_still_works()
     {
-        // Article (sec_) -> comments (sec_) — both on the same connection.
+        // Article (secondary_db) -> comments (secondary_db) — same connection.
         $query = Article::query()->joinRelationship('comments')->toSql();
 
-        $this->assertQueryContains('from "sec_articles"', $query);
+        $this->assertQueryContains('from "articles"', $query);
         $this->assertQueryContains(
-            'inner join "sec_comments" on "sec_comments"."article_id" = "sec_articles"."id"',
+            'inner join "comments" on "comments"."article_id" = "articles"."id"',
             $query
         );
-        $this->assertQueryNotContains('"main_', $query);
+        $this->assertQueryNotContains('"secondary_db"."comments"', $query);
     }
 }

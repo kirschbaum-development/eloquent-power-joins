@@ -15,7 +15,7 @@ class Author extends Model
 {
     use SoftDeletes;
 
-    protected $connection = 'testing';
+    protected $connection = 'primary';
 
     protected $table = 'authors';
 

@@ -83,8 +83,8 @@ class ConnectionAwareTable
         $grammar = static::grammar($baseQuery);
         $wrapped = $grammar->wrap(static::prefixed($related, $table));
 
-        if (static::shouldQualifyWithDatabase($related)) {
-            $wrapped = $grammar->wrap((string) $related->getConnection()->getDatabaseName()).'.'.$wrapped;
+        if ($dbName = static::qualifiedDatabaseName($related)) {
+            $wrapped = $grammar->wrap($dbName).'.'.$wrapped;
         }
 
         if ($alias) {
@@ -121,8 +121,8 @@ class ConnectionAwareTable
 
         $wrappedTable = $grammar->wrap(static::prefixed($owner, $tableName ?? $owner->getTable()));
 
-        if (static::shouldQualifyWithDatabase($owner)) {
-            $wrappedTable = $grammar->wrap((string) $owner->getConnection()->getDatabaseName()).'.'.$wrappedTable;
+        if ($dbName = static::qualifiedDatabaseName($owner)) {
+            $wrappedTable = $grammar->wrap($dbName).'.'.$wrappedTable;
         }
 
         return new Expression($wrappedTable.'.'.$grammar->wrap($column));
@@ -193,6 +193,17 @@ class ConnectionAwareTable
         }
 
         return $columnWithTable;
+    }
+
+    protected static function qualifiedDatabaseName(Model $model): ?string
+    {
+        if (!static::shouldQualifyWithDatabase($model)) {
+            return null;
+        }
+
+        $name = (string) $model->getConnection()->getDatabaseName();
+
+        return ($name === '' || $name === ':memory:') ? null : $name;
     }
 
     protected static function prefixed(Model $model, string $table): string

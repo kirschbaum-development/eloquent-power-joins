@@ -237,8 +237,8 @@ class PowerJoinClause extends JoinClause
                 $grammar = $this->getGrammar();
                 $prefixed = $this->model->getConnection()->getTablePrefix().$this->model->getTable();
                 $wrapped = $grammar->wrap($prefixed);
-                if (ConnectionAwareTable::shouldQualifyWithDatabase($this->model)) {
-                    $wrapped = $grammar->wrap((string) $this->model->getConnection()->getDatabaseName()).'.'.$wrapped;
+                if ($dbName = ConnectionAwareTable::qualifiedDatabaseName($this->model)) {
+                    $wrapped = $grammar->wrap($dbName).'.'.$wrapped;
                 }
                 $column = new \Illuminate\Database\Query\Expression($wrapped.'.'.$grammar->wrap($columnName));
             }

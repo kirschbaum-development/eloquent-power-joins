@@ -17,36 +17,16 @@ use InvalidArgumentException;
  * For same-connection joins this class is a pass-through returning plain
  * strings — the base grammar handles quoting and prefixing as before. For
  * cross-connection joins it returns an Expression already quoted by the base
- * grammar, embedding the *related* connection's table prefix (and optionally
- * the related database name) so the base grammar doesn't apply its own prefix
- * on top.
+ * grammar, embedding the *related* connection's table prefix and database name
+ * so the base grammar doesn't apply its own prefix on top.
+ *
+ * Database name qualification (the "db.table" form) is applied automatically
+ * for drivers that support it (MySQL/MariaDB). SQLite is excluded because it
+ * requires ATTACH DATABASE for cross-database access and does not support the
+ * simple database.table syntax.
  */
 class ConnectionAwareTable
 {
-    /**
-     * Connection names whose joined references should be qualified with the
-     * database name ("db.table" form). Opt-in because it only works when both
-     * databases live on the same server.
-     *
-     * @var array<string, true>
-     */
-    protected static array $qualifyWithDatabase = [];
-
-    public static function qualifyWithDatabaseName(string $connectionName): void
-    {
-        static::$qualifyWithDatabase[$connectionName] = true;
-    }
-
-    public static function disableDatabaseQualification(string $connectionName): void
-    {
-        unset(static::$qualifyWithDatabase[$connectionName]);
-    }
-
-    public static function shouldQualifyWithDatabase(Model $related): bool
-    {
-        return isset(static::$qualifyWithDatabase[(string) $related->getConnectionName()]);
-    }
-
     /**
      * Whether the given model's connection differs from the base query's model connection.
      */
@@ -129,11 +109,6 @@ class ConnectionAwareTable
     }
 
     /**
-     * Build a qualified column reference from a raw "table.col" string, using
-     * the context to detect which model the string refers to. Used when
-     * applying extra conditions from the related query.
-     */
-    /**
      * Return either the registered alias or a connection-aware table reference.
      */
     public static function tableOrAliasReference(
@@ -195,15 +170,21 @@ class ConnectionAwareTable
         return $columnWithTable;
     }
 
-    protected static function qualifiedDatabaseName(Model $model): ?string
+    /**
+     * Returns the database name to use as a qualifier, or null when qualification
+     * is not applicable (SQLite driver or empty name).
+     */
+    public static function qualifiedDatabaseName(Model $model): ?string
     {
-        if (!static::shouldQualifyWithDatabase($model)) {
+        $connection = $model->getConnection();
+
+        if ($connection->getDriverName() === 'sqlite') {
             return null;
         }
 
-        $name = (string) $model->getConnection()->getDatabaseName();
+        $name = (string) $connection->getDatabaseName();
 
-        return ($name === '' || $name === ':memory:') ? null : $name;
+        return empty($name) ? null : $name;
     }
 
     protected static function prefixed(Model $model, string $table): string

@@ -81,7 +81,7 @@ class JoinRelationship
 
     public function newPowerJoinClause(): Closure
     {
-        return function (QueryBuilder $parentQuery, string $type, string $table, ?Model $model = null) {
+        return function (QueryBuilder $parentQuery, string $type, $table, ?Model $model = null) {
             return new PowerJoinClause($parentQuery, $type, $table, $model);
         };
     }
@@ -429,7 +429,12 @@ class JoinRelationship
                     $this->orderBy($column, $direction);
                 } else {
                     $this->orderBy(
-                        sprintf('%s.%s', $table, $column),
+                        \Kirschbaum\PowerJoins\ConnectionAwareTable::columnReference(
+                            $latestRelationshipModel,
+                            $this,
+                            $column,
+                            $table !== $latestRelationshipModel->getTable() ? $table : null,
+                        ),
                         $direction
                     );
                 }

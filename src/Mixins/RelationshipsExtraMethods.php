@@ -15,7 +15,9 @@ use Illuminate\Database\Eloquent\Relations\MorphToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use Illuminate\Database\MySqlConnection;
+use Illuminate\Database\Query\Expression;
 use Illuminate\Support\Str;
+use Kirschbaum\PowerJoins\ConnectionAwareTable;
 use Kirschbaum\PowerJoins\PowerJoinClause;
 use Kirschbaum\PowerJoins\StaticCache;
 
@@ -76,32 +78,35 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForBelongsTo()
     {
         return function ($query, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $joinedTable = $this->query->getModel()->getTable();
-            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+            $relatedModel = $this->query->getModel();
+            $joinTable = ConnectionAwareTable::tableReference($relatedModel, $query);
+            $parentColumn = ConnectionAwareTable::columnOrAliasReference($this->parent, $query, $this->foreignKey);
 
-            $query->{$joinType}($joinedTable, function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
+            $query->{$joinType}($joinTable, function ($join) use ($callback, $relatedModel, $parentColumn, $query, $alias, $disableExtraConditions) {
                 if ($alias) {
                     $join->as($alias);
                 }
 
                 $join->on(
-                    "{$parentTable}.{$this->foreignKey}",
+                    $parentColumn,
                     '=',
-                    "{$joinedTable}.{$this->ownerKey}"
+                    ConnectionAwareTable::columnReference($relatedModel, $query, $this->ownerKey, $alias),
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
-                    $join->whereNull("{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}");
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($relatedModel, $query, $relatedModel->getDeletedAtColumn(), $alias)
+                    );
                 }
 
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $query, $relatedModel, $alias);
                 }
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->query->getModel());
+            }, $relatedModel);
         };
     }
 
@@ -113,49 +118,55 @@ class RelationshipsExtraMethods
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             [$alias1, $alias2] = $alias;
 
-            $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+            $related = $this->getModel();
+            $pivotTable = $this->getTable();
 
-            $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1) {
+            $pivotTableArg = ConnectionAwareTable::tableReference($related, $builder, tableName: $pivotTable);
+            $parentColumn = ConnectionAwareTable::columnOrAliasReference($this->parent, $builder, $this->parentKey);
+
+            $builder->{$joinType}($pivotTableArg, function ($join) use ($callback, $related, $pivotTable, $parentColumn, $builder, $alias1) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
 
                 $join->on(
-                    "{$joinedTable}.{$this->getForeignPivotKeyName()}",
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getForeignPivotKeyName(), $alias1, $pivotTable),
                     '=',
-                    "{$parentTable}.{$this->parentKey}"
+                    $parentColumn,
                 );
 
-                if (is_array($callback) && isset($callback[$this->getTable()])) {
-                    $callback[$this->getTable()]($join);
+                if (is_array($callback) && isset($callback[$pivotTable])) {
+                    $callback[$pivotTable]($join);
                 }
             });
 
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
+            $relatedTableArg = ConnectionAwareTable::tableReference($related, $builder);
+
+            $builder->{$joinType}($relatedTableArg, function ($join) use ($callback, $related, $pivotTable, $builder, $alias1, $alias2, $disableExtraConditions) {
                 if ($alias2) {
                     $join->as($alias2);
                 }
 
                 $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getRelatedKeyName()}",
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getRelatedKeyName(), $alias2),
                     '=',
-                    "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getRelatedPivotKeyName(), $alias1, $pivotTable),
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($related, $builder, $related->getDeletedAtColumn(), $alias2)
+                    );
                 }
 
-                // applying any extra conditions to the belongs to many relationship
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $builder, $related, $alias2);
                 }
 
-                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
-                    $callback[$this->getModel()->getTable()]($join);
+                if (is_array($callback) && isset($callback[$related->getTable()])) {
+                    $callback[$related->getTable()]($join);
                 }
-            }, $this->getModel());
+            }, $related);
 
             return $this;
         };
@@ -169,49 +180,55 @@ class RelationshipsExtraMethods
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             [$alias1, $alias2] = $alias;
 
-            $joinedTable = $alias1 ?: $this->getTable();
-            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+            $related = $this->getModel();
+            $pivotTable = $this->getTable();
 
-            $builder->{$joinType}($this->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias1, $disableExtraConditions) {
+            $pivotTableArg = ConnectionAwareTable::tableReference($related, $builder, tableName: $pivotTable);
+            $parentColumn = ConnectionAwareTable::columnOrAliasReference($this->parent, $builder, $this->parentKey);
+
+            $builder->{$joinType}($pivotTableArg, function ($join) use ($callback, $related, $pivotTable, $parentColumn, $builder, $alias1, $disableExtraConditions) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
 
                 $join->on(
-                    "{$joinedTable}.{$this->getForeignPivotKeyName()}",
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getForeignPivotKeyName(), $alias1, $pivotTable),
                     '=',
-                    "{$parentTable}.{$this->parentKey}"
+                    $parentColumn,
                 );
 
-                // applying any extra conditions to the belongs to many relationship
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $builder, $related, $alias1, $pivotTable);
                 }
 
-                if (is_array($callback) && isset($callback[$this->getTable()])) {
-                    $callback[$this->getTable()]($join);
+                if (is_array($callback) && isset($callback[$pivotTable])) {
+                    $callback[$pivotTable]($join);
                 }
             });
 
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $alias2, $disableExtraConditions) {
+            $relatedTableArg = ConnectionAwareTable::tableReference($related, $builder);
+
+            $builder->{$joinType}($relatedTableArg, function ($join) use ($callback, $related, $pivotTable, $builder, $alias1, $alias2, $disableExtraConditions) {
                 if ($alias2) {
                     $join->as($alias2);
                 }
 
                 $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getModel()->getKeyName()}",
+                    ConnectionAwareTable::columnReference($related, $builder, $related->getKeyName(), $alias2),
                     '=',
-                    "{$joinedTable}.{$this->getRelatedPivotKeyName()}"
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getRelatedPivotKeyName(), $alias1, $pivotTable),
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($related, $builder, $related->getDeletedAtColumn(), $alias2)
+                    );
                 }
 
-                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
-                    $callback[$this->getModel()->getTable()]($join);
+                if (is_array($callback) && isset($callback[$related->getTable()])) {
+                    $callback[$related->getTable()]($join);
                 }
-            }, $this->getModel());
+            }, $related);
 
             return $this;
         };
@@ -223,29 +240,38 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForMorph()
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $disableExtraConditions, $alias) {
+            $related = $this->getModel();
+            $joinTable = ConnectionAwareTable::tableReference($related, $builder);
+
+            $builder->{$joinType}($joinTable, function ($join) use ($callback, $related, $builder, $disableExtraConditions, $alias) {
                 if ($alias) {
                     $join->as($alias);
                 }
 
                 $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getForeignKeyName(), $alias),
                     '=',
-                    "{$this->parent->getTable()}.{$this->localKey}"
-                )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
+                    ConnectionAwareTable::columnOrAliasReference($this->parent, $builder, $this->localKey),
+                )->where(
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getMorphType(), $alias),
+                    '=',
+                    $this->getMorphClass(),
+                );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
-                    $join->whereNull($this->query->getModel()->getQualifiedDeletedAtColumn());
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($related, $builder, $related->getDeletedAtColumn(), $alias)
+                    );
                 }
 
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $builder, $related, $alias);
                 }
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->getModel());
+            }, $related);
 
             return $this;
         };
@@ -259,20 +285,29 @@ class RelationshipsExtraMethods
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false, ?string $morphable = null) {
             /** @var Model */
             $modelInstance = new $morphable();
+            $related = $this->getModel();
 
-            $builder->{$joinType}($modelInstance->getTable(), function ($join) use ($modelInstance, $callback, $disableExtraConditions) {
+            $joinTable = ConnectionAwareTable::tableReference($modelInstance, $builder);
+
+            $builder->{$joinType}($joinTable, function ($join) use ($modelInstance, $related, $builder, $callback, $disableExtraConditions) {
                 $join->on(
-                    "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getForeignKeyName()),
                     '=',
-                    "{$modelInstance->getTable()}.{$modelInstance->getKeyName()}"
-                )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $modelInstance->getMorphClass());
+                    ConnectionAwareTable::columnReference($modelInstance, $builder, $modelInstance->getKeyName()),
+                )->where(
+                    ConnectionAwareTable::columnReference($related, $builder, $this->getMorphType()),
+                    '=',
+                    $modelInstance->getMorphClass(),
+                );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($modelInstance->getScopes())) {
-                    $join->whereNull($modelInstance->getQualifiedDeletedAtColumn());
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($modelInstance, $builder, $modelInstance->getDeletedAtColumn())
+                    );
                 }
 
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $builder, $modelInstance);
                 }
 
                 if ($callback && is_callable($callback)) {
@@ -291,8 +326,7 @@ class RelationshipsExtraMethods
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false, bool $hasCheck = false) {
             $joinedModel = $this->query->getModel();
-            $joinedTable = $alias ?: $joinedModel->getTable();
-            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+            $parentTableOrAlias = StaticCache::getTableOrAliasForModel($this->parent);
             $isOneOfMany = method_exists($this, 'isOneOfMany') ? $this->isOneOfMany() : false;
 
             if ($isOneOfMany && !$hasCheck) {
@@ -300,8 +334,8 @@ class RelationshipsExtraMethods
                 $fkColumn = $this->getOneOfManySubQuery()->getQuery()->columns[1];
                 $localKey = $this->localKey;
 
-                $builder->where(function ($query) use ($column, $joinType, $joinedModel, $builder, $fkColumn, $parentTable, $localKey) {
-                    $query->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn, $parentTable, $localKey) {
+                $builder->where(function ($query) use ($column, $joinType, $joinedModel, $builder, $fkColumn, $parentTableOrAlias, $localKey) {
+                    $query->whereIn($joinedModel->getQualifiedKeyName(), function ($query) use ($column, $joinedModel, $builder, $fkColumn, $parentTableOrAlias, $localKey) {
                         $columnValue = $column->getValue($builder->getGrammar());
                         $direction = Str::contains($columnValue, 'min(') ? 'asc' : 'desc';
 
@@ -309,11 +343,11 @@ class RelationshipsExtraMethods
                         $columnName = Str::replace(['"', "'", '`'], '', $columnName);
 
                         if ($builder->getConnection() instanceof MySqlConnection) {
-                            $query->select('*')->from(function ($query) use ($joinedModel, $columnName, $fkColumn, $direction, $parentTable, $localKey) {
+                            $query->select('*')->from(function ($query) use ($joinedModel, $columnName, $fkColumn, $direction, $parentTableOrAlias, $localKey) {
                                 $query
                                     ->select($joinedModel->getQualifiedKeyName())
                                     ->from($joinedModel->getTable())
-                                    ->whereColumn($fkColumn, "{$parentTable}.{$localKey}")
+                                    ->whereColumn($fkColumn, "{$parentTableOrAlias}.{$localKey}")
                                     ->orderBy($columnName, $direction)
                                     ->take(1);
                             });
@@ -322,7 +356,7 @@ class RelationshipsExtraMethods
                                 ->select($joinedModel->getQualifiedKeyName())
                                 ->distinct($columnName)
                                 ->from($joinedModel->getTable())
-                                ->whereColumn($fkColumn, "{$parentTable}.{$localKey}")
+                                ->whereColumn($fkColumn, "{$parentTableOrAlias}.{$localKey}")
                                 ->orderBy($columnName, $direction)
                                 ->take(1);
                         }
@@ -334,31 +368,57 @@ class RelationshipsExtraMethods
                 });
             }
 
-            $builder->{$joinType}($this->query->getModel()->getTable(), function ($join) use ($callback, $joinedTable, $parentTable, $alias, $disableExtraConditions) {
+            $joinTable = ConnectionAwareTable::tableReference($joinedModel, $builder);
+            $foreignKeyColumn = $this->buildHasManyForeignKeyReference($joinedModel, $builder, $alias);
+
+            $builder->{$joinType}($joinTable, function ($join) use ($callback, $joinedModel, $foreignKeyColumn, $builder, $alias, $disableExtraConditions) {
                 if ($alias) {
                     $join->as($alias);
                 }
 
                 $join->on(
-                    $this->foreignKey,
+                    $foreignKeyColumn,
                     '=',
-                    "{$parentTable}.{$this->localKey}"
+                    ConnectionAwareTable::columnOrAliasReference($this->parent, $builder, $this->localKey),
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
                     $join->whereNull(
-                        "{$joinedTable}.{$this->query->getModel()->getDeletedAtColumn()}"
+                        ConnectionAwareTable::columnReference($joinedModel, $builder, $joinedModel->getDeletedAtColumn(), $alias)
                     );
                 }
 
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $builder, $joinedModel, $alias);
                 }
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->query->getModel());
+            }, $joinedModel);
+        };
+    }
+
+    /**
+     * Build the foreign key column reference for HasMany, handling the case
+     * where the foreign key may already be qualified ("table.col") upstream.
+     */
+    protected function buildHasManyForeignKeyReference()
+    {
+        return function (Model $joinedModel, $builder, ?string $alias = null) {
+            $foreignKey = $this->foreignKey;
+
+            if (str_contains($foreignKey, '.')) {
+                [$table, $column] = explode('.', $foreignKey, 2);
+
+                if ($table === $joinedModel->getTable()) {
+                    return ConnectionAwareTable::columnReference($joinedModel, $builder, $column, $alias);
+                }
+
+                return $foreignKey;
+            }
+
+            return ConnectionAwareTable::columnReference($joinedModel, $builder, $foreignKey, $alias);
         };
     }
 
@@ -369,57 +429,65 @@ class RelationshipsExtraMethods
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
             [$alias1, $alias2] = $alias;
-            $throughTable = $alias1 ?: $this->getThroughParent()->getTable();
-            $farTable = $alias2 ?: $this->getModel()->getTable();
 
-            $builder->{$joinType}($this->getThroughParent()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $alias1, $disableExtraConditions) {
+            $throughParent = $this->getThroughParent();
+            $farModel = $this->getModel();
+
+            $throughTableArg = ConnectionAwareTable::tableReference($throughParent, $builder);
+
+            $builder->{$joinType}($throughTableArg, function (PowerJoinClause $join) use ($callback, $throughParent, $builder, $alias1, $disableExtraConditions) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
 
-                $farParentTable = StaticCache::getTableOrAliasForModel($this->getFarParent());
                 $join->on(
-                    "{$throughTable}.{$this->getFirstKeyName()}",
+                    ConnectionAwareTable::columnReference($throughParent, $builder, $this->getFirstKeyName(), $alias1),
                     '=',
-                    "{$farParentTable}.{$this->localKey}"
+                    ConnectionAwareTable::columnOrAliasReference($this->getFarParent(), $builder, $this->localKey),
                 );
 
-                if ($disableExtraConditions === false && $this->usesSoftDeletes($this->getThroughParent())) {
-                    $join->whereNull($this->getThroughParent()->getQualifiedDeletedAtColumn());
+                if ($disableExtraConditions === false && $this->usesSoftDeletes($throughParent)) {
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($throughParent, $builder, $throughParent->getDeletedAtColumn(), $alias1)
+                    );
                 }
 
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join);
+                    $this->applyExtraConditions($join, $builder, $throughParent, $alias1);
                 }
 
-                if (is_array($callback) && isset($callback[$this->getThroughParent()->getTable()])) {
-                    $callback[$this->getThroughParent()->getTable()]($join);
+                if (is_array($callback) && isset($callback[$throughParent->getTable()])) {
+                    $callback[$throughParent->getTable()]($join);
                 }
 
                 if ($callback && is_callable($callback)) {
                     $callback($join);
                 }
-            }, $this->getThroughParent());
+            }, $throughParent);
 
-            $builder->{$joinType}($this->getModel()->getTable(), function (PowerJoinClause $join) use ($callback, $throughTable, $farTable, $alias2) {
+            $farTableArg = ConnectionAwareTable::tableReference($farModel, $builder);
+
+            $builder->{$joinType}($farTableArg, function (PowerJoinClause $join) use ($callback, $throughParent, $farModel, $builder, $alias1, $alias2) {
                 if ($alias2) {
                     $join->as($alias2);
                 }
 
                 $join->on(
-                    "{$farTable}.{$this->secondKey}",
+                    ConnectionAwareTable::columnReference($farModel, $builder, $this->secondKey, $alias2),
                     '=',
-                    "{$throughTable}.{$this->secondLocalKey}"
+                    ConnectionAwareTable::columnReference($throughParent, $builder, $this->secondLocalKey, $alias1),
                 );
 
                 if ($this->usesSoftDeletes($this->getScopes())) {
-                    $join->whereNull("{$farTable}.{$this->getModel()->getDeletedAtColumn()}");
+                    $join->whereNull(
+                        ConnectionAwareTable::columnReference($farModel, $builder, $farModel->getDeletedAtColumn(), $alias2)
+                    );
                 }
 
-                if (is_array($callback) && isset($callback[$this->getModel()->getTable()])) {
-                    $callback[$this->getModel()->getTable()]($join);
+                if (is_array($callback) && isset($callback[$farModel->getTable()])) {
+                    $callback[$farModel->getTable()]($join);
                 }
-            }, $this->getModel());
+            }, $farModel);
 
             return $this;
         };
@@ -435,17 +503,18 @@ class RelationshipsExtraMethods
                 $builder->select(sprintf('%s.*', $builder->getModel()->getTable()));
             }
 
-            if ($morphable) {
-                $modelInstance = new $morphable();
+            $target = $morphable ? new $morphable() : $this->query->getModel();
 
-                $builder
-                    ->selectRaw(sprintf('count(%s) as %s_count', $modelInstance->getQualifiedKeyName(), Str::replace('.', '_', $modelInstance->getTable())))
-                    ->havingRaw(sprintf('count(%s) %s %d', $modelInstance->getQualifiedKeyName(), $operator, $count));
-            } else {
-                $builder
-                    ->selectRaw(sprintf('count(%s) as %s_count', $this->query->getModel()->getQualifiedKeyName(), Str::replace('.', '_', $this->query->getModel()->getTable())))
-                    ->havingRaw(sprintf('count(%s) %s %d', $this->query->getModel()->getQualifiedKeyName(), $operator, $count));
-            }
+            $qualifiedKey = ConnectionAwareTable::columnReference($target, $builder, $target->getKeyName());
+            $countExpression = $qualifiedKey instanceof Expression
+                ? $qualifiedKey->getValue($builder->getQuery()->getGrammar())
+                : $qualifiedKey;
+
+            $countAlias = Str::replace('.', '_', $target->getTable()).'_count';
+
+            $builder
+                ->selectRaw(sprintf('count(%s) as %s', $countExpression, $countAlias))
+                ->havingRaw(sprintf('count(%s) %s %d', $countExpression, $operator, $count));
         };
     }
 
@@ -488,7 +557,10 @@ class RelationshipsExtraMethods
 
     public function applyExtraConditions()
     {
-        return function (PowerJoinClause $join) {
+        return function (PowerJoinClause $join, $baseQuery = null, ?Model $owner = null, ?string $alias = null, ?string $tableName = null) {
+            $baseQuery ??= $join;
+            $owner ??= $this->query->getModel();
+
             foreach ($this->getQuery()->getQuery()->wheres as $condition) {
                 if ($this->shouldNotApplyExtraCondition($condition)) {
                     continue;
@@ -499,41 +571,74 @@ class RelationshipsExtraMethods
                 }
 
                 $method = "apply{$condition['type']}Condition";
-                $this->$method($join, $condition);
+                $this->$method($join, $condition, $baseQuery, $owner, $alias, $tableName);
             }
         };
     }
 
     public function applyBasicCondition()
     {
-        return function ($join, $condition) {
-            $join->where($condition['column'], $condition['operator'], $condition['value'], $condition['boolean']);
+        return function ($join, $condition, $baseQuery = null, ?Model $owner = null, ?string $alias = null, ?string $tableName = null) {
+            $column = $this->rewriteExtraConditionColumn($condition['column'], $baseQuery, $owner, $alias, $tableName);
+            $join->where($column, $condition['operator'], $condition['value'], $condition['boolean']);
         };
     }
 
     public function applyNullCondition()
     {
-        return function ($join, $condition) {
-            $join->whereNull($condition['column'], $condition['boolean']);
+        return function ($join, $condition, $baseQuery = null, ?Model $owner = null, ?string $alias = null, ?string $tableName = null) {
+            $column = $this->rewriteExtraConditionColumn($condition['column'], $baseQuery, $owner, $alias, $tableName);
+            $join->whereNull($column, $condition['boolean']);
         };
     }
 
     public function applyNotNullCondition()
     {
-        return function ($join, $condition) {
-            $join->whereNotNull($condition['column'], $condition['boolean']);
+        return function ($join, $condition, $baseQuery = null, ?Model $owner = null, ?string $alias = null, ?string $tableName = null) {
+            $column = $this->rewriteExtraConditionColumn($condition['column'], $baseQuery, $owner, $alias, $tableName);
+            $join->whereNotNull($column, $condition['boolean']);
         };
     }
 
     public function applyNestedCondition()
     {
-        return function ($join, $condition) {
-            $join->where(function ($q) use ($condition) {
+        return function ($join, $condition, $baseQuery = null, ?Model $owner = null, ?string $alias = null, ?string $tableName = null) {
+            $join->where(function ($q) use ($condition, $baseQuery, $owner, $alias, $tableName) {
                 foreach ($condition['query']->wheres as $condition) {
                     $method = "apply{$condition['type']}Condition";
-                    $this->$method($q, $condition);
+                    $this->$method($q, $condition, $baseQuery, $owner, $alias, $tableName);
                 }
             });
+        };
+    }
+
+    /**
+     * Rewrite the column of an extra condition so it uses the related
+     * connection's prefix when the models live on different connections.
+     */
+    protected function rewriteExtraConditionColumn()
+    {
+        return function ($column, $baseQuery, ?Model $owner, ?string $alias, ?string $tableName) {
+            if (!is_string($column) || !$baseQuery || !$owner) {
+                return $column;
+            }
+
+            if (!str_contains($column, '.')) {
+                return $column;
+            }
+
+            [$tableOrAlias, $columnName] = explode('.', $column, 2);
+            $ownerTable = $tableName ?? $owner->getTable();
+
+            if ($tableOrAlias === $ownerTable) {
+                return ConnectionAwareTable::columnReference($owner, $baseQuery, $columnName, $alias, $tableName);
+            }
+
+            if ($alias && $tableOrAlias === $alias) {
+                return ConnectionAwareTable::columnReference($owner, $baseQuery, $columnName, $alias, $tableName);
+            }
+
+            return $column;
         };
     }
 

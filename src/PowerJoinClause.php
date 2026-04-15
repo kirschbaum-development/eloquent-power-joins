@@ -39,12 +39,14 @@ class PowerJoinClause extends JoinClause
     /**
      * Create a new join clause instance.
      */
-    public function __construct(Builder $parentQuery, $type, string $table, ?Model $model = null)
+    public function __construct(Builder $parentQuery, $type, $table, ?Model $model = null)
     {
         parent::__construct($parentQuery, $type, $table);
 
         $this->model = $model;
-        $this->tableName = $table;
+        $this->tableName = $table instanceof \Illuminate\Database\Query\Expression
+            ? (string) $table->getValue($parentQuery->getGrammar())
+            : $table;
     }
 
     /**
@@ -54,7 +56,14 @@ class PowerJoinClause extends JoinClause
     {
         $this->alias = $alias;
         $this->joinedTableAlias = $joinedTableAlias;
-        $this->table = sprintf('%s as %s', $this->table, $alias);
+        if ($this->table instanceof \Illuminate\Database\Query\Expression) {
+            $grammar = $this->getGrammar();
+            $this->table = new \Illuminate\Database\Query\Expression(
+                $this->table->getValue($grammar).' as '.$grammar->wrap($alias)
+            );
+        } else {
+            $this->table = sprintf('%s as %s', $this->table, $alias);
+        }
         $this->useTableAliasInConditions();
 
         if ($this->model) {
@@ -118,7 +127,11 @@ class PowerJoinClause extends JoinClause
                 return true;
             }
 
-            if ($whereType === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            $column = $where['column'] ?? '';
+            if ($column instanceof \Illuminate\Database\Query\Expression) {
+                $column = (string) $column->getValue($this->getGrammar());
+            }
+            if ($whereType === 'Null' && Str::contains($column, $this->getModel()->getDeletedAtColumn())) {
                 return true;
             }
 
@@ -142,6 +155,14 @@ class PowerJoinClause extends JoinClause
     {
         $key = $this->model->getKeyName();
         $table = $this->tableName;
+        $grammar = $this->getGrammar();
+
+        $where['first'] = $where['first'] instanceof \Illuminate\Database\Query\Expression
+            ? $where['first']->getValue($grammar)
+            : $where['first'];
+        $where['second'] = $where['second'] instanceof \Illuminate\Database\Query\Expression
+            ? $where['second']->getValue($grammar)
+            : $where['second'];
 
         // if it was already replaced, skip
         if (Str::startsWith($where['first'].'.', $this->alias.'.') || Str::startsWith($where['second'].'.', $this->alias.'.')) {
@@ -164,6 +185,10 @@ class PowerJoinClause extends JoinClause
     {
         $table = $this->tableName;
 
+        if ($where['column'] instanceof \Illuminate\Database\Query\Expression) {
+            $where['column'] = (string) $where['column']->getValue($this->getGrammar());
+        }
+
         if (Str::startsWith($where['column'].'.', $this->alias.'.')) {
             return $where;
         }
@@ -180,7 +205,7 @@ class PowerJoinClause extends JoinClause
 
     public function whereNull($columns, $boolean = 'and', $not = false)
     {
-        if ($this->alias && Str::contains($columns, $this->tableName)) {
+        if ($this->alias && is_string($columns) && Str::contains($columns, $this->tableName)) {
             $columns = str_replace("{$this->tableName}.", "{$this->alias}.", $columns);
         }
 
@@ -196,8 +221,27 @@ class PowerJoinClause extends JoinClause
     {
         if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
-        } elseif ($this->alias && !is_callable($column)) {
+        } elseif ($this->alias && is_string($column) && Str::startsWith($column, $this->alias.'.')) {
+            // already prefixed
+        } elseif ($this->alias && !is_callable($column) && is_string($column)) {
             $column = $this->alias.'.'.$column;
+        } elseif (
+            !$this->alias
+            && is_string($column)
+            && $this->model
+            && Str::contains($column, $this->model->getTable().'.')
+            && $this->model->getConnectionName() !== $this->getConnection()->getName()
+        ) {
+            [$tableOrAlias, $columnName] = explode('.', $column, 2);
+            if ($tableOrAlias === $this->model->getTable()) {
+                $grammar = $this->getGrammar();
+                $prefixed = $this->model->getConnection()->getTablePrefix().$this->model->getTable();
+                $wrapped = $grammar->wrap($prefixed);
+                if (ConnectionAwareTable::shouldQualifyWithDatabase($this->model)) {
+                    $wrapped = $grammar->wrap((string) $this->model->getConnection()->getDatabaseName()).'.'.$wrapped;
+                }
+                $column = new \Illuminate\Database\Query\Expression($wrapped.'.'.$grammar->wrap($columnName));
+            }
         }
 
         if (is_callable($column)) {

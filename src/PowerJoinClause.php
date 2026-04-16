@@ -213,8 +213,21 @@ class PowerJoinClause extends JoinClause
 
     public function whereNull($columns, $boolean = 'and', $not = false)
     {
-        if ($this->alias && is_string($columns) && Str::contains($columns, $this->tableName)) {
-            $columns = str_replace("{$this->tableName}.", "{$this->alias}.", $columns);
+        if ($this->alias) {
+            if (is_string($columns) && Str::contains($columns, $this->tableName)) {
+                $columns = str_replace("{$this->tableName}.", "{$this->alias}.", $columns);
+            } elseif ($columns instanceof \Illuminate\Database\Query\Expression) {
+                $grammar = $this->getGrammar();
+                $raw = (string) $columns->getValue($grammar);
+                $wrappedAlias = $grammar->wrap($this->alias);
+                $wrappedTable = $this->tableName;
+
+                if (Str::contains($raw, $wrappedTable)) {
+                    $columns = new \Illuminate\Database\Query\Expression(
+                        str_replace($wrappedTable, $wrappedAlias, $raw)
+                    );
+                }
+            }
         }
 
         return parent::whereNull($columns, $boolean, $not);
@@ -309,7 +322,19 @@ class PowerJoinClause extends JoinClause
         }, $this->wheres);
 
         if (!$hasCondition) {
-            $this->whereNotNull($this->getModel()->getQualifiedDeletedAtColumn());
+            $grammar = $this->getGrammar();
+            $deletedAtCol = $grammar->wrap($this->getModel()->getDeletedAtColumn());
+
+            if ($this->alias) {
+                $tableRef = $grammar->wrap($this->alias);
+            } elseif ($this->table instanceof \Illuminate\Database\Query\Expression) {
+                // Cross-connection: tableName is already grammar-wrapped with DB qualifier
+                $tableRef = $this->tableName;
+            } else {
+                $tableRef = $grammar->wrap($this->getModel()->getTable());
+            }
+
+            $this->whereNotNull(new \Illuminate\Database\Query\Expression("{$tableRef}.{$deletedAtCol}"));
         }
 
         return $this;

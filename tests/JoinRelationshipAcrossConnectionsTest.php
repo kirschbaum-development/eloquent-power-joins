@@ -161,16 +161,18 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     */
 
     /** @test */
-    public function test_belongs_to_many_uses_related_connection_for_pivot_and_related_table()
+    public function test_belongs_to_many_uses_parent_connection_for_pivot_and_related_connection_for_related_table()
     {
         $query = Author::query()->joinRelationship('tags')->toSql();
 
+        // Pivot table uses parent's connection (same as base query, no DB qualifier needed)
         $this->assertQueryContains(
-            'inner join "secondary_db"."author_tag" on "secondary_db"."author_tag"."author_id" = "authors"."id"',
+            'inner join "author_tag" on "author_tag"."author_id" = "authors"."id"',
             $query
         );
+        // Related table uses related model's connection
         $this->assertQueryContains(
-            'inner join "secondary_db"."tags" on "secondary_db"."tags"."id" = "secondary_db"."author_tag"."tag_id"',
+            'inner join "secondary_db"."tags" on "secondary_db"."tags"."id" = "author_tag"."tag_id"',
             $query
         );
     }
@@ -187,21 +189,25 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
     }
 
     /** @test */
-    public function test_morph_to_many_uses_related_connection_for_pivot_and_related_table()
+    public function test_morph_to_many_uses_parent_connection_for_pivot_and_related_connection_for_related_table()
     {
         $query = Author::query()->joinRelationship('labels')->toSql();
 
-        $this->assertQueryContains('"secondary_db"."labelables"', $query);
+        // Pivot table uses parent's connection (same as base query, no DB qualifier needed)
+        $this->assertQueryContains('"labelables"', $query);
+        $this->assertQueryNotContains('"secondary_db"."labelables"', $query);
+        // Related table uses related model's connection
         $this->assertQueryContains('"secondary_db"."labels"', $query);
     }
 
     /** @test */
-    public function test_morph_to_many_morph_type_condition_uses_correct_qualifier()
+    public function test_morph_to_many_morph_type_condition_uses_parent_qualifier()
     {
         $query = Author::query()->joinRelationship('labels')->toSql();
 
-        // The morph type discriminator on the pivot must also carry the database qualifier.
-        $this->assertQueryContains('"secondary_db"."labelables"."labelable_type"', $query);
+        // The morph type discriminator on the pivot uses parent's connection (no DB qualifier)
+        $this->assertQueryContains('"labelables"."labelable_type"', $query);
+        $this->assertQueryNotContains('"secondary_db"."labelables"."labelable_type"', $query);
     }
 
     /*
@@ -641,7 +647,9 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             ->toSql();
 
         $this->assertQueryContains('"secondary_db"."articles"', $query);
-        $this->assertQueryContains('"secondary_db"."author_tag"', $query);
+        // Pivot uses parent's connection (same as base query, no DB qualifier)
+        $this->assertQueryContains('"author_tag"', $query);
+        $this->assertQueryNotContains('"secondary_db"."author_tag"', $query);
         $this->assertQueryContains('"secondary_db"."tags"', $query);
         $this->assertQueryContains('"secondary_db"."stickers"', $query);
     }
@@ -811,5 +819,168 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
             $query
         );
         $this->assertQueryNotContains('"secondary_db"."comments"', $query);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Soft Deletes — withTrashed/onlyTrashed via join callback
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_with_trashed_via_callback_on_cross_connection_belongs_to()
+    {
+        // Article (secondary) belongsTo Author (primary, SoftDeletes).
+        // The join adds a whereNull for deleted_at as an Expression.
+        // withTrashed() on the callback must remove it without crashing.
+        $query = Article::query()
+            ->leftJoinRelationship('author', fn ($join) => $join->withTrashed())
+            ->toSql();
+
+        $this->assertQueryContains(
+            'left join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
+            $query
+        );
+        // The joined model's deleted_at should be removed; base model's own WHERE deleted_at stays
+        $this->assertQueryNotContains('"primary_db"."authors"."deleted_at"', $query);
+    }
+
+    /** @test */
+    public function test_with_trashed_via_callback_on_cross_connection_has_many()
+    {
+        // Author (primary) hasMany Article (secondary, SoftDeletes).
+        $query = Author::query()
+            ->leftJoinRelationship('articles', fn ($join) => $join->withTrashed())
+            ->toSql();
+
+        $this->assertQueryContains(
+            'left join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
+            $query
+        );
+        // The joined model's deleted_at should be removed; base model's own WHERE deleted_at stays
+        $this->assertQueryNotContains('"secondary_db"."articles"."deleted_at"', $query);
+    }
+
+    /** @test */
+    public function test_only_trashed_via_callback_on_cross_connection_belongs_to()
+    {
+        // Article (secondary) belongsTo Author (primary, SoftDeletes).
+        // onlyTrashed() must flip whereNull to whereNotNull without crashing.
+        $query = Article::query()
+            ->joinRelationship('author', fn ($join) => $join->onlyTrashed())
+            ->toSql();
+
+        $this->assertQueryContains(
+            'inner join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
+            $query
+        );
+        $this->assertQueryContains('deleted_at', $query);
+        $this->assertQueryContains('is not null', $query);
+    }
+
+    /** @test */
+    public function test_only_trashed_via_callback_on_cross_connection_has_many()
+    {
+        $query = Author::query()
+            ->joinRelationship('articles', fn ($join) => $join->onlyTrashed())
+            ->toSql();
+
+        $this->assertQueryContains(
+            'inner join "secondary_db"."articles" on "secondary_db"."articles"."author_id" = "authors"."id"',
+            $query
+        );
+        $this->assertQueryContains('deleted_at', $query);
+        $this->assertQueryContains('is not null', $query);
+    }
+
+    /** @test */
+    public function test_with_trashed_via_callback_on_nested_cross_connection()
+    {
+        // Comment (secondary) -> Article (secondary) -> Author (primary, SoftDeletes)
+        $query = Comment::query()
+            ->leftJoinRelationship('article.author', [
+                'author' => fn ($join) => $join->withTrashed(),
+            ])
+            ->toSql();
+
+        $this->assertQueryContains(
+            'left join "articles" on "comments"."article_id" = "articles"."id"',
+            $query
+        );
+        $this->assertQueryContains(
+            'left join "primary_db"."authors" on "articles"."author_id" = "primary_db"."authors"."id"',
+            $query
+        );
+        $this->assertQueryNotContains('"authors"."deleted_at"', $query);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pivot table — qualification uses parent model's connection
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_belongs_to_many_pivot_uses_parent_connection_for_qualification()
+    {
+        // Author (primary) belongsToMany Tag (secondary) via author_tag.
+        // Pivot author_tag lives on primary (parent's DB), not secondary.
+        $query = Author::query()->joinRelationship('tags')->toSql();
+
+        // Pivot should use parent's DB (primary_db), not related's DB (secondary_db)
+        $this->assertQueryContains(
+            'inner join "author_tag" on "author_tag"."author_id" = "authors"."id"',
+            $query
+        );
+        // Related table should still use related's DB
+        $this->assertQueryContains('"secondary_db"."tags"', $query);
+    }
+
+    /** @test */
+    public function test_morph_to_many_pivot_uses_parent_connection_for_qualification()
+    {
+        // Author (primary) morphToMany Label (secondary) via labelables.
+        // Pivot should use parent's DB.
+        $query = Author::query()->joinRelationship('labels')->toSql();
+
+        // Pivot should not carry the related model's DB qualifier
+        $this->assertQueryContains('"labelables"', $query);
+        $this->assertQueryNotContains('"secondary_db"."labelables"', $query);
+        // Related table should still use related's DB
+        $this->assertQueryContains('"secondary_db"."labels"', $query);
+    }
+
+    /** @test */
+    public function test_power_join_where_has_on_belongs_to_many_cross_connection()
+    {
+        $query = Author::query()->powerJoinWhereHas('tags', function ($join) {
+            $join->where('tags.name', 'laravel');
+        })->toSql();
+
+        $this->assertQueryContains('"author_tag"', $query);
+        $this->assertQueryNotContains('"secondary_db"."author_tag"', $query);
+        $this->assertQueryContains('"secondary_db"."tags"', $query);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Aliases — combined with cross-connection soft deletes
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_alias_on_cross_connection_soft_delete_model()
+    {
+        // When combining alias + cross-DB + soft-delete, whereNull receives
+        // an Expression. The alias replacement must handle it.
+        $query = Article::query()
+            ->joinRelationship('author', fn ($join) => $join->as('author_alias'))
+            ->toSql();
+
+        $this->assertQueryContains('"primary_db"."authors" as "author_alias"', $query);
+        $this->assertQueryContains('"author_alias"."id"', $query);
+        // The deleted_at clause should use the alias, not the original table
+        $this->assertQueryContains('"author_alias"."deleted_at" is null', $query);
+        $this->assertQueryNotContains('"primary_db"."authors"."deleted_at"', $query);
     }
 }

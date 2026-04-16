@@ -127,10 +127,7 @@ class PowerJoinClause extends JoinClause
                 return true;
             }
 
-            $column = $where['column'] ?? '';
-            if ($column instanceof \Illuminate\Database\Query\Expression) {
-                $column = (string) $column->getValue($this->getGrammar());
-            }
+            $column = $this->resolveWhereColumn($where);
             if ($whereType === 'Null' && Str::contains($column, $this->getModel()->getDeletedAtColumn())) {
                 return true;
             }
@@ -203,6 +200,17 @@ class PowerJoinClause extends JoinClause
         return $where;
     }
 
+    protected function resolveWhereColumn(array $where): string
+    {
+        $column = $where['column'] ?? '';
+
+        if ($column instanceof \Illuminate\Database\Query\Expression) {
+            return (string) $column->getValue($this->getGrammar());
+        }
+
+        return (string) $column;
+    }
+
     public function whereNull($columns, $boolean = 'and', $not = false)
     {
         if ($this->alias && is_string($columns) && Str::contains($columns, $this->tableName)) {
@@ -264,7 +272,9 @@ class PowerJoinClause extends JoinClause
         }
 
         $this->wheres = array_filter($this->wheres, function ($where) {
-            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            $column = $this->resolveWhereColumn($where);
+
+            if ($where['type'] === 'Null' && Str::contains($column, $this->getModel()->getDeletedAtColumn())) {
                 return false;
             }
 
@@ -288,7 +298,9 @@ class PowerJoinClause extends JoinClause
         $hasCondition = null;
 
         $this->wheres = array_map(function ($where) use (&$hasCondition) {
-            if ($where['type'] === 'Null' && Str::contains($where['column'], $this->getModel()->getDeletedAtColumn())) {
+            $column = $this->resolveWhereColumn($where);
+
+            if ($where['type'] === 'Null' && Str::contains($column, $this->getModel()->getDeletedAtColumn())) {
                 $where['type'] = 'NotNull';
                 $hasCondition = true;
             }

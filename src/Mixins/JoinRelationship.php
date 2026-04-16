@@ -420,11 +420,16 @@ class JoinRelationship
                     $table !== $latestRelationshipModel->getTable() ? $table : null,
                 );
 
+                $grammar = $this->getQuery()->getGrammar();
+                $columnSql = $columnRef instanceof Expression
+                    ? $columnRef->getValue($grammar)
+                    : $grammar->wrap($columnRef);
+
                 $this->selectRaw(
                     sprintf(
                         '%s(%s) as %s',
                         $aggregation,
-                        $columnRef instanceof Expression ? $columnRef->getValue($this->getQuery()->getGrammar()) : $columnRef,
+                        $columnSql,
                         $aliasName
                     )
                 )

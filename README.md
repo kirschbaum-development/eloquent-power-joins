@@ -330,6 +330,27 @@ Post::orderByLeftPowerJoinsMin('comments.votes');
 Post::orderByLeftPowerJoinsMax('comments.votes');
 ```
 
+### 4 - Joining relationships across database connections
+
+If your models live on different database connections, Eloquent Power Joins handles the cross-connection join automatically. All you need is to set the `$connection` property on each model as usual — no additional configuration is required.
+
+```php
+class Author extends Model
+{
+    protected $connection = 'primary';
+}
+
+class Article extends Model
+{
+    protected $connection = 'secondary';
+}
+```
+
+```php
+// Produces: ... inner join `secondary_db`.`articles` on `secondary_db`.`articles`.`author_id` = `authors`.`id`
+Author::joinRelationship('articles')->get();
+```
+
 ***
 
 ## Contributing

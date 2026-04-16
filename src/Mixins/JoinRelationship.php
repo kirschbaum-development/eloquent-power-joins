@@ -81,7 +81,7 @@ class JoinRelationship
 
     public function newPowerJoinClause(): Closure
     {
-        return function (QueryBuilder $parentQuery, string $type, string $table, ?Model $model = null) {
+        return function (QueryBuilder $parentQuery, string $type, $table, ?Model $model = null) {
             return new PowerJoinClause($parentQuery, $type, $table, $model);
         };
     }
@@ -413,12 +413,23 @@ class JoinRelationship
                     $aggregation
                 );
 
+                $columnRef = \Kirschbaum\PowerJoins\ConnectionAwareTable::columnReference(
+                    $latestRelationshipModel,
+                    $this,
+                    $column,
+                    $table !== $latestRelationshipModel->getTable() ? $table : null,
+                );
+
+                $grammar = $this->getQuery()->getGrammar();
+                $columnSql = $columnRef instanceof Expression
+                    ? $columnRef->getValue($grammar)
+                    : $grammar->wrap($columnRef);
+
                 $this->selectRaw(
                     sprintf(
-                        '%s(%s.%s) as %s',
+                        '%s(%s) as %s',
                         $aggregation,
-                        $table,
-                        $column,
+                        $columnSql,
                         $aliasName
                     )
                 )
@@ -429,7 +440,12 @@ class JoinRelationship
                     $this->orderBy($column, $direction);
                 } else {
                     $this->orderBy(
-                        sprintf('%s.%s', $table, $column),
+                        \Kirschbaum\PowerJoins\ConnectionAwareTable::columnReference(
+                            $latestRelationshipModel,
+                            $this,
+                            $column,
+                            $table !== $latestRelationshipModel->getTable() ? $table : null,
+                        ),
                         $direction
                     );
                 }

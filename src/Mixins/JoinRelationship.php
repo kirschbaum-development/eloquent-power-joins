@@ -413,12 +413,18 @@ class JoinRelationship
                     $aggregation
                 );
 
+                $columnRef = \Kirschbaum\PowerJoins\ConnectionAwareTable::columnReference(
+                    $latestRelationshipModel,
+                    $this,
+                    $column,
+                    $table !== $latestRelationshipModel->getTable() ? $table : null,
+                );
+
                 $this->selectRaw(
                     sprintf(
-                        '%s(%s.%s) as %s',
+                        '%s(%s) as %s',
                         $aggregation,
-                        $table,
-                        $column,
+                        $columnRef instanceof Expression ? $columnRef->getValue($this->getQuery()->getGrammar()) : $columnRef,
                         $aliasName
                     )
                 )

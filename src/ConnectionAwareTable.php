@@ -17,13 +17,14 @@ use InvalidArgumentException;
  * For same-connection joins this class is a pass-through returning plain
  * strings — the base grammar handles quoting and prefixing as before. For
  * cross-connection joins it returns an Expression already quoted by the base
- * grammar, embedding the *related* connection's table prefix and database name
- * so the base grammar doesn't apply its own prefix on top.
+ * grammar, embedding the *related* connection's table prefix and qualified
+ * database/schema name so the base grammar doesn't apply its own prefix on
+ * top.
  *
- * Database name qualification (the "db.table" form) is applied automatically
- * for drivers that support it (MySQL/MariaDB). SQLite is excluded because it
- * requires ATTACH DATABASE for cross-database access and does not support the
- * simple database.table syntax.
+ * The qualifier used for "schema.table" form is sourced from the connection
+ * config's `schema` key first, falling back to the physical database name.
+ * SQLite is supported when the application has ATTACHed a database under an
+ * alias and set that alias as the connection's `schema`.
  */
 class ConnectionAwareTable
 {
@@ -171,20 +172,33 @@ class ConnectionAwareTable
     }
 
     /**
-     * Returns the database name to use as a qualifier, or null when qualification
-     * is not applicable (SQLite driver or empty name).
+     * Returns the database/schema name to use as a qualifier, or null when
+     * qualification is not applicable. Prefers the connection config's `schema`
+     * key (logical schema for PostgreSQL, ATTACH alias for SQLite) and falls
+     * back to the physical database name (MySQL/MariaDB).
      */
     public static function qualifiedDatabaseName(Model $model): ?string
     {
         $connection = $model->getConnection();
+        $config = $connection->getConfig();
 
+        $schema = $config['schema'] ?? null;
+
+        if (is_string($schema) && $schema !== '') {
+            return $schema;
+        }
+
+        // SQLite has no standalone database.table syntax; cross-database
+        // access requires ATTACH DATABASE with an alias set via `schema`.
+        // Without that alias, getDatabaseName() returns a file path or
+        // `:memory:`, which is not a valid qualifier.
         if ($connection->getDriverName() === 'sqlite') {
             return null;
         }
 
         $name = (string) $connection->getDatabaseName();
 
-        return empty($name) ? null : $name;
+        return $name === '' ? null : $name;
     }
 
     protected static function prefixed(Model $model, string $table): string

@@ -506,9 +506,10 @@ class RelationshipsExtraMethods
             $target = $morphable ? new $morphable() : $this->query->getModel();
 
             $qualifiedKey = ConnectionAwareTable::columnReference($target, $builder, $target->getKeyName());
+            $grammar = $builder->getQuery()->getGrammar();
             $countExpression = $qualifiedKey instanceof Expression
-                ? $qualifiedKey->getValue($builder->getQuery()->getGrammar())
-                : $qualifiedKey;
+                ? $qualifiedKey->getValue($grammar)
+                : $grammar->wrap($qualifiedKey);
 
             $countAlias = Str::replace('.', '_', $target->getTable()).'_count';
 

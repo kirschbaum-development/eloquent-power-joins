@@ -230,7 +230,7 @@ class PowerJoinClause extends JoinClause
             && is_string($column)
             && $this->model
             && Str::contains($column, $this->model->getTable().'.')
-            && $this->model->getConnectionName() !== $this->getConnection()->getName()
+            && $this->model->getConnection()->getName() !== $this->getConnection()->getName()
         ) {
             [$tableOrAlias, $columnName] = explode('.', $column, 2);
             if ($tableOrAlias === $this->model->getTable()) {

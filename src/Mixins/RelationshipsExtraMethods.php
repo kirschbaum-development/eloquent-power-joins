@@ -121,16 +121,16 @@ class RelationshipsExtraMethods
             $related = $this->getModel();
             $pivotTable = $this->getTable();
 
-            $pivotTableArg = ConnectionAwareTable::tableReference($related, $builder, tableName: $pivotTable);
+            $pivotTableArg = ConnectionAwareTable::tableReference($this->parent, $builder, tableName: $pivotTable);
             $parentColumn = ConnectionAwareTable::columnOrAliasReference($this->parent, $builder, $this->parentKey);
 
-            $builder->{$joinType}($pivotTableArg, function ($join) use ($callback, $related, $pivotTable, $parentColumn, $builder, $alias1) {
+            $builder->{$joinType}($pivotTableArg, function ($join) use ($callback, $pivotTable, $parentColumn, $builder, $alias1) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
 
                 $join->on(
-                    ConnectionAwareTable::columnReference($related, $builder, $this->getForeignPivotKeyName(), $alias1, $pivotTable),
+                    ConnectionAwareTable::columnReference($this->parent, $builder, $this->getForeignPivotKeyName(), $alias1, $pivotTable),
                     '=',
                     $parentColumn,
                 );
@@ -150,7 +150,7 @@ class RelationshipsExtraMethods
                 $join->on(
                     ConnectionAwareTable::columnReference($related, $builder, $this->getRelatedKeyName(), $alias2),
                     '=',
-                    ConnectionAwareTable::columnReference($related, $builder, $this->getRelatedPivotKeyName(), $alias1, $pivotTable),
+                    ConnectionAwareTable::columnReference($this->parent, $builder, $this->getRelatedPivotKeyName(), $alias1, $pivotTable),
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {
@@ -183,22 +183,22 @@ class RelationshipsExtraMethods
             $related = $this->getModel();
             $pivotTable = $this->getTable();
 
-            $pivotTableArg = ConnectionAwareTable::tableReference($related, $builder, tableName: $pivotTable);
+            $pivotTableArg = ConnectionAwareTable::tableReference($this->parent, $builder, tableName: $pivotTable);
             $parentColumn = ConnectionAwareTable::columnOrAliasReference($this->parent, $builder, $this->parentKey);
 
-            $builder->{$joinType}($pivotTableArg, function ($join) use ($callback, $related, $pivotTable, $parentColumn, $builder, $alias1, $disableExtraConditions) {
+            $builder->{$joinType}($pivotTableArg, function ($join) use ($callback, $pivotTable, $parentColumn, $builder, $alias1, $disableExtraConditions) {
                 if ($alias1) {
                     $join->as($alias1);
                 }
 
                 $join->on(
-                    ConnectionAwareTable::columnReference($related, $builder, $this->getForeignPivotKeyName(), $alias1, $pivotTable),
+                    ConnectionAwareTable::columnReference($this->parent, $builder, $this->getForeignPivotKeyName(), $alias1, $pivotTable),
                     '=',
                     $parentColumn,
                 );
 
                 if ($disableExtraConditions === false) {
-                    $this->applyExtraConditions($join, $builder, $related, $alias1, $pivotTable);
+                    $this->applyExtraConditions($join, $builder, $this->parent, $alias1, $pivotTable);
                 }
 
                 if (is_array($callback) && isset($callback[$pivotTable])) {
@@ -216,7 +216,7 @@ class RelationshipsExtraMethods
                 $join->on(
                     ConnectionAwareTable::columnReference($related, $builder, $related->getKeyName(), $alias2),
                     '=',
-                    ConnectionAwareTable::columnReference($related, $builder, $this->getRelatedPivotKeyName(), $alias1, $pivotTable),
+                    ConnectionAwareTable::columnReference($this->parent, $builder, $this->getRelatedPivotKeyName(), $alias1, $pivotTable),
                 );
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {

@@ -983,4 +983,134 @@ class JoinRelationshipAcrossConnectionsTest extends TestCase
         $this->assertQueryContains('"author_alias"."deleted_at" is null', $query);
         $this->assertQueryNotContains('"primary_db"."authors"."deleted_at"', $query);
     }
+
+    /*
+    |--------------------------------------------------------------------------
+    | whereNull with Expression columns and alias
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_where_null_replaces_alias_in_expression_column_cross_db()
+    {
+        // When disableExtraConditions removes the auto soft-delete clause, and
+        // the user re-adds it manually via whereNull with a cross-db Expression
+        // column, the alias replacement in whereNull must handle Expression columns.
+        $authorModel = new Author();
+        $query = Article::query()
+            ->joinRelationship('author', function ($join) use ($authorModel) {
+                $join->as('a');
+                $join->whereNull(
+                    \Kirschbaum\PowerJoins\ConnectionAwareTable::columnReference(
+                        $authorModel,
+                        Article::query(),
+                        $authorModel->getDeletedAtColumn(),
+                    )
+                );
+            }, disableExtraConditions: true)
+            ->toSql();
+
+        // The whereNull should use the alias 'a', not the original table reference
+        $this->assertQueryContains('"a"."deleted_at" is null', $query);
+        $this->assertQueryNotContains('"primary_db"."authors"."deleted_at"', $query);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | onlyTrashed fallback with cross-database qualification
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_only_trashed_fallback_qualifies_column_for_cross_database()
+    {
+        // When disableExtraConditions: true removes the auto soft-delete clause,
+        // calling onlyTrashed() falls back to getQualifiedDeletedAtColumn() which
+        // returns "authors.deleted_at" without the database qualifier needed for
+        // cross-database joins.
+        $query = Author::query()
+            ->joinRelationship('articles', function ($join) {
+                $join->onlyTrashed();
+            }, disableExtraConditions: true)
+            ->toSql();
+
+        // The fallback must produce the fully-qualified cross-db reference
+        $this->assertQueryContains('"secondary_db"."articles"."deleted_at" is not null', $query);
+        $this->assertQueryNotContains(' "articles"."deleted_at" is not null', $query);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | orderByPowerJoins aggregation with qualified table in selectRaw
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_order_by_power_joins_count_uses_qualified_table_with_prefix()
+    {
+        // When the secondary connection has a table prefix, orderByPowerJoinsCount
+        // uses a raw selectRaw with the plain table name. The selectRaw must use the
+        // same qualified reference as the join.
+        config(['database.connections.secondary' => [
+            'driver' => 'mysql',
+            'database' => 'secondary_db',
+            'prefix' => 'sec_',
+            'foreign_key_constraints' => false,
+        ]]);
+
+        $query = Author::query()->orderByPowerJoinsCount('articles.id')->toSql();
+
+        // The selectRaw must reference the prefixed, DB-qualified table
+        $this->assertQueryContains('"secondary_db"."sec_articles"."id"', $query);
+        // Must NOT use the raw unqualified table name in the aggregation
+        $this->assertQueryNotContains('(articles.id)', $query);
+
+        // Restore config
+        $this->getEnvironmentSetUp(app());
+    }
+
+    /*
+    |--------------------------------------------------------------------------
+    | Pivot table with dot-qualified name
+    |--------------------------------------------------------------------------
+    */
+
+    /** @test */
+    public function test_pivot_table_already_qualified_with_dot_is_not_re_qualified()
+    {
+        // When the user manually qualifies the pivot table name with a database
+        // prefix (e.g., "secondary_db.author_tag"), the lib should detect the dot
+        // and treat it as already qualified, not apply its own qualification on top.
+        $query = Author::query()->joinRelationship('tagsOnSecondaryPivot')->toSql();
+
+        // The pivot join should use the user-provided qualified name
+        $this->assertQueryContains('"secondary_db"."author_tag"', $query);
+        // The related table should still use related's connection
+        $this->assertQueryContains('"secondary_db"."tags"', $query);
+    }
+
+    /** @test */
+    public function test_pivot_table_already_qualified_with_prefix_is_not_double_prefixed()
+    {
+        // When secondary connection has a table prefix and the pivot is manually
+        // qualified with the database name, the prefix should NOT be applied on
+        // top of the already-qualified name.
+        config(['database.connections.secondary' => [
+            'driver' => 'mysql',
+            'database' => 'secondary_db',
+            'prefix' => 'sec_',
+            'foreign_key_constraints' => false,
+        ]]);
+
+        $query = Author::query()->joinRelationship('tagsOnSecondaryPivot')->toSql();
+
+        // The pivot should keep the user-qualified name; no extra prefix
+        $this->assertQueryContains('"secondary_db"."author_tag"', $query);
+        // Must NOT apply the primary connection prefix to the pivot
+        $this->assertQueryNotContains('"secondary_db"."pri_author_tag"', $query);
+        $this->assertQueryNotContains('"secondary_db"."sec_author_tag"', $query);
+
+        // Restore config
+        $this->getEnvironmentSetUp(app());
+    }
 }

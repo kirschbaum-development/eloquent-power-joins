@@ -51,6 +51,11 @@ class Author extends Model
         return $this->belongsToMany(Tag::class, 'author_tag', 'author_id', 'tag_id');
     }
 
+    public function tagsOnSecondaryPivot(): BelongsToMany
+    {
+        return $this->belongsToMany(Tag::class, 'secondary_db.author_tag', 'author_id', 'tag_id');
+    }
+
     public function stickers(): MorphMany
     {
         return $this->morphMany(Sticker::class, 'stickerable');

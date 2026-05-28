@@ -382,4 +382,18 @@ class JoinRelationshipUsingAliasTest extends TestCase
             $query
         );
     }
+
+    /**
+     * @test
+     */
+    public function test_morph_join_uses_parent_alias_in_on_condition()
+    {
+        $query = User::joinRelationship('posts.images', [
+            'posts' => fn ($join) => $join->as('posts_alias'),
+        ])->toSql();
+
+        // The ON condition must reference the alias, not the original table name
+        $this->assertQueryContains('imageable_id = posts_alias.id', $query);
+        $this->assertStringNotContainsString('imageable_id = posts.id', $query);
+    }
 }

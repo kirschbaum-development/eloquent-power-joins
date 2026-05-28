@@ -223,7 +223,9 @@ class RelationshipsExtraMethods
     protected function performJoinForEloquentPowerJoinsForMorph()
     {
         return function ($builder, $joinType, $callback = null, $alias = null, bool $disableExtraConditions = false) {
-            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $disableExtraConditions, $alias) {
+            $parentTable = StaticCache::getTableOrAliasForModel($this->parent);
+
+            $builder->{$joinType}($this->getModel()->getTable(), function ($join) use ($callback, $disableExtraConditions, $alias, $parentTable) {
                 if ($alias) {
                     $join->as($alias);
                 }
@@ -231,7 +233,7 @@ class RelationshipsExtraMethods
                 $join->on(
                     "{$this->getModel()->getTable()}.{$this->getForeignKeyName()}",
                     '=',
-                    "{$this->parent->getTable()}.{$this->localKey}"
+                    "{$parentTable}.{$this->localKey}"
                 )->where("{$this->getModel()->getTable()}.{$this->getMorphType()}", '=', $this->getMorphClass());
 
                 if ($disableExtraConditions === false && $this->usesSoftDeletes($this->query->getScopes())) {

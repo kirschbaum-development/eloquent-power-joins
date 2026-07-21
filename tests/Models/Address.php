@@ -37,8 +37,6 @@ class Address extends Model
      */
     public function latest_requested_address(): HasOne
     {
-        return $this->requested_addresses()
-            ->one()
-            ->latestOfMany('requested_at');
+        return $this->requested_addresses()->one()->latestOfMany('requested_at');
     }
 }

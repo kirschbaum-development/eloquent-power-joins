@@ -127,6 +127,7 @@ class CreateTables extends Migration
             $table->timestamp('requested_at');
             $table->string('status')->default('pending');
             $table->timestamps();
+            $table->softDeletes();
 
             $table->index('kvh_code');
         });

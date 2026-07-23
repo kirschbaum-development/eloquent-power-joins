@@ -4,6 +4,10 @@ on:
   push:
   pull_request:
 
+env:
+    # Laravel 11 remains supported by this package but no longer has patched releases.
+    COMPOSER_POLICY_ADVISORIES_BLOCK: '0'
+
 jobs:
     mysql_8:
         runs-on: ubuntu-24.04
@@ -54,7 +58,10 @@ jobs:
                 with:
                     timeout_minutes: 5
                     max_attempts: 5
-                    command: composer update --prefer-stable --prefer-dist --no-interaction --no-progress
+                    command: |
+                        composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
+                        composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
+                        composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
             -   name: Execute tests
                 run: vendor/bin/phpunit
@@ -118,8 +125,7 @@ jobs:
                     composer --version
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
-                    composer dump
+                    composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
             -   name: Execute tests
                 run: vendor/bin/phpunit
@@ -174,8 +180,7 @@ jobs:
                     composer --version
                     composer require "laravel/framework:${{ matrix.laravel }}" --no-interaction --no-update
                     composer require "orchestra/testbench:${{ matrix.testbench }}" --no-interaction --no-update --dev
-                    composer update --prefer-dist --no-interaction --no-suggest --dev
-                    composer dump
+                    composer update --prefer-stable --prefer-dist --no-interaction --no-progress
 
             -   name: Setup SQLite Database
                 run: php vendor/bin/testbench package:create-sqlite-db

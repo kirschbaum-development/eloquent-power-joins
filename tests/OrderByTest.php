@@ -4,8 +4,10 @@ namespace Kirschbaum\PowerJoins\Tests;
 
 use Illuminate\Database\PostgresConnection;
 use Illuminate\Support\Facades\DB;
+use Kirschbaum\PowerJoins\Tests\Models\Address;
 use Kirschbaum\PowerJoins\Tests\Models\Comment;
 use Kirschbaum\PowerJoins\Tests\Models\Post;
+use Kirschbaum\PowerJoins\Tests\Models\RequestedAddress;
 use Kirschbaum\PowerJoins\Tests\Models\User;
 use Kirschbaum\PowerJoins\Tests\Models\UserProfile;
 
@@ -231,5 +233,24 @@ class OrderByTest extends TestCase
         $query->get();
 
         $this->assertTrue(true, 'No exceptions, we are good :)');
+    }
+
+    public function test_order_by_has_one_of_many_with_soft_delete()
+    {
+        $address1 = factory(Address::class)->create();
+        $requestedAt = now();
+        factory(RequestedAddress::class)->create(['kvh_code' => $address1->kvh_code, 'requested_at' => now()])->delete();
+        factory(RequestedAddress::class)->create(['kvh_code' => $address1->kvh_code, 'requested_at' => now()->addSeconds()]);
+
+        $address2 = factory(Address::class)->create();
+        factory(RequestedAddress::class)->create(['kvh_code' => $address2->kvh_code, 'requested_at' => now()->addSeconds(2)]);
+        factory(RequestedAddress::class)->create(['kvh_code' => $address2->kvh_code, 'requested_at' => now()->addSeconds(3)])->delete();
+
+        $addressesOrderedByLatestRequested = Address::orderByPowerJoins('latest_requested_address.created_at', 'desc')->get();
+
+        $this->assertCount(2, $addressesOrderedByLatestRequested);
+
+        // making sure left join do not throw exceptions
+        Address::orderByLeftPowerJoins('latest_requested_address.created_at', 'desc')->get();
     }
 }

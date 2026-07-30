@@ -12,7 +12,7 @@ Joins are very useful in a lot of ways. If you are here, you most likely know ab
 
 A few things we consider is missing when using joins which are very powerful Eloquent features:
 
-* Ability to use relationship definitions to make joins;
+* Ability to use relationship definitions to make joins (inner, left, right, and cross joins);
 * Ability to use model scopes inside different contexts;
 * Ability to query relationship existence using joins instead of where exists;
 * Ability to easily sort results based on columns or aggregations from related tables;
@@ -59,11 +59,12 @@ But, **it gets better** when you need to **join nested relationships**. Let's as
 User::joinRelationship('posts.comments');
 ```
 
-So much better, wouldn't you agree?! You can also `left` or `right` join the relationships as needed.
+So much better, wouldn't you agree?! You can also `left`, `right`, or `cross` join the relationships as needed.
 
 ```php
 User::leftJoinRelationship('posts.comments');
 User::rightJoinRelationship('posts.comments');
+User::crossJoinRelationship('posts.comments');
 ```
 
 #### Joining polymorphic relationships
@@ -145,10 +146,11 @@ When using model scopes inside a join clause, you **can't** type hint the `$quer
 
 #### Using aliases
 
-Sometimes, you are going to need to use table aliases on your joins because you are joining the same table more than once. One option to accomplish this is to use the `joinRelationshipUsingAlias` method.
+Sometimes, you are going to need to use table aliases on your joins because you are joining the same table more than once. One option to accomplish this is to use the `joinRelationshipUsingAlias` method. This works for all join types including cross joins.
 
 ```php
 Post::joinRelationshipUsingAlias('category.parent')->get();
+Post::crossJoinRelationshipUsingAlias('category.parent')->get();
 ```
 
 In case you need to specify the name of the alias which is going to be used, you can do in two different ways:
@@ -203,7 +205,7 @@ When joining any models which uses the `SoftDeletes` trait, the following condit
 and "users"."deleted_at" is null
 ```
 
-In case you want to include trashed models, you can call the `->withTrashed()` method in the join callback.
+In case you want to include trashed models, you can call the `->withTrashed()` method in the join callback. This works for all join types:
 
 ```php
 UserProfile::joinRelationship('users', fn ($join) => $join->withTrashed());

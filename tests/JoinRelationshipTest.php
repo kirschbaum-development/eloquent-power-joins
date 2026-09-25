@@ -576,6 +576,20 @@ class JoinRelationshipTest extends TestCase
     }
 
     /** @test */
+    public function test_join_relationship_respects_explicit_select_star()
+    {
+        $query = User::query()
+            ->select('*')
+            ->joinRelationship('posts')
+            ->toSql();
+
+        $this->assertQueryContains(
+            'select * from "users"',
+            $query
+        );
+    }
+
+    /** @test */
     public function test_join_has_many_through_relationship()
     {
         // just making sure it runs fine

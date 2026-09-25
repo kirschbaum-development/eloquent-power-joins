@@ -116,12 +116,14 @@ class JoinRelationship
                 StaticCache::setTableAliasForModel($this->getModel(), $mainTableOrAlias);
             }
 
-            $defaultSelect = sprintf('%s.*', $mainTableOrAlias);
-            $this->getQuery()->beforeQuery(function ($queryBuilder) use ($defaultSelect) {
-                if (is_null($queryBuilder->columns) || $queryBuilder->columns === ['*']) {
-                    $queryBuilder->columns = [$defaultSelect];
-                }
-            });
+            if (is_null($this->getSelect())) {
+                $defaultSelect = sprintf('%s.*', $mainTableOrAlias);
+                $this->getQuery()->beforeQuery(function ($queryBuilder) use ($defaultSelect) {
+                    if (is_null($queryBuilder->columns) || $queryBuilder->columns === ['*']) {
+                        $queryBuilder->columns = [$defaultSelect];
+                    }
+                });
+            }
 
             if (Str::contains($relationName, '.')) {
                 $this->joinNestedRelationship($relationName, $callback, $joinType, $useAlias, $disableExtraConditions, $morphable);
@@ -537,12 +539,14 @@ class JoinRelationship
     public function powerJoinHas(): Closure
     {
         return function (string $relation, string $operator = '>=', int $count = 1, $boolean = 'and', Closure|array|string|null $callback = null, ?string $morphable = null): static {
-            $defaultSelect = sprintf('%s.*', $this->getModel()->getTable());
-            $this->getQuery()->beforeQuery(function ($queryBuilder) use ($defaultSelect) {
-                if (is_null($queryBuilder->columns) || $queryBuilder->columns === ['*']) {
-                    $queryBuilder->columns = [$defaultSelect];
-                }
-            });
+            if (is_null($this->getSelect())) {
+                $defaultSelect = sprintf('%s.*', $this->getModel()->getTable());
+                $this->getQuery()->beforeQuery(function ($queryBuilder) use ($defaultSelect) {
+                    if (is_null($queryBuilder->columns) || $queryBuilder->columns === ['*']) {
+                        $queryBuilder->columns = [$defaultSelect];
+                    }
+                });
+            }
 
             if (is_null($this->getGroupBy())) {
                 $this->groupBy($this->getModel()->getQualifiedKeyName());

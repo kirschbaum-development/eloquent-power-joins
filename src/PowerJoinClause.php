@@ -194,6 +194,10 @@ class PowerJoinClause extends JoinClause
 
     public function where($column, $operator = null, $value = null, $boolean = 'and'): self
     {
+        if ($this->alias && is_string($column) && Str::startsWith($column, "{$this->alias}.")) {
+            return parent::where($column, $operator, $value, $boolean);
+        }
+
         if ($this->alias && is_string($column) && Str::contains($column, $this->tableName)) {
             $column = str_replace("{$this->tableName}.", "{$this->alias}.", $column);
         } elseif ($this->alias && !is_callable($column)) {
